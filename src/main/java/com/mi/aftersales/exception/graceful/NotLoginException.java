@@ -1,4 +1,4 @@
-package com.mi.exception.graceful;
+package com.mi.aftersales.exception.graceful;
 
 import com.feiniaojin.gracefulresponse.api.ExceptionMapper;
 

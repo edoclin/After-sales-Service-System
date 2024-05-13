@@ -1,4 +1,4 @@
-package com.mi.enums;
+package com.mi.aftersales.enums;
 
 /**
  * @description: 三方登录类型

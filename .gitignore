@@ -40,3 +40,4 @@ out/
 .vscode/
 /src/main/resources/application-dev.yaml
 /src/main/resources/rebel.xml
+/src/main/java/com/mi/aftersales/util/CodeGenerator.java

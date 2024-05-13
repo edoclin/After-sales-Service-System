@@ -1,8 +1,8 @@
-package com.mi.controller;
+package com.mi.aftersales.controller;
 
-import com.mi.config.yaml.bean.OAuthConfig;
-import com.mi.config.yaml.bean.OAuthList;
-import com.mi.enums.OAuthType;
+import com.mi.aftersales.config.yaml.bean.OAuthConfig;
+import com.mi.aftersales.config.yaml.bean.OAuthList;
+import com.mi.aftersales.enums.OAuthType;
 import me.zhyd.oauth.config.AuthConfig;
 import me.zhyd.oauth.model.AuthCallback;
 import me.zhyd.oauth.request.AuthGithubRequest;

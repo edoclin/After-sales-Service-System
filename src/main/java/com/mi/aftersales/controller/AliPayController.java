@@ -1,8 +1,8 @@
-package com.mi.controller;
+package com.mi.aftersales.controller;
 
 import com.alipay.api.AlipayClient;
 import com.alipay.api.DefaultAlipayClient;
-import com.mi.config.yaml.bean.AliPayConfig;
+import com.mi.aftersales.config.yaml.bean.AliPayConfig;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;

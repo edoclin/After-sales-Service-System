@@ -1,4 +1,4 @@
-package com.mi.config.yaml.bean;
+package com.mi.aftersales.config.yaml.bean;
 
 import lombok.Data;
 
