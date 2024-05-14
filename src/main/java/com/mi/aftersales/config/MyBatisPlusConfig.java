@@ -63,4 +63,14 @@ public class MyBatisPlusConfig implements MetaObjectHandler, IdentifierGenerator
         // table ID生成策略
         return IdUtil.getSnowflakeNextId();
     }
+
+    @Override
+    public boolean assignId(Object idValue) {
+        return IdentifierGenerator.super.assignId(idValue);
+    }
+
+    @Override
+    public String nextUUID(Object entity) {
+        return IdUtil.getSnowflakeNextIdStr();
+    }
 }

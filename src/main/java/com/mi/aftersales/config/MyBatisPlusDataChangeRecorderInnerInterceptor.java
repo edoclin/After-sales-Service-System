@@ -12,5 +12,7 @@ public class MyBatisPlusDataChangeRecorderInnerInterceptor extends DataChangeRec
     @Override
     protected void dealOperationResult(OperationResult operationResult) {
         super.dealOperationResult(operationResult);
+
+
     }
 }

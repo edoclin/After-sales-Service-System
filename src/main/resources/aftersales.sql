@@ -50,7 +50,7 @@ CREATE TABLE t_employee_info
     `email`                   varchar(512)     not null default '' COMMENT '邮箱',
     `employee_desc`           text COMMENT '员工个人简介',
     `employee_pic_file_id`    varchar(32)      not null default '' COMMENT '员工照片文件ID',
-    `work_no`                 int(10) zerofill not null default 0 auto_increment COMMENT '员工唯一工号',
+    `work_no`                 int(10) zerofill not null auto_increment unique COMMENT '员工唯一工号',
     `direct_leader_mobile_id` varchar(32)      not null default '' COMMENT '直属上级',
     PRIMARY KEY (login_id)
 ) COMMENT = '员工信息表';
@@ -77,11 +77,11 @@ CREATE TABLE t_order
     `engineer_fault_desc` text COMMENT '工程师故障描述',
     `order_status`        tinyint       not null default 0 COMMENT '工单状态',
     `material_fee`        decimal(8, 2) not null default 0 COMMENT '物料费;用户支付物料费,默认所有物料总价*1.2',
-    `manual_fee`          decimal(8, 2) not null default 0 COMMENT '工程师手工费;工程师手工费,默认50',
-    `engineer_mobile_id`  varchar(32)   not null default '' COMMENT '受理工程师ID',
-    `client_mobile_id`    varchar(32)   not null default '' COMMENT '工单创建客户ID',
+    `manual_fee`          decimal(8, 2) not null default 50 COMMENT '工程师手工费;工程师手工费,默认50',
+    `engineer_login_id`   varchar(32)   not null default '' COMMENT '受理工程师ID',
+    `client_login_id`     varchar(32)   not null default '' COMMENT '工单创建客户ID',
     `center_id`           varchar(32)   not null default '' COMMENT '服务中心ID',
-    `arrvial_time`        timestamp     not null default now() COMMENT '到店时间/取件时间',
+    `arrival_time`        timestamp     not null default now() COMMENT '到店时间/取件时间',
     `transferring`        bool          not null default false COMMENT '是否流转中',
     `transfer_num`        int           not null default 0 COMMENT '流转次数',
     PRIMARY KEY (order_id)
@@ -91,8 +91,8 @@ CREATE TABLE t_order
 CREATE INDEX idx_sn ON t_order (sn);
 CREATE INDEX idx_fapiao_id ON t_order (fapiao_id);
 CREATE INDEX idx_sku_id ON t_order (sku_id);
-CREATE INDEX idx_client_mobile ON t_order (client_mobile_id);
-CREATE INDEX idx_engineer_id ON t_order (engineer_mobile_id);
+CREATE INDEX idx_client_id ON t_order (client_login_id);
+CREATE INDEX idx_engineer_id ON t_order (engineer_login_id);
 CREATE INDEX idx_center_id ON t_order (center_id);
 
 DROP TABLE IF EXISTS t_order_upload;
@@ -123,7 +123,7 @@ CREATE TABLE t_order_status_log
     `deleted`       bigint      not null default 0 COMMENT '逻辑删除',
     `log_id`        varchar(32) NOT NULL default '' COMMENT '日志ID',
     `order_id`      varchar(32) not null default '' COMMENT '工单ID',
-    `order_status`  tinyint     not null default '' COMMENT '当前工单状态',
+    `order_status`  tinyint     not null default 0 COMMENT '当前工单状态',
     `status_detail` text COMMENT '状态详情(JSON);每个状态对应不同的JAVABEAN信息',
     PRIMARY KEY (log_id)
 ) COMMENT = '工单状态日志';
@@ -142,7 +142,7 @@ CREATE TABLE t_middle_order_material
     `id`              varchar(32) NOT NULL default '' COMMENT '中间表ID',
     `order_id`        varchar(32) not null default '' COMMENT '工单ID',
     `material_id`     varchar(32) not null default '' COMMENT '物料ID',
-    `material_amount` decimal(8, 6)        default 0 COMMENT '物料数量',
+    `material_amount` decimal(10, 4)       default 0 COMMENT '物料数量',
     PRIMARY KEY (id)
 ) COMMENT = '工单物料中间表';
 
@@ -177,6 +177,7 @@ CREATE TABLE t_spu
     `deleted`           bigint       not null default 0 COMMENT '逻辑删除',
     `spu_id`            varchar(32)  NOT NULL default '' COMMENT '商品ID',
     `category_id`       int          not null default 0 COMMENT '所属分类ID',
+    `weight`            int          not null default 0 COMMENT '展示权重',
     `released_time`     timestamp    not null default now() COMMENT '商品发布日期',
     `spu_name`          varchar(256) not null default '' COMMENT '唯一商品名称',
     `spu_cover_file_id` varchar(32)  not null default '' COMMENT '商品封面图片ID',
@@ -200,6 +201,7 @@ CREATE TABLE t_spu_category
     `deleted`            bigint       not null default 0 COMMENT '逻辑删除',
     `visible`            bool         not null default false COMMENT '是否对用户可见',
     `category_id`        INT AUTO_INCREMENT COMMENT '分类编号',
+    `weight`             int          not null default 0 COMMENT '展示权重',
     `parent_category_id` int(4)       not null default 0 COMMENT '父级分类编号',
     `category_name`      varchar(256) not null default '' COMMENT '分类名称',
     `category_level`     int(4)       not null default 0 COMMENT '分类级别',
@@ -222,6 +224,7 @@ CREATE TABLE t_sku
     `deleted`           bigint       not null default 0 COMMENT '逻辑删除',
     `sku_id`            varchar(32)  NOT NULL default '' COMMENT 'sku编号',
     `spu_id`            varchar(32)  not null default '' COMMENT '所属spu编号',
+    `weight`            int          not null default 0 COMMENT '展示权重',
     `sku_cover_file_id` varchar(32)  not null default '' COMMENT 'sku封面展示图片ID',
     `sku_display_name`  varchar(256) not null default '' COMMENT 'sku唯一展示名称',
     `visible`           bool         not null default false COMMENT '该sku是否对用户可见',
@@ -340,7 +343,7 @@ CREATE TABLE t_api
     `created_id`   varchar(32)  not null default '' COMMENT '创建者',
     `updated_id`   varchar(32)  not null default '' COMMENT '更新者',
     `deleted`      bigint       not null default 0 COMMENT '逻辑删除',
-    `api_id`       INT AUTO_INCREMENT COMMENT 'APIID',
+    `api_id`       INT AUTO_INCREMENT COMMENT 'ApiId',
     `uri`          varchar(512) not null default '' COMMENT 'API访问URI',
     `method`       tinyint      not null default 0 COMMENT 'API访问方法',
     `api_comment`  varchar(256) not null default '' COMMENT 'API描述',
@@ -374,7 +377,7 @@ CREATE TABLE t_middle_permission_api
     `deleted`       bigint      not null default 0 COMMENT '逻辑删除',
     `id`            INT AUTO_INCREMENT COMMENT '主键',
     `permission_id` int         not null default 0 COMMENT '权限ID',
-    `api_id`        int         not null default 0 COMMENT 'APIID',
+    `api_id`        int         not null default 0 COMMENT 'ApiId',
     PRIMARY KEY (id)
 ) COMMENT = '权限具有API中间表';
 
