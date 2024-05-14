@@ -6,8 +6,7 @@ import com.baomidou.mybatisplus.annotation.TableLogic;
 import com.baomidou.mybatisplus.annotation.TableName;
 import java.io.Serializable;
 import java.time.LocalDateTime;
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Accessors;
@@ -24,34 +23,34 @@ import lombok.experimental.Accessors;
 @Setter
 @Accessors(chain = true)
 @TableName("t_middle_permission_api")
-@ApiModel(value = "MiddlePermissionApi对象", description = "权限具有API中间表")
+@Schema(name = "MiddlePermissionApi", description = "权限具有API中间表")
 public class MiddlePermissionApi implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
-    @ApiModelProperty("创建时间")
+    @Schema(description = "创建时间")
     private LocalDateTime createdTime;
 
-    @ApiModelProperty("更新时间")
+    @Schema(description = "更新时间")
     private LocalDateTime updatedTime;
 
-    @ApiModelProperty("创建者")
+    @Schema(description = "创建者")
     private String createdId;
 
-    @ApiModelProperty("更新者")
+    @Schema(description = "更新者")
     private String updatedId;
 
-    @ApiModelProperty("逻辑删除")
+    @Schema(description = "逻辑删除")
     @TableLogic
     private Long deleted;
 
-    @ApiModelProperty("主键")
+    @Schema(description = "主键")
     @TableId(value = "id", type = IdType.AUTO)
     private Integer id;
 
-    @ApiModelProperty("权限ID")
+    @Schema(description = "权限ID")
     private Integer permissionId;
 
-    @ApiModelProperty("ApiId")
+    @Schema(description = "ApiId")
     private Integer apiId;
 }

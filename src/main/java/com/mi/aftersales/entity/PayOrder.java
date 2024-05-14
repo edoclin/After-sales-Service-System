@@ -7,8 +7,7 @@ import com.baomidou.mybatisplus.annotation.TableName;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Accessors;
@@ -25,43 +24,43 @@ import lombok.experimental.Accessors;
 @Setter
 @Accessors(chain = true)
 @TableName("t_pay_order")
-@ApiModel(value = "PayOrder对象", description = "工单支付记录")
+@Schema(name = "PayOrder", description = "工单支付记录")
 public class PayOrder implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
-    @ApiModelProperty("创建时间")
+    @Schema(description = "创建时间")
     private LocalDateTime createdTime;
 
-    @ApiModelProperty("更新时间")
+    @Schema(description = "更新时间")
     private LocalDateTime updatedTime;
 
-    @ApiModelProperty("创建者")
+    @Schema(description = "创建者")
     private String createdId;
 
-    @ApiModelProperty("更新者")
+    @Schema(description = "更新者")
     private String updatedId;
 
-    @ApiModelProperty("逻辑删除")
+    @Schema(description = "逻辑删除")
     @TableLogic
     private Long deleted;
 
-    @ApiModelProperty("工单支付ID")
+    @Schema(description = "工单支付ID")
     @TableId(value = "pay_order_id", type = IdType.AUTO)
     private String payOrderId;
 
-    @ApiModelProperty("工单ID")
+    @Schema(description = "工单ID")
     private String orderId;
 
-    @ApiModelProperty("支付方式")
+    @Schema(description = "支付方式")
     private Byte payMethod;
 
-    @ApiModelProperty("支付记录详情(JSON)")
+    @Schema(description = "支付记录详情(JSON)")
     private String payDetail;
 
-    @ApiModelProperty("订单金额")
+    @Schema(description = "订单金额")
     private BigDecimal amount;
 
-    @ApiModelProperty("支付状态")
+    @Schema(description = "支付状态")
     private Byte payStatus;
 }

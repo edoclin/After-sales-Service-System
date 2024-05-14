@@ -6,8 +6,7 @@ import com.baomidou.mybatisplus.annotation.TableLogic;
 import com.baomidou.mybatisplus.annotation.TableName;
 import java.io.Serializable;
 import java.time.LocalDateTime;
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Accessors;
@@ -24,43 +23,43 @@ import lombok.experimental.Accessors;
 @Setter
 @Accessors(chain = true)
 @TableName("t_sku")
-@ApiModel(value = "Sku对象", description = "商品销售单元")
+@Schema(name = "Sku", description = "商品销售单元")
 public class Sku implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
-    @ApiModelProperty("创建时间")
+    @Schema(description = "创建时间")
     private LocalDateTime createdTime;
 
-    @ApiModelProperty("更新时间")
+    @Schema(description = "更新时间")
     private LocalDateTime updatedTime;
 
-    @ApiModelProperty("创建者")
+    @Schema(description = "创建者")
     private String createdId;
 
-    @ApiModelProperty("更新者")
+    @Schema(description = "更新者")
     private String updatedId;
 
-    @ApiModelProperty("逻辑删除")
+    @Schema(description = "逻辑删除")
     @TableLogic
     private Long deleted;
 
-    @ApiModelProperty("sku编号")
+    @Schema(description = "sku编号")
     @TableId(value = "sku_id", type = IdType.AUTO)
     private String skuId;
 
-    @ApiModelProperty("所属spu编号")
+    @Schema(description = "所属spu编号")
     private String spuId;
 
-    @ApiModelProperty("展示权重")
+    @Schema(description = "展示权重")
     private Integer weight;
 
-    @ApiModelProperty("sku封面展示图片ID")
+    @Schema(description = "sku封面展示图片ID")
     private String skuCoverFileId;
 
-    @ApiModelProperty("sku唯一展示名称")
+    @Schema(description = "sku唯一展示名称")
     private String skuDisplayName;
 
-    @ApiModelProperty("该sku是否对用户可见")
+    @Schema(description = "该sku是否对用户可见")
     private Boolean visible;
 }

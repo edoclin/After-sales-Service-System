@@ -4,14 +4,12 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableLogic;
 import com.baomidou.mybatisplus.annotation.TableName;
-
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
 import com.mi.aftersales.entity.enums.LoginOAuthSourceEnum;
 import com.mi.aftersales.entity.enums.LoginTypeEnum;
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Accessors;
@@ -28,40 +26,40 @@ import lombok.experimental.Accessors;
 @Setter
 @Accessors(chain = true)
 @TableName("t_login")
-@ApiModel(value = "Login对象", description = "登录表")
+@Schema(name = "Login", description = "登录表")
 public class Login implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
-    @ApiModelProperty("登录ID")
-    @TableId(value = "login_id", type = IdType.ASSIGN_ID)
+    @Schema(description = "登录ID")
+    @TableId(value = "login_id", type = IdType.AUTO)
     private String loginId;
 
-    @ApiModelProperty("唯一手机号")
+    @Schema(description = "唯一手机号")
     private String mobile;
 
-    @ApiModelProperty("逻辑删除")
+    @Schema(description = "逻辑删除")
     @TableLogic
     private Long deleted;
 
-    @ApiModelProperty("注册时间")
+    @Schema(description = "注册时间")
     private LocalDateTime createdTime;
 
-    @ApiModelProperty("上次登录时间")
+    @Schema(description = "上次登录时间")
     private LocalDateTime updatedTime;
 
-    @ApiModelProperty("创建者")
+    @Schema(description = "创建者")
     private String createdId;
 
-    @ApiModelProperty("更新者")
+    @Schema(description = "更新者")
     private String updatedId;
 
-    @ApiModelProperty("来源")
+    @Schema(description = "来源")
     private LoginOAuthSourceEnum source;
 
-    @ApiModelProperty("三方登录唯一标志")
+    @Schema(description = "三方登录唯一标志")
     private String appId;
 
-    @ApiModelProperty("登录类型;1:客户, 2:员工")
+    @Schema(description = "登录类型;1:客户, 2:员工")
     private LoginTypeEnum loginType;
 }

@@ -19,6 +19,8 @@ val tencentCloudSdkVersion = "3.1.1013"
 val statemachineVersion = "4.0.0"
 val springfoxVersion = "3.0.0"
 val freemarkerVersion = "2.3.31"
+val redissonVersion = "3.18.0"
+val springDocVersion = "1.8.0"
 
 java {
     sourceCompatibility = JavaVersion.VERSION_17
@@ -41,6 +43,10 @@ dependencies {
     implementation("com.alipay.sdk:alipay-sdk-java:$alipaySdkVersion")
     // MybatisPlus代码生成模版引擎
 //    implementation("org.springframework.boot:spring-boot-starter-validation")
+// https://mvnrepository.com/artifact/org.redisson/redisson-spring-boot-starter
+    implementation("org.redisson:redisson-spring-boot-starter:$redissonVersion")
+// https://mvnrepository.com/artifact/org.springdoc/springdoc-openapi-ui
+    implementation("org.springdoc:springdoc-openapi-ui:$springDocVersion")
 
     // 状态机
     implementation("org.springframework.statemachine:spring-statemachine-core:$statemachineVersion")
@@ -58,7 +64,7 @@ dependencies {
     implementation("com.qcloud:cos_api:$cosApiSdkVersion")
     // 腾讯云短信服务
     implementation("com.tencentcloudapi:tencentcloud-sdk-java:$tencentCloudSdkVersion")
-    implementation("io.springfox:springfox-boot-starter:$springfoxVersion")
+//    implementation("io.springfox:springfox-boot-starter:$springfoxVersion")
 
     compileOnly("org.projectlombok:lombok")
     annotationProcessor("org.projectlombok:lombok")

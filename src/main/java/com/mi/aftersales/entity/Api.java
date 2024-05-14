@@ -6,8 +6,7 @@ import com.baomidou.mybatisplus.annotation.TableLogic;
 import com.baomidou.mybatisplus.annotation.TableName;
 import java.io.Serializable;
 import java.time.LocalDateTime;
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Accessors;
@@ -24,37 +23,37 @@ import lombok.experimental.Accessors;
 @Setter
 @Accessors(chain = true)
 @TableName("t_api")
-@ApiModel(value = "Api对象", description = "API列表")
+@Schema(name = "Api", description = "API列表")
 public class Api implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
-    @ApiModelProperty("创建时间")
+    @Schema(description = "创建时间")
     private LocalDateTime createdTime;
 
-    @ApiModelProperty("更新时间")
+    @Schema(description = "更新时间")
     private LocalDateTime updatedTime;
 
-    @ApiModelProperty("创建者")
+    @Schema(description = "创建者")
     private String createdId;
 
-    @ApiModelProperty("更新者")
+    @Schema(description = "更新者")
     private String updatedId;
 
-    @ApiModelProperty("逻辑删除")
+    @Schema(description = "逻辑删除")
     @TableLogic
     private Long deleted;
 
-    @ApiModelProperty("ApiId")
+    @Schema(description = "ApiId")
     @TableId(value = "api_id", type = IdType.AUTO)
     private Integer apiId;
 
-    @ApiModelProperty("API访问URI")
+    @Schema(description = "API访问URI")
     private String uri;
 
-    @ApiModelProperty("API访问方法")
+    @Schema(description = "API访问方法")
     private Byte method;
 
-    @ApiModelProperty("API描述")
+    @Schema(description = "API描述")
     private String apiComment;
 }

@@ -7,8 +7,7 @@ import com.baomidou.mybatisplus.annotation.TableName;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Accessors;
@@ -25,37 +24,37 @@ import lombok.experimental.Accessors;
 @Setter
 @Accessors(chain = true)
 @TableName("t_middle_order_material")
-@ApiModel(value = "MiddleOrderMaterial对象", description = "工单物料中间表")
+@Schema(name = "MiddleOrderMaterial", description = "工单物料中间表")
 public class MiddleOrderMaterial implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
-    @ApiModelProperty("创建时间")
+    @Schema(description = "创建时间")
     private LocalDateTime createdTime;
 
-    @ApiModelProperty("更新时间")
+    @Schema(description = "更新时间")
     private LocalDateTime updatedTime;
 
-    @ApiModelProperty("创建者")
+    @Schema(description = "创建者")
     private String createdId;
 
-    @ApiModelProperty("更新者")
+    @Schema(description = "更新者")
     private String updatedId;
 
-    @ApiModelProperty("逻辑删除")
+    @Schema(description = "逻辑删除")
     @TableLogic
     private Long deleted;
 
-    @ApiModelProperty("中间表ID")
+    @Schema(description = "中间表ID")
     @TableId(value = "id", type = IdType.AUTO)
     private String id;
 
-    @ApiModelProperty("工单ID")
+    @Schema(description = "工单ID")
     private String orderId;
 
-    @ApiModelProperty("物料ID")
+    @Schema(description = "物料ID")
     private String materialId;
 
-    @ApiModelProperty("物料数量")
+    @Schema(description = "物料数量")
     private BigDecimal materialAmount;
 }

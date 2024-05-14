@@ -1,18 +1,10 @@
 package com.mi.aftersales.vo;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableLogic;
-import com.baomidou.mybatisplus.annotation.TableName;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Accessors;
-
-import java.io.Serializable;
-import java.time.LocalDateTime;
 
 /**
  * <p>
@@ -25,17 +17,16 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 @Accessors(chain = true)
-@ApiModel(value = "LoginVo对象", description = "")
-// 返回时忽略空值
+@Schema(title = "登录返回对象", description = "")
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 public class LoginVo {
-    @ApiModelProperty("Token名称")
+    @Schema(description = "Token名称")
     private String tokenName;
-    @ApiModelProperty("Token值")
+    @Schema(description = "Token值")
     private String tokenValue;
-    @ApiModelProperty("用户ID")
+    @Schema(description = "用户ID")
     private String loginId;
-    @ApiModelProperty("其他信息")
+    @Schema(description = "其他信息")
     private String note;
 
 

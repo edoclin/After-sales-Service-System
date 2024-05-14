@@ -6,8 +6,7 @@ import com.baomidou.mybatisplus.annotation.TableLogic;
 import com.baomidou.mybatisplus.annotation.TableName;
 import java.io.Serializable;
 import java.time.LocalDateTime;
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Accessors;
@@ -24,46 +23,46 @@ import lombok.experimental.Accessors;
 @Setter
 @Accessors(chain = true)
 @TableName("t_address")
-@ApiModel(value = "Address对象", description = "客户联系地址")
+@Schema(name = "Address", description = "客户联系地址")
 public class Address implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
-    @ApiModelProperty("创建时间")
+    @Schema(description = "创建时间")
     private LocalDateTime createdTime;
 
-    @ApiModelProperty("更新时间")
+    @Schema(description = "更新时间")
     private LocalDateTime updatedTime;
 
-    @ApiModelProperty("创建者")
+    @Schema(description = "创建者")
     private String createdId;
 
-    @ApiModelProperty("更新者")
+    @Schema(description = "更新者")
     private String updatedId;
 
-    @ApiModelProperty("逻辑删除")
+    @Schema(description = "逻辑删除")
     @TableLogic
     private Long deleted;
 
-    @ApiModelProperty("地址ID")
+    @Schema(description = "地址ID")
     @TableId(value = "address_id", type = IdType.AUTO)
     private String addressId;
 
-    @ApiModelProperty("省市区")
+    @Schema(description = "省市区")
     private String region;
 
-    @ApiModelProperty("详细地址")
+    @Schema(description = "详细地址")
     private String addressDetail;
 
-    @ApiModelProperty("客户ID")
+    @Schema(description = "客户ID")
     private String loginId;
 
-    @ApiModelProperty("联系方式")
+    @Schema(description = "联系方式")
     private String mobile;
 
-    @ApiModelProperty("是否默认地址")
+    @Schema(description = "是否默认地址")
     private Boolean defaulted;
 
-    @ApiModelProperty("收货人姓名")
+    @Schema(description = "收货人姓名")
     private String receiver;
 }

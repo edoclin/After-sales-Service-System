@@ -1,19 +1,35 @@
 package com.mi.aftersales.controller;
 
-import cn.dev33.satoken.stp.SaTokenInfo;
 import cn.dev33.satoken.stp.StpUtil;
-import com.mi.aftersales.exception.graceful.ExampleException;
-import com.mi.aftersales.exception.graceful.NotLoginException;
+import cn.hutool.core.bean.BeanUtil;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.mi.aftersales.config.yaml.bean.OAuthConfig;
+import com.mi.aftersales.config.yaml.bean.OAuthList;
+import com.mi.aftersales.entity.Login;
+import com.mi.aftersales.entity.enums.LoginOAuthSourceEnum;
+import com.mi.aftersales.exception.graceful.IllegalOAuthTypeException;
 import com.mi.aftersales.service.ILoginService;
+import com.mi.aftersales.vo.LoginPageVo;
 import com.mi.aftersales.vo.LoginVo;
-import com.mi.aftersales.vo.form.LoginBySmsForm;
-import io.swagger.annotations.ApiImplicitParam;
-import io.swagger.annotations.ApiImplicitParams;
-import io.swagger.annotations.ApiOperation;
-import org.springframework.web.bind.annotation.*;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.Parameters;
+import me.zhyd.oauth.config.AuthConfig;
+import me.zhyd.oauth.model.AuthCallback;
+import me.zhyd.oauth.model.AuthResponse;
+import me.zhyd.oauth.model.AuthUser;
+import me.zhyd.oauth.request.AuthGithubRequest;
+import me.zhyd.oauth.request.AuthMiRequest;
+import me.zhyd.oauth.request.AuthRequest;
+import me.zhyd.oauth.utils.AuthStateUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
-import javax.validation.Valid;
 
 /**
  * <p>
@@ -26,76 +42,85 @@ import javax.validation.Valid;
 @RestController
 @RequestMapping("/aftersales/login")
 public class LoginController {
+    private static final Logger log = LoggerFactory.getLogger(LoginController.class);
     @Resource
     private ILoginService iLoginService;
-
-
     /**
-     * @description: 验证码登录示例, @Valid表单一定要验证!!!
-     * 规则定义在LoginBySmsForm中
+     * @description: 三方登录成功状态码
      * @return:
      * @author: edoclin
-     * @created: 2024/5/14 14:06
+     * @created: 2024/5/14 16:35
      **/
-    @PostMapping("/")
-    @ApiOperation("示例: 验证码登录接口")
-    @ApiImplicitParams({
-            @ApiImplicitParam(name = "mobile", value = "用户注册的手机号", defaultValue = "13111111111", required = true),
-            @ApiImplicitParam(name = "code", value = "用户接收到的短信验证码", defaultValue = "ABCDEF", required = true)})
-    public LoginVo example1(@RequestBody @Valid LoginBySmsForm form) {
-        LoginVo loginVo = new LoginVo();
+    private static final int OAUTH2_SUCCESS_CODE = 2000;
+    @Resource
+    private OAuthList oAuthList;
 
-        // 登录校验
-        if (StpUtil.isLogin()) {
-            // pass
-        }
-        // 模拟查询到的loginId登录
-        StpUtil.login("loginId");
+    /**
+     * @description: 三方登录页面渲染
+     * @return: 三方登录url
+     * @author: edoclin
+     * @created: 2024/5/12 12:36
+     **/
+    @GetMapping(path = "/oauth2/{client}/render")
+    @Operation(summary = "三方登录页面渲染", description = "三方登录页面渲染")
+    @Parameter(name = "client", description = "三方登录类型", example = "github", required = true)
 
-
-        // 填充信息
-        loginVo.setTokenName(StpUtil.getTokenName()).setTokenValue(StpUtil.getTokenValue());
-
-        // 直接返回vo实体
-
-        /*
-        * 响应结果示例
-        * {
-              "status": {
-                "code": "1",
-                "msg": "ok"
-              },
-              "payload": {
-                "tokenName": "template-token",
-                "tokenValue": "tG_IjzhO7C6RJZcY2_0HqqjWximP8c2wAn__"
-              }
-            }
-        * */
-        return loginVo;
+    public LoginPageVo githubRender(@PathVariable String client) {
+        return new LoginPageVo().setUrl(getAuthRequest(client).authorize(AuthStateUtils.createState()));
     }
 
-    @GetMapping("/exception")
-    @ApiOperation("示例: 统一异常返回示例")
-    public Object example2() {
-        try {
-            int a = 5 / 0;
-        } catch (NotLoginException e) {
-            throw new NotLoginException();
-        } catch (RuntimeException e) {
-            // 业务逻辑中遇到需要返回给用户失败信息时, 在exception.graceful中定义一个异常直接抛出
-            throw new ExampleException();
+    /**
+     * @description: 三方登录回调接口
+     * @return:
+     * @author: edoclin
+     * @created: 2024/5/12 12:43
+     **/
+    @GetMapping("/oauth2/{client}/callback")
+    @Operation(summary = "三方登录回调接口", description = "三方登录回调接口")
+    @Parameter(name = "client", description = "三方登录类型", example = "github", required = true)
+    @Parameter(name = "callback", description = "回调参数", example = "github", required = true)
+    public LoginVo login(@PathVariable String client, AuthCallback callback) {
+        AuthResponse authResponse = getAuthRequest(client).login(callback);
+        if (authResponse.getCode() == OAUTH2_SUCCESS_CODE) {
+            // 三方授权成功
+            AuthUser data = (AuthUser) authResponse.getData();
+            Login login = iLoginService.getOne(Wrappers.lambdaQuery(Login.class).eq(Login::getSource, client.toUpperCase()).eq(Login::getAppId, data.getUuid()));
+
+            if (BeanUtil.isEmpty(login)) {
+                // 尚未注册, 让用户绑定手机
+            } else {
+                StpUtil.login(login.getLoginId());
+                LoginVo loginVo = new LoginVo();
+                loginVo.setTokenName(StpUtil.getTokenName()).setTokenValue(StpUtil.getTokenValue());
+                return loginVo;
+            }
         }
         return null;
-        /*
-        响应结果:
-        {
-          "status": {
-            "code": "3",
-            "msg": "样例异常"
-          },
-          "payload": {}
-        }
-        * */
-
     }
+
+    /**
+     * @description: 构造AuthRequest实例
+     * @return:
+     * @author: edoclin
+     * @created: 2024/5/12 12:43
+     **/
+    private AuthRequest getAuthRequest(String client) {
+        LoginOAuthSourceEnum oAuthType;
+
+        try {
+            oAuthType = LoginOAuthSourceEnum.valueOf(client.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new IllegalOAuthTypeException();
+        }
+        OAuthConfig config = oAuthList.getClients().get(client);
+
+        AuthConfig build = AuthConfig.builder().clientId(config.getClientId()).clientSecret(config.getClientSecret()).redirectUri(config.getCallbackUri()).build();
+
+        return switch (oAuthType) {
+            case GITHUB -> new AuthGithubRequest(build);
+            case MI -> new AuthMiRequest(build);
+        };
+    }
+
+
 }

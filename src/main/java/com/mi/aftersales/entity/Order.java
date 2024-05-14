@@ -7,8 +7,7 @@ import com.baomidou.mybatisplus.annotation.TableName;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Accessors;
@@ -25,76 +24,76 @@ import lombok.experimental.Accessors;
 @Setter
 @Accessors(chain = true)
 @TableName("t_order")
-@ApiModel(value = "Order对象", description = "工单")
+@Schema(name = "Order", description = "工单")
 public class Order implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
-    @ApiModelProperty("工单ID")
+    @Schema(description = "工单ID")
     @TableId(value = "order_id", type = IdType.AUTO)
     private String orderId;
 
-    @ApiModelProperty("创建时间")
+    @Schema(description = "创建时间")
     private LocalDateTime createdTime;
 
-    @ApiModelProperty("更新时间")
+    @Schema(description = "更新时间")
     private LocalDateTime updatedTime;
 
-    @ApiModelProperty("创建者")
+    @Schema(description = "创建者")
     private String createdId;
 
-    @ApiModelProperty("更新者")
+    @Schema(description = "更新者")
     private String updatedId;
 
-    @ApiModelProperty("逻辑删除")
+    @Schema(description = "逻辑删除")
     @TableLogic
     private Long deleted;
 
-    @ApiModelProperty("最小销售单元ID(商品)")
+    @Schema(description = "最小销售单元ID(商品)")
     private String skuId;
 
-    @ApiModelProperty("发票ID")
+    @Schema(description = "发票ID")
     private String fapiaoId;
 
-    @ApiModelProperty("商品序列号")
+    @Schema(description = "商品序列号")
     private String sn;
 
-    @ApiModelProperty("工单类型;1:到店;2寄修")
+    @Schema(description = "工单类型;1:到店;2寄修")
     private Byte orderType;
 
-    @ApiModelProperty("客户故障描述")
+    @Schema(description = "客户故障描述")
     private String clientFaultDesc;
 
-    @ApiModelProperty("工程师备注")
+    @Schema(description = "工程师备注")
     private String engineerNotice;
 
-    @ApiModelProperty("工程师故障描述")
+    @Schema(description = "工程师故障描述")
     private String engineerFaultDesc;
 
-    @ApiModelProperty("工单状态")
+    @Schema(description = "工单状态")
     private Byte orderStatus;
 
-    @ApiModelProperty("物料费;用户支付物料费,默认所有物料总价*1.2")
+    @Schema(description = "物料费;用户支付物料费,默认所有物料总价*1.2")
     private BigDecimal materialFee;
 
-    @ApiModelProperty("工程师手工费;工程师手工费,默认50")
+    @Schema(description = "工程师手工费;工程师手工费,默认50")
     private BigDecimal manualFee;
 
-    @ApiModelProperty("受理工程师ID")
+    @Schema(description = "受理工程师ID")
     private String engineerLoginId;
 
-    @ApiModelProperty("工单创建客户ID")
+    @Schema(description = "工单创建客户ID")
     private String clientLoginId;
 
-    @ApiModelProperty("服务中心ID")
+    @Schema(description = "服务中心ID")
     private String centerId;
 
-    @ApiModelProperty("到店时间/取件时间")
+    @Schema(description = "到店时间/取件时间")
     private LocalDateTime arrivalTime;
 
-    @ApiModelProperty("是否流转中")
+    @Schema(description = "是否流转中")
     private Boolean transferring;
 
-    @ApiModelProperty("流转次数")
+    @Schema(description = "流转次数")
     private Integer transferNum;
 }
