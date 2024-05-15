@@ -1,4 +1,4 @@
-package com.mi.aftersales.vo;
+package com.mi.aftersales.vo.result;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -7,10 +7,6 @@ import lombok.Setter;
 import lombok.experimental.Accessors;
 
 /**
- * <p>
- * 客户联系地址
- * </p>
- *
  * @author edoclin
  * @since 2024-05-14
  */
@@ -19,7 +15,7 @@ import lombok.experimental.Accessors;
 @Accessors(chain = true)
 @Schema(title = "登录返回对象", description = "")
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
-public class LoginVo {
+public class LoginResultVo {
     @Schema(description = "Token名称")
     private String tokenName;
     @Schema(description = "Token值")

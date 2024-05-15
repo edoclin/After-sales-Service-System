@@ -1,4 +1,4 @@
-package com.mi.aftersales.vo;
+package com.mi.aftersales.vo.result;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -15,7 +15,7 @@ import lombok.experimental.Accessors;
 @Accessors(chain = true)
 @Schema(title = "渲染三方页面", description = "三方登录页面")
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
-public class LoginPageVo {
+public class ThirdLoginPageResultVo {
     @Schema(description = "三方登录页面url", defaultValue = "")
     private String url;
 
