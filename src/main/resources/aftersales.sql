@@ -350,6 +350,8 @@ CREATE TABLE t_api
     PRIMARY KEY (api_id)
 ) COMMENT = 'API列表';
 
+create unique index union_idx_logic_del on t_api(method, uri, deleted);
+
 DROP TABLE IF EXISTS t_permission;
 CREATE TABLE t_permission
 (
@@ -390,13 +392,13 @@ CREATE TABLE t_middle_login_permission
     `updated_id`    varchar(32) not null default '' COMMENT '更新者',
     `deleted`       bigint      not null default 0 COMMENT '逻辑删除',
     `id`            varchar(32) NOT NULL default '' COMMENT '主键',
-    `mobile_id`     varchar(32) not null default '' COMMENT '用户ID',
+    `login_id`     varchar(32) not null default '' COMMENT '用户ID',
     `permission_id` int         not null default 0 COMMENT '权限ID',
     PRIMARY KEY (id)
 ) COMMENT = '用户具有权限中间表';
 
 
-CREATE INDEX idx_mobile_id ON t_middle_login_permission (mobile_id);
+CREATE INDEX idx_mobile_id ON t_middle_login_permission (login_id);
 CREATE INDEX idx_permission_id ON t_middle_login_permission (permission_id);
 
 DROP TABLE IF EXISTS t_sms_log;
@@ -412,7 +414,9 @@ CREATE TABLE t_sms_log
     `mobile`       varchar(32)  not null default '' COMMENT '目标手机号',
     `result`       tinyint      not null default 0 COMMENT '推送结果',
     `response`     varchar(256) not null default '' COMMENT '响应结果',
-    `detail`       varchar(256) not null default '' COMMENT '推送详情'
+    `detail`       varchar(256) not null default '' COMMENT '推送详情',
+
+    PRIMARY KEY (log_id)
 ) COMMENT = '短信推送日志';
 
 

@@ -4,6 +4,8 @@ import com.baomidou.mybatisplus.annotation.*;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
+
+import com.mi.aftersales.entity.enums.ApiMethodEnum;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import lombok.Setter;
@@ -36,11 +38,11 @@ public class Api implements Serializable {
 
     @Schema(description = "创建者")
     @TableField(fill = FieldFill.INSERT)
-    private String createdId;
+    private String createdId = "";
 
     @Schema(description = "更新者")
     @TableField(fill = FieldFill.UPDATE)
-    private String updatedId;
+    private String updatedId = "";
 
     @Schema(description = "逻辑删除")
     @TableLogic
@@ -54,7 +56,7 @@ public class Api implements Serializable {
     private String uri;
 
     @Schema(description = "API访问方法")
-    private Byte method;
+    private ApiMethodEnum method;
 
     @Schema(description = "API描述")
     private String apiComment;

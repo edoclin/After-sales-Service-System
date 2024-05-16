@@ -27,7 +27,7 @@ public class ClientInfo implements Serializable {
     private static final long serialVersionUID = 1L;
 
     @Schema(description = "登录ID")
-    @TableId(value = "login_id", type = IdType.AUTO)
+    @TableId(value = "login_id", type = IdType.INPUT)
     private String loginId;
 
     @Schema(description = "逻辑删除")
@@ -43,10 +43,12 @@ public class ClientInfo implements Serializable {
     private LocalDateTime updatedTime;
 
     @Schema(description = "创建者")
-    private String createdId;
+    @TableField(fill = FieldFill.INSERT)
+    private String createdId = "";
 
     @Schema(description = "更新者")
-    private String updatedId;
+    @TableField(fill = FieldFill.UPDATE)
+    private String updatedId = "";
 
     @Schema(description = "用户头像")
     private String avatar;

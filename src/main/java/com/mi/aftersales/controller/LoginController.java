@@ -1,5 +1,6 @@
 package com.mi.aftersales.controller;
 
+import cn.dev33.satoken.session.SaSession;
 import cn.dev33.satoken.stp.StpUtil;
 import cn.dev33.satoken.temp.SaTempUtil;
 import cn.hutool.captcha.generator.RandomGenerator;
@@ -7,17 +8,19 @@ import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.text.CharSequenceUtil;
 import cn.hutool.core.util.IdUtil;
-import cn.hutool.core.util.ObjectUtil;
-import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.feiniaojin.gracefulresponse.GracefulResponseException;
+import com.mi.aftersales.config.yaml.bean.InitConfig;
 import com.mi.aftersales.config.yaml.bean.OAuthConfig;
 import com.mi.aftersales.config.yaml.bean.OAuthList;
 import com.mi.aftersales.config.yaml.bean.CustomSmsConfig;
+import com.mi.aftersales.entity.Api;
 import com.mi.aftersales.entity.Login;
+import com.mi.aftersales.entity.MiddleLoginPermission;
+import com.mi.aftersales.entity.MiddlePermissionApi;
 import com.mi.aftersales.entity.enums.LoginOAuthSourceEnum;
 import com.mi.aftersales.entity.enums.LoginTypeEnum;
-import com.mi.aftersales.exception.graceful.*;
-import com.mi.aftersales.service.ILoginService;
+import com.mi.aftersales.service.*;
 import com.mi.aftersales.vo.form.LoginBindForm;
 import com.mi.aftersales.vo.form.LoginBySmsForm;
 import com.mi.aftersales.vo.form.SendSmsCodeForm;
@@ -42,6 +45,8 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import javax.validation.Valid;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -57,15 +62,21 @@ import java.util.concurrent.TimeUnit;
 public class LoginController {
     private static final Logger log = LoggerFactory.getLogger(LoginController.class);
 
-    @Resource
-    private RedissonClient redissonClient;
 
     @Resource
-    private StringRedisTemplate redisTemplate4Sms;
-
+    private IApiService iApiService;
 
     @Resource
     private ILoginService iLoginService;
+
+    @Resource
+    private IMiddlePermissionApiService iMiddlePermissionApiService;
+
+    @Resource
+    private IMiddleLoginPermissionService iMiddleLoginPermissionService;
+
+    @Resource
+    private StringRedisTemplate redisTemplate4Sms;
 
     /**
      * @description: 三方登录成功状态码
@@ -81,6 +92,7 @@ public class LoginController {
     private CustomSmsConfig customSmsConfig;
 
     @GetMapping(path = "/sms")
+    @Operation(summary = "发送短信验证码", description = "发送短信验证码")
     public SmsResultVo sendSmsCode(@RequestBody @Valid SendSmsCodeForm form) {
         SmsResultVo smsResultVo = new SmsResultVo();
         RandomGenerator randomGenerator = new RandomGenerator("0123456789", 6);
@@ -120,7 +132,7 @@ public class LoginController {
     }
 
 
-    @GetMapping("/oauth2/{client}/callback")
+    @GetMapping(path = "/oauth2/{client}/callback")
     @Operation(summary = "三方登录回调接口", description = "三方登录回调接口")
     @Parameter(name = "client", description = "三方登录类型", example = "github", required = true)
     @Parameter(name = "callback", description = "回调参数", example = "github", required = true)
@@ -137,17 +149,17 @@ public class LoginController {
                 String tempToken = SaTempUtil.createToken(CharSequenceUtil.format("{}:{}", data.getSource(), data.getUuid()), 300);
                 loginResultVo.setTempToken(tempToken);
             } else {
-                StpUtil.login(login.getLoginId());
+                loginAndSetPermissions(login.getLoginId());
                 loginResultVo.setTokenName(StpUtil.getTokenName()).setTokenValue(StpUtil.getTokenValue()).setLoginId(login.getLoginId());
             }
         } else {
             log.error(authResponse.getMsg());
-            throw new ThirdLoginFailedException();
+            throw new GracefulResponseException(CharSequenceUtil.format("{}登录失败", client));
         }
         return loginResultVo;
     }
 
-    @PostMapping("/bind")
+    @PostMapping(path = "/bind")
     @Operation(summary = "三方登录绑定手机号", description = "三方登录绑定手机号")
     @Parameter(name = "mobile", description = "手机号", example = "13111111111", required = true)
     @Parameter(name = "code", description = "短信验证码", example = "123456", required = true)
@@ -158,7 +170,7 @@ public class LoginController {
         String key = "sms:" + form.getMobile();
         String code = redisTemplate4Sms.opsForValue().get(key);
         if (CharSequenceUtil.isBlank(code)) {
-            throw new SmsCodeTimeoutException();
+            throw new GracefulResponseException("验证码无效");
         } else {
             code = code.split("_")[0];
             if (CharSequenceUtil.equals(form.getCode(), code)) {
@@ -169,7 +181,7 @@ public class LoginController {
                     // 验证tempToken是否有效
                     user = SaTempUtil.parseToken(form.getTempToken(), String.class).split(":");
                 } catch (NullPointerException e) {
-                    throw new IllegalTempTokenException();
+                    throw new GracefulResponseException("无效的临时令牌");
                 }
                 SaTempUtil.deleteToken(form.getTempToken());
                 Login login = iLoginService.lambdaQuery().eq(Login::getMobile, form.getMobile()).one();
@@ -189,30 +201,30 @@ public class LoginController {
                 }
 
                 if (iLoginService.saveOrUpdate(login)) {
-                    StpUtil.login(login.getLoginId());
+                    loginAndSetPermissions(login.getLoginId());
                     loginResultVo.setTokenName(StpUtil.getTokenName()).setTokenValue(StpUtil.getTokenValue()).setLoginId(login.getLoginId());
                 }
 
             } else {
-                throw new IllegalSmsCodeException();
+                throw new GracefulResponseException("验证码错误");
             }
         }
         return loginResultVo;
     }
 
 
-    @PostMapping("/sms")
+    @PostMapping(path = "/sms")
     @Operation(summary = "手机验证码登录", description = "手机验证码登录")
     @Parameter(name = "mobile", description = "手机号", example = "13111111111", required = true)
     @Parameter(name = "code", description = "短信验证码", example = "123456", required = true)
     @Parameter(name = "autoRegister", description = "未注册用户是否自动注册", example = "true", required = true)
-    public LoginResultVo login(@RequestBody @Valid LoginBySmsForm form) {
+    public LoginResultVo loginBySms(@RequestBody @Valid LoginBySmsForm form) {
         LoginResultVo loginResultVo = new LoginResultVo();
         // 验证验证码是否正确
         String key = "sms:" + form.getMobile();
         String code = redisTemplate4Sms.opsForValue().get(key);
         if (CharSequenceUtil.isBlank(code)) {
-            throw new SmsCodeTimeoutException();
+            throw new GracefulResponseException("验证码已过期");
         } else {
             code = code.split("_")[0];
             if (CharSequenceUtil.equals(form.getCode(), code)) {
@@ -220,7 +232,7 @@ public class LoginController {
                 // 验证码正确
                 Login login = iLoginService.getOne(Wrappers.lambdaQuery(Login.class).eq(Login::getMobile, form.getMobile()));
                 if (BeanUtil.isNotEmpty(login)) {
-                    StpUtil.login(login.getLoginId());
+                    loginAndSetPermissions(login.getLoginId());
                     loginResultVo.setTokenName(StpUtil.getTokenName()).setTokenValue(StpUtil.getTokenValue()).setLoginId(login.getLoginId());
                 } else {
                     if (Boolean.TRUE.equals(form.getAutoRegister())) {
@@ -230,15 +242,15 @@ public class LoginController {
                         login.setLoginType(LoginTypeEnum.CLIENT);
                         login.setLoginId(IdUtil.getSnowflakeNextIdStr());
                         if (iLoginService.save(login)) {
-                            StpUtil.login(login.getLoginId());
+                            loginAndSetPermissions(login.getLoginId());
                             loginResultVo.setTokenName(StpUtil.getTokenName()).setTokenValue(StpUtil.getTokenValue()).setLoginId(login.getLoginId());
                         }
                     } else {
-                        throw new IllegalMobileException();
+                        throw new GracefulResponseException("当前手机号未注册");
                     }
                 }
             } else {
-                throw new IllegalSmsCodeException();
+                throw new GracefulResponseException("验证码错误");
             }
         }
         return loginResultVo;
@@ -256,7 +268,7 @@ public class LoginController {
         try {
             oAuthType = LoginOAuthSourceEnum.valueOf(client.toUpperCase());
         } catch (IllegalArgumentException e) {
-            throw new IllegalOAuthTypeException();
+            throw new GracefulResponseException("不支持的登录方式");
         }
         OAuthConfig config = oAuthList.getClients().get(client.toLowerCase());
 
@@ -266,5 +278,26 @@ public class LoginController {
             case GITHUB -> new AuthGithubRequest(build);
             case MI -> new AuthMiRequest(build);
         };
+    }
+
+    /**
+     * @description: 登录时缓存权限信息，权限修改后需要重新登录
+     * @return:
+     * @author: edoclin
+     * @created: 2024/5/16 23:29
+     **/
+    private void loginAndSetPermissions(String loginId) {
+        StpUtil.login(loginId);
+        List<String> permissions = new ArrayList<>();
+        iMiddleLoginPermissionService.lambdaQuery().eq(MiddleLoginPermission::getLoginId, loginId).list().forEach(middleLoginPermission -> {
+            iMiddlePermissionApiService.lambdaQuery().eq(MiddlePermissionApi::getPermissionId, middleLoginPermission.getPermissionId()).list().forEach(middlePermissionApi -> {
+                Api api = iApiService.getById(middlePermissionApi.getApiId());
+
+                if (BeanUtil.isNotEmpty(api)) {
+                    permissions.add(CharSequenceUtil.format("{}-{}", api.getMethod().name().toUpperCase(), api.getUri()));
+                }
+            });
+        });
+        StpUtil.getSession().set(SaSession.PERMISSION_LIST, permissions);
     }
 }

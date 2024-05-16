@@ -1,11 +1,10 @@
 package com.mi.aftersales.entity;
 
-import com.baomidou.mybatisplus.annotation.FieldFill;
-import com.baomidou.mybatisplus.annotation.TableField;
-import com.baomidou.mybatisplus.annotation.TableLogic;
-import com.baomidou.mybatisplus.annotation.TableName;
+import com.baomidou.mybatisplus.annotation.*;
+
 import java.io.Serializable;
 import java.time.LocalDateTime;
+
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import lombok.Setter;
@@ -38,17 +37,18 @@ public class SmsLog implements Serializable {
 
     @Schema(description = "创建者")
     @TableField(fill = FieldFill.INSERT)
-    private String createdId;
+    private String createdId = "";
 
     @Schema(description = "更新者")
     @TableField(fill = FieldFill.UPDATE)
-    private String updatedId;
+    private String updatedId = "";
 
     @Schema(description = "逻辑删除")
     @TableLogic
     private Long deleted;
 
     @Schema(description = "日志ID")
+    @TableId(value = "sku_id", type = IdType.ASSIGN_UUID)
     private String logId;
 
     @Schema(description = "推送类型")

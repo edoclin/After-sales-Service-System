@@ -27,7 +27,7 @@ public class EmployeeInfo implements Serializable {
     private static final long serialVersionUID = 1L;
 
     @Schema(description = "登录ID")
-    @TableId(value = "login_id", type = IdType.AUTO)
+    @TableId(value = "login_id", type = IdType.INPUT)
     private String loginId;
 
     @Schema(description = "逻辑删除")
@@ -44,11 +44,11 @@ public class EmployeeInfo implements Serializable {
 
     @Schema(description = "创建者")
     @TableField(fill = FieldFill.INSERT)
-    private String createdId;
+    private String createdId = "";
 
     @Schema(description = "更新者")
     @TableField(fill = FieldFill.UPDATE)
-    private String updatedId;
+    private String updatedId = "";
 
     @Schema(description = "员工角色")
     private Byte employeeRole;

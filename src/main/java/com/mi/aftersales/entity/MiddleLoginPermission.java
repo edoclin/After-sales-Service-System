@@ -36,22 +36,22 @@ public class MiddleLoginPermission implements Serializable {
 
     @Schema(description = "创建者")
     @TableField(fill = FieldFill.INSERT)
-    private String createdId;
+    private String createdId = "";
 
     @Schema(description = "更新者")
     @TableField(fill = FieldFill.UPDATE)
-    private String updatedId;
+    private String updatedId = "";
 
     @Schema(description = "逻辑删除")
     @TableLogic
     private Long deleted;
 
     @Schema(description = "主键")
-    @TableId(value = "id", type = IdType.AUTO)
+    @TableId(value = "id", type = IdType.ASSIGN_UUID)
     private String id;
 
     @Schema(description = "用户ID")
-    private String mobileId;
+    private String loginId;
 
     @Schema(description = "权限ID")
     private Integer permissionId;

@@ -7,9 +7,9 @@ import com.baomidou.mybatisplus.core.handlers.MetaObjectHandler;
 import com.baomidou.mybatisplus.core.incrementer.IdentifierGenerator;
 import com.baomidou.mybatisplus.extension.plugins.MybatisPlusInterceptor;
 import com.baomidou.mybatisplus.extension.plugins.inner.PaginationInnerInterceptor;
+import com.mi.aftersales.entity.*;
 import org.apache.ibatis.reflection.MetaObject;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
@@ -21,7 +21,17 @@ import java.time.LocalDateTime;
  * @created: 2024/5/13 22:32
  **/
 @Component
-public class MyBatisPlusConfig implements MetaObjectHandler {
+public class MyBatisPlusConfig implements MetaObjectHandler, IdentifierGenerator {
+
+    private boolean excludeFillEntity(MetaObject metaObject) {
+        return
+                (metaObject.getOriginalObject() instanceof Login) ||
+                        (metaObject.getOriginalObject() instanceof MiddleLoginPermission) ||
+                        (metaObject.getOriginalObject() instanceof Permission) ||
+                        (metaObject.getOriginalObject() instanceof MiddlePermissionApi) ||
+                        (metaObject.getOriginalObject() instanceof Api);
+    }
+
     /**
      * @description: 插入字段填充
      * @return:
@@ -31,7 +41,7 @@ public class MyBatisPlusConfig implements MetaObjectHandler {
     @Override
     public void insertFill(MetaObject metaObject) {
         setFieldValByName("createdTime", LocalDateTime.now(), metaObject);
-        if (StpUtil.isLogin()) {
+        if (!excludeFillEntity(metaObject) && StpUtil.isLogin()) {
             setFieldValByName("createdId", StpUtil.getLoginIdAsString(), metaObject);
         }
     }
@@ -45,7 +55,7 @@ public class MyBatisPlusConfig implements MetaObjectHandler {
     @Override
     public void updateFill(MetaObject metaObject) {
         setFieldValByName("updatedTime", LocalDateTime.now(), metaObject);
-        if (StpUtil.isLogin()) {
+        if (!excludeFillEntity(metaObject) && StpUtil.isLogin()) {
             setFieldValByName("updatedId", StpUtil.getLoginIdAsString(), metaObject);
         }
     }
@@ -57,5 +67,20 @@ public class MyBatisPlusConfig implements MetaObjectHandler {
         interceptor.addInnerInterceptor(new MyBatisPlusDataChangeRecorderInnerInterceptor());
         interceptor.addInnerInterceptor(new PaginationInnerInterceptor(DbType.MYSQL));
         return interceptor;
+    }
+
+    @Override
+    public boolean assignId(Object idValue) {
+        return IdentifierGenerator.super.assignId(idValue);
+    }
+
+    @Override
+    public Number nextId(Object entity) {
+        return IdUtil.getSnowflakeNextId();
+    }
+
+    @Override
+    public String nextUUID(Object entity) {
+        return IdUtil.getSnowflakeNextIdStr();
     }
 }

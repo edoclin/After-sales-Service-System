@@ -36,18 +36,18 @@ public class OrderStatusLog implements Serializable {
 
     @Schema(description = "创建者")
     @TableField(fill = FieldFill.INSERT)
-    private String createdId;
+    private String createdId = "";
 
     @Schema(description = "更新者")
     @TableField(fill = FieldFill.UPDATE)
-    private String updatedId;
+    private String updatedId = "";
 
     @Schema(description = "逻辑删除")
     @TableLogic
     private Long deleted;
 
     @Schema(description = "日志ID")
-    @TableId(value = "log_id", type = IdType.AUTO)
+    @TableId(value = "log_id", type = IdType.ASSIGN_UUID)
     private String logId;
 
     @Schema(description = "工单ID")

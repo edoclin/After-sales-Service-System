@@ -37,18 +37,18 @@ public class PayOrder implements Serializable {
 
     @Schema(description = "创建者")
     @TableField(fill = FieldFill.INSERT)
-    private String createdId;
+    private String createdId = "";
 
     @Schema(description = "更新者")
     @TableField(fill = FieldFill.UPDATE)
-    private String updatedId;
+    private String updatedId = "";
 
     @Schema(description = "逻辑删除")
     @TableLogic
     private Long deleted;
 
     @Schema(description = "工单支付ID")
-    @TableId(value = "pay_order_id", type = IdType.AUTO)
+    @TableId(value = "pay_order_id", type = IdType.ASSIGN_UUID)
     private String payOrderId;
 
     @Schema(description = "工单ID")

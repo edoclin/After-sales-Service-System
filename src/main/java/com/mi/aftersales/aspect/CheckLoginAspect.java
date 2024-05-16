@@ -9,15 +9,21 @@ import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Pointcut;
 import org.springframework.stereotype.Component;
 
+
+/**
+ * @description:
+ * @author: edoclin
+ * @created: 2024/5/16 22:10
+ **/
 @Aspect
 @Component
 public class CheckLoginAspect {
 
     @Pointcut("@annotation(com.mi.aftersales.aspect.anno.CheckLogin)")
-    public void permission() {
+    public void login() {
     }
 
-    @Around("permission()")
+    @Around("login()")
     public Object aroundAdvice(ProceedingJoinPoint proceedingJoinPoint) throws Throwable {
         if (!StpUtil.isLogin()) {
             throw new NotLoginException();
