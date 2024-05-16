@@ -21,6 +21,7 @@ val springfoxVersion = "3.0.0"
 val freemarkerVersion = "2.3.31"
 val redissonVersion = "3.18.0"
 val springDocVersion = "1.8.0"
+val sms4jVersion = "3.2.1"
 
 java {
     sourceCompatibility = JavaVersion.VERSION_17
@@ -47,6 +48,10 @@ dependencies {
     implementation("org.redisson:redisson-spring-boot-starter:$redissonVersion")
 // https://mvnrepository.com/artifact/org.springdoc/springdoc-openapi-ui
     implementation("org.springdoc:springdoc-openapi-ui:$springDocVersion")
+
+    // https://mvnrepository.com/artifact/org.dromara.sms4j/sms4j-spring-boot-starter
+    implementation("org.dromara.sms4j:sms4j-spring-boot-starter:$sms4jVersion")
+    implementation("org.springframework.boot:spring-boot-starter-aop")
 
     // 状态机
     implementation("org.springframework.statemachine:spring-statemachine-core:$statemachineVersion")

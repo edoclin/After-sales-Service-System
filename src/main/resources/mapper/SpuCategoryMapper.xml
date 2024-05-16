@@ -2,4 +2,17 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.mi.aftersales.mapper.SpuCategoryMapper">
 
+    <resultMap id="getSelf" type="com.mi.aftersales.vo.SpuCategory4ClientVo">
+        <result column="category_id" property="categoryId"/>
+        <result column="category_name" property="categoryName"/>
+        <collection property="children" select="listSpuCategory4Client" column="category_id"/>
+    </resultMap>
+    <select id="listSpuCategory4Client" resultMap="getSelf">
+        select category_id, category_name
+        from t_spu_category
+        where deleted = false
+          and visible = true
+          AND parent_category_id = #{parent_id}
+        ORDER BY weight desc
+    </select>
 </mapper>

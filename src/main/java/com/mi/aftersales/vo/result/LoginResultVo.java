@@ -24,6 +24,8 @@ public class LoginResultVo {
     private String loginId;
     @Schema(description = "其他信息")
     private String note;
-
-
+    @Schema(description = "是否需要绑定手机号")
+    private Boolean needMobile;
+    @Schema(description = "绑定手机临时Token")
+    private String tempToken;
 }

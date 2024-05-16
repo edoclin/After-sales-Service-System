@@ -16,8 +16,8 @@ import javax.validation.constraints.Pattern;
 @Getter
 @Setter
 @Accessors(chain = true)
-@Schema(title = "登录表单", description = "用户登录表单")
-public class LoginBySmsForm {
+@Schema(title = "绑定手机号表单", description = "绑定手机号表单")
+public class LoginBindForm {
 
     @Schema(description = "登录手机号")
     @NotEmpty(message = "手机号不能为空")
@@ -30,7 +30,8 @@ public class LoginBySmsForm {
     @Length(min = 6, max = 6, message = "请输入6位有效验证码")
     private String code;
 
-    @Schema(description = "是否自动注册")
-    private Boolean autoRegister;
+    @Schema(description = "临时令牌")
+    @NotEmpty(message = "临时令牌")
+    private String tempToken;
 
 }

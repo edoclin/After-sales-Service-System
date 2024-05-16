@@ -2,7 +2,10 @@ package com.mi.aftersales.mapper;
 
 import com.mi.aftersales.entity.SpuCategory;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.mi.aftersales.vo.SpuCategory4ClientVo;
 import org.apache.ibatis.annotations.Mapper;
+
+import java.util.List;
 
 /**
  * <p>
@@ -14,5 +17,5 @@ import org.apache.ibatis.annotations.Mapper;
  */
 @Mapper
 public interface SpuCategoryMapper extends BaseMapper<SpuCategory> {
-
+    List<SpuCategory4ClientVo> listSpuCategory4Client(Integer parentId);
 }

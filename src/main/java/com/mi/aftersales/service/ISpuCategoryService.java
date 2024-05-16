@@ -2,6 +2,9 @@ package com.mi.aftersales.service;
 
 import com.mi.aftersales.entity.SpuCategory;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.mi.aftersales.vo.SpuCategory4ClientVo;
+
+import java.util.List;
 
 /**
  * <p>
@@ -12,5 +15,5 @@ import com.baomidou.mybatisplus.extension.service.IService;
  * @since 2024-05-14
  */
 public interface ISpuCategoryService extends IService<SpuCategory> {
-
+    List<SpuCategory4ClientVo> listSpuCategory4Client(Integer parentId);
 }

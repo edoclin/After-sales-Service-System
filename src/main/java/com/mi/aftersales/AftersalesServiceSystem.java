@@ -11,9 +11,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 @EnableGracefulResponse
 @SpringBootApplication
 @MapperScan("com.mi.aftersales.mapper")
-//@EnableSwagger2
-//@EnableOpenApi
-//@EnableWebMvc
+
 public class AftersalesServiceSystem {
 
     public static void main(String[] args) {

@@ -8,9 +8,9 @@ import org.springframework.stereotype.Component;
  * @author edoclin
  */
 @Component
-@ConfigurationProperties(prefix = "sms")
+@ConfigurationProperties(prefix = "custom.sms")
 @Data
-public class SmsConfig {
+public class CustomSmsConfig {
     /**
      * @description: 验证码有效时间(Second)
      * @return:
