@@ -1,9 +1,7 @@
 package com.mi.aftersales.entity;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableLogic;
-import com.baomidou.mybatisplus.annotation.TableName;
+import com.baomidou.mybatisplus.annotation.*;
+
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -34,15 +32,19 @@ public class Order implements Serializable {
     private String orderId;
 
     @Schema(description = "创建时间")
+    @TableField(fill = FieldFill.INSERT)
     private LocalDateTime createdTime;
 
     @Schema(description = "更新时间")
+    @TableField(fill = FieldFill.UPDATE)
     private LocalDateTime updatedTime;
 
     @Schema(description = "创建者")
+    @TableField(fill = FieldFill.INSERT)
     private String createdId;
 
     @Schema(description = "更新者")
+    @TableField(fill = FieldFill.UPDATE)
     private String updatedId;
 
     @Schema(description = "逻辑删除")

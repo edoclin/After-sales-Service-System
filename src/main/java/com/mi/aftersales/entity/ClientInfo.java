@@ -1,9 +1,7 @@
 package com.mi.aftersales.entity;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableLogic;
-import com.baomidou.mybatisplus.annotation.TableName;
+import com.baomidou.mybatisplus.annotation.*;
+
 import java.io.Serializable;
 import java.time.LocalDateTime;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -37,9 +35,11 @@ public class ClientInfo implements Serializable {
     private Long deleted;
 
     @Schema(description = "注册时间")
+    @TableField(fill = FieldFill.INSERT)
     private LocalDateTime createdTime;
 
     @Schema(description = "更新时间")
+    @TableField(fill = FieldFill.UPDATE)
     private LocalDateTime updatedTime;
 
     @Schema(description = "创建者")

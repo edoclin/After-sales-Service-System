@@ -10,6 +10,7 @@ import com.baomidou.mybatisplus.extension.plugins.inner.PaginationInnerIntercept
 import org.apache.ibatis.reflection.MetaObject;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
 
@@ -19,8 +20,8 @@ import java.time.LocalDateTime;
  * @author: edoclin
  * @created: 2024/5/13 22:32
  **/
-@Configuration
-public class MyBatisPlusConfig implements MetaObjectHandler, IdentifierGenerator {
+@Component
+public class MyBatisPlusConfig implements MetaObjectHandler {
     /**
      * @description: 插入字段填充
      * @return:
@@ -29,9 +30,9 @@ public class MyBatisPlusConfig implements MetaObjectHandler, IdentifierGenerator
      **/
     @Override
     public void insertFill(MetaObject metaObject) {
-        this.strictInsertFill(metaObject, "createdTime", LocalDateTime.class, LocalDateTime.now());
+        setFieldValByName("createdTime", LocalDateTime.now(), metaObject);
         if (StpUtil.isLogin()) {
-            this.strictInsertFill(metaObject, "createdId", String.class, StpUtil.getLoginIdAsString());
+            setFieldValByName("createdId", StpUtil.getLoginIdAsString(), metaObject);
         }
     }
 
@@ -43,9 +44,9 @@ public class MyBatisPlusConfig implements MetaObjectHandler, IdentifierGenerator
      **/
     @Override
     public void updateFill(MetaObject metaObject) {
-        this.strictInsertFill(metaObject, "updatedTime", LocalDateTime.class, LocalDateTime.now());
+        setFieldValByName("updatedTime", LocalDateTime.now(), metaObject);
         if (StpUtil.isLogin()) {
-            this.strictInsertFill(metaObject, "updatedId", String.class, StpUtil.getLoginIdAsString());
+            setFieldValByName("updatedId", StpUtil.getLoginIdAsString(), metaObject);
         }
     }
 
@@ -56,21 +57,5 @@ public class MyBatisPlusConfig implements MetaObjectHandler, IdentifierGenerator
         interceptor.addInnerInterceptor(new MyBatisPlusDataChangeRecorderInnerInterceptor());
         interceptor.addInnerInterceptor(new PaginationInnerInterceptor(DbType.MYSQL));
         return interceptor;
-    }
-
-    @Override
-    public Number nextId(Object entity) {
-        // table ID生成策略
-        return IdUtil.getSnowflakeNextId();
-    }
-
-    @Override
-    public boolean assignId(Object idValue) {
-        return IdentifierGenerator.super.assignId(idValue);
-    }
-
-    @Override
-    public String nextUUID(Object entity) {
-        return IdUtil.getSnowflakeNextIdStr();
     }
 }
