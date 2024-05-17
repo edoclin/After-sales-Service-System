@@ -11,7 +11,7 @@ import org.springframework.statemachine.config.builders.StateMachineTransitionCo
 import java.util.EnumSet;
 
 /**
- * @description: 订单状态机
+ * @description: 工单状态机
  * @return:
  * @author: edoclin
  * @created: 2024/5/16 15:19

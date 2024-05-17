@@ -2,6 +2,7 @@ package com.mi.aftersales.controller;
 
 import com.mi.aftersales.config.enums.OrderStatusChangeEventEnum;
 import com.mi.aftersales.entity.enums.OrderStatusEnum;
+import com.mi.aftersales.vo.form.ClientOrderForm;
 import com.mi.aftersales.vo.form.LoginBySmsForm;
 import com.mi.aftersales.vo.result.LoginResultVo;
 import io.swagger.v3.oas.annotations.Operation;
@@ -34,7 +35,7 @@ public class OrderController {
 
     @PostMapping(path = "/")
     @Operation(summary = "客户创建工单", description = "客户创建工单")
-    public void postOrder(@RequestBody @Valid LoginBySmsForm form) {
+    public void postOrder(@RequestBody @Valid ClientOrderForm form) {
 
     }
 

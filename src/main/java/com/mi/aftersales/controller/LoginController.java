@@ -10,7 +10,6 @@ import cn.hutool.core.text.CharSequenceUtil;
 import cn.hutool.core.util.IdUtil;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.feiniaojin.gracefulresponse.GracefulResponseException;
-import com.mi.aftersales.config.yaml.bean.InitConfig;
 import com.mi.aftersales.config.yaml.bean.OAuthConfig;
 import com.mi.aftersales.config.yaml.bean.OAuthList;
 import com.mi.aftersales.config.yaml.bean.CustomSmsConfig;
@@ -20,6 +19,7 @@ import com.mi.aftersales.entity.MiddleLoginPermission;
 import com.mi.aftersales.entity.MiddlePermissionApi;
 import com.mi.aftersales.entity.enums.LoginOAuthSourceEnum;
 import com.mi.aftersales.entity.enums.LoginTypeEnum;
+import com.mi.aftersales.enums.SmsCodeType;
 import com.mi.aftersales.service.*;
 import com.mi.aftersales.vo.form.LoginBindForm;
 import com.mi.aftersales.vo.form.LoginBySmsForm;
@@ -37,7 +37,9 @@ import me.zhyd.oauth.request.AuthGithubRequest;
 import me.zhyd.oauth.request.AuthMiRequest;
 import me.zhyd.oauth.request.AuthRequest;
 import me.zhyd.oauth.utils.AuthStateUtils;
-import org.redisson.api.RedissonClient;
+import org.dromara.sms4j.api.SmsBlend;
+import org.dromara.sms4j.api.entity.SmsResponse;
+import org.dromara.sms4j.core.factory.SmsFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -100,9 +102,10 @@ public class LoginController {
         String key = "sms:" + form.getMobile();
         String smsCode = redisTemplate4Sms.opsForValue().get(key);
         if (CharSequenceUtil.isBlank(smsCode)) {
-            // 不存在, 发送验证码
-            String code = randomGenerator.generate() + "_" + DateUtil.currentSeconds();
-            // todo send sms
+            String code = randomGenerator.generate();
+            SmsBlend smsBlend = SmsFactory.getSmsBlend(SmsCodeType.LOGIN.getValue());
+            SmsResponse smsResponse = smsBlend.sendMessage(form.getMobile(), code);
+            code += "_" + DateUtil.currentSeconds();
             redisTemplate4Sms.opsForValue().set(key, code, customSmsConfig.getValidTime(), TimeUnit.SECONDS);
             smsResultVo.setSuccess(true);
         } else {
@@ -114,8 +117,11 @@ public class LoginController {
                 smsResultVo.setSuccess(false);
                 smsResultVo.setInfo(CharSequenceUtil.format("请{}秒后再尝试!", customSmsConfig.getPeriod() - delta));
             } else {
-                // todo send sms
-                String code = randomGenerator.generate() + "_" + DateUtil.currentSeconds();
+                String code = randomGenerator.generate();
+                SmsBlend smsBlend = SmsFactory.getSmsBlend(SmsCodeType.LOGIN.getValue());
+                SmsResponse smsResponse = smsBlend.sendMessage(form.getMobile(), code);
+
+                code += "_" + DateUtil.currentSeconds();
                 redisTemplate4Sms.opsForValue().set(key, code, customSmsConfig.getValidTime(), TimeUnit.SECONDS);
                 smsResultVo.setSuccess(true);
             }

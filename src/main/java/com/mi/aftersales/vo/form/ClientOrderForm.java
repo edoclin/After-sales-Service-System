@@ -24,8 +24,8 @@ public class ClientOrderForm {
     @NotEmpty(message = "商品不能为空")
     private String skuId;
 
-    @Schema(description = "发票号码")
-    @NotEmpty(message = "发票号码不能为空")
+    @Schema(description = "发票ID")
+    @NotEmpty(message = "发票ID不能为空")
     private String fapiaoId;
 
     @Schema(description = "商品序列号")
@@ -36,12 +36,6 @@ public class ClientOrderForm {
 
     @Schema(description = "客户描述故障")
     private String clientFaultDesc;
-
-    @Schema(description = "工程师备注")
-    private String engineerNotice;
-
-    @Schema(description = "工程师描述故障")
-    private String engineerFaultDesc;
 
     @Schema(description = "到店维修中心")
     private String centerId;

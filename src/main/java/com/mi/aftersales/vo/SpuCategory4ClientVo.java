@@ -20,7 +20,7 @@ import java.util.List;
 @Getter
 @Setter
 @Accessors(chain = true)
-@Schema(name = "SpuCategory", description = "商品分类树状查询")
+@Schema(name = "商品分类树状查询", description = "商品分类树状查询")
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 public class SpuCategory4ClientVo implements Serializable {
 

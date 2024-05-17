@@ -132,10 +132,9 @@ public class InitApplicationRunner implements ApplicationRunner {
     public void run(ApplicationArguments args) throws Exception {
         RLock fairLock = redissonClient.getFairLock("init");
         if (fairLock.tryLock()) {
-            initApiTable();
-            cachedApis();
-            init();
-
+//            initApiTable();
+//            cachedApis();
+//            init();
             fairLock.unlock();
         }
     }
