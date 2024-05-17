@@ -16,22 +16,6 @@ import java.util.List;
  **/
 @Configuration
 public class SaTokenConfig implements WebMvcConfigurer, StpInterface {
-
-/*    @Bean
-    public StpLogic stpLogicJwt() {
-        return new StpLogicJwtForSimple();
-    }*/
-
-    /**
-     * 创建一个 Sa-Token 综合拦截器，默认带有注解鉴权能力
-     */
-
-//    @Override
-//    public void addInterceptors(InterceptorRegistry registry) {
-//        registry.addInterceptor(SaInterceptor()).addPathPatterns("/**");
-//    }
-
-
     /**
      * 返回指定账号id所拥有的权限码集合
      * Params:

@@ -2,11 +2,10 @@ package com.mi.aftersales.controller;
 
 import cn.hutool.core.bean.BeanUtil;
 import com.feiniaojin.gracefulresponse.GracefulResponseException;
-import com.mi.aftersales.aspect.anno.CheckLogin;
 import com.mi.aftersales.aspect.anno.CheckPermission;
 import com.mi.aftersales.entity.SpuCategory;
 import com.mi.aftersales.service.ISpuCategoryService;
-import com.mi.aftersales.vo.SpuCategory4ClientVo;
+import com.mi.aftersales.vo.result.SpuCategory4ClientVo;
 import com.mi.aftersales.vo.form.SpuCategoryForm;
 import com.mi.aftersales.vo.form.SpuCategorySetVisibleForm;
 import io.swagger.v3.oas.annotations.Operation;

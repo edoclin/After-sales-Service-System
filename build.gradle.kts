@@ -15,7 +15,6 @@ val gracefulResponseVersion = "3.5.2-boot2"
 val jedisVersion = "5.1.2"
 val alipaySdkVersion = "4.35.87.ALL"
 val cosApiSdkVersion = "5.6.211"
-val tencentCloudSdkVersion = "3.1.1013"
 val statemachineVersion = "4.0.0"
 val springfoxVersion = "3.0.0"
 val freemarkerVersion = "2.3.31"
@@ -42,17 +41,10 @@ repositories {
 
 dependencies {
     implementation("com.alipay.sdk:alipay-sdk-java:$alipaySdkVersion")
-    // MybatisPlus代码生成模版引擎
-//    implementation("org.springframework.boot:spring-boot-starter-validation")
-// https://mvnrepository.com/artifact/org.redisson/redisson-spring-boot-starter
     implementation("org.redisson:redisson-spring-boot-starter:$redissonVersion")
-// https://mvnrepository.com/artifact/org.springdoc/springdoc-openapi-ui
     implementation("org.springdoc:springdoc-openapi-ui:$springDocVersion")
-
-    // https://mvnrepository.com/artifact/org.dromara.sms4j/sms4j-spring-boot-starter
     implementation("org.dromara.sms4j:sms4j-spring-boot-starter:$sms4jVersion")
     implementation("org.springframework.boot:spring-boot-starter-aop")
-
     // 状态机
     implementation("org.springframework.statemachine:spring-statemachine-core:$statemachineVersion")
     implementation("cn.hutool:hutool-all:$hutoolVersion")
@@ -61,19 +53,13 @@ dependencies {
     implementation("com.baomidou:mybatis-plus-boot-starter:$mybatisPlusVersion")
     implementation("com.baomidou:mybatis-plus-generator:$mybatisPlusVersion")
     implementation("org.freemarker:freemarker:$freemarkerVersion")
-
     implementation("me.zhyd.oauth:JustAuth:$justAuthVersion")
     implementation("com.feiniaojin:graceful-response:$gracefulResponseVersion")
     implementation("redis.clients:jedis:$jedisVersion")
-    // 腾讯与文件存储服务
+    // 腾讯云文件存储服务
     implementation("com.qcloud:cos_api:$cosApiSdkVersion")
-    // 腾讯云短信服务
-    implementation("com.tencentcloudapi:tencentcloud-sdk-java:$tencentCloudSdkVersion")
-//    implementation("io.springfox:springfox-boot-starter:$springfoxVersion")
-
     compileOnly("org.projectlombok:lombok")
     annotationProcessor("org.projectlombok:lombok")
-
     runtimeOnly("mysql:mysql-connector-java")
     testImplementation("org.springframework.boot:spring-boot-starter-test")
 }

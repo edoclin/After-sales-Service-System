@@ -1,4 +1,4 @@
-package com.mi.aftersales.enums;
+package com.mi.aftersales.controller.enums;
 
 import lombok.Getter;
 

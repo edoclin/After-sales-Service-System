@@ -2,7 +2,7 @@ package com.mi.aftersales.service;
 
 import com.mi.aftersales.entity.SpuCategory;
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.mi.aftersales.vo.SpuCategory4ClientVo;
+import com.mi.aftersales.vo.result.SpuCategory4ClientVo;
 
 import java.util.List;
 

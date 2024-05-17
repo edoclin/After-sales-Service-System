@@ -19,7 +19,7 @@ import com.mi.aftersales.entity.MiddleLoginPermission;
 import com.mi.aftersales.entity.MiddlePermissionApi;
 import com.mi.aftersales.entity.enums.LoginOAuthSourceEnum;
 import com.mi.aftersales.entity.enums.LoginTypeEnum;
-import com.mi.aftersales.enums.SmsCodeType;
+import com.mi.aftersales.controller.enums.SmsCodeType;
 import com.mi.aftersales.service.*;
 import com.mi.aftersales.vo.form.LoginBindForm;
 import com.mi.aftersales.vo.form.LoginBySmsForm;

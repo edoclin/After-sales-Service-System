@@ -4,7 +4,7 @@ import com.mi.aftersales.entity.SpuCategory;
 import com.mi.aftersales.mapper.SpuCategoryMapper;
 import com.mi.aftersales.service.ISpuCategoryService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.mi.aftersales.vo.SpuCategory4ClientVo;
+import com.mi.aftersales.vo.result.SpuCategory4ClientVo;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;

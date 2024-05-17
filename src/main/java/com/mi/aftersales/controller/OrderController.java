@@ -1,7 +1,14 @@
 package com.mi.aftersales.controller;
 
+import cn.dev33.satoken.stp.StpUtil;
+import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.text.CharSequenceUtil;
+import com.feiniaojin.gracefulresponse.GracefulResponseException;
 import com.mi.aftersales.config.enums.OrderStatusChangeEventEnum;
+import com.mi.aftersales.entity.Fapiao;
 import com.mi.aftersales.entity.enums.OrderStatusEnum;
+import com.mi.aftersales.service.IFapiaoService;
+import com.mi.aftersales.service.IOrderService;
 import com.mi.aftersales.vo.form.ClientOrderForm;
 import com.mi.aftersales.vo.form.LoginBySmsForm;
 import com.mi.aftersales.vo.result.LoginResultVo;
@@ -33,9 +40,21 @@ public class OrderController {
     private StateMachine<OrderStatusEnum, OrderStatusChangeEventEnum> orderStateMachine;
 
 
+    @Resource
+    private IFapiaoService iFapiaoService;
+
+    @Resource
+    private IOrderService iOrderService;
+
+
     @PostMapping(path = "/")
     @Operation(summary = "客户创建工单", description = "客户创建工单")
     public void postOrder(@RequestBody @Valid ClientOrderForm form) {
+        Fapiao byId = iFapiaoService.getById(form.getFapiaoId());
+
+        if (BeanUtil.isEmpty(byId) || !CharSequenceUtil.equals(byId.getCreatedId(), StpUtil.getLoginIdAsString())) {
+            throw new GracefulResponseException("非法的发票ID！");
+        }
 
     }
 
