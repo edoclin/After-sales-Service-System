@@ -77,7 +77,7 @@ public class OrderEventConfig {
             throw new ServerErrorException();
         }
 
-        // 工程师可接单
+        // 加入待办工单
         redisTemplate.opsForSet().add(IOrderService.NAMESPACE_4_PENDING_ORDER, order.getOrderId());
         return true;
     }
@@ -111,6 +111,9 @@ public class OrderEventConfig {
         if (Boolean.FALSE.equals(iOrderService.updateById(order))) {
             throw new ServerErrorException();
         }
+
+        // 移除待办工单
+        redisTemplate.opsForSet().remove(IOrderService.NAMESPACE_4_PENDING_ORDER, order.getOrderId());
         return true;
     }
 
