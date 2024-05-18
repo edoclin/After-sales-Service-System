@@ -44,7 +44,6 @@ CREATE TABLE t_employee_info
     `updated_time`            timestamp        not null default now() COMMENT '更新时间',
     `created_id`              varchar(32)      not null default '' COMMENT '创建者',
     `updated_id`              varchar(32)      not null default '' COMMENT '更新者',
-    `employee_role`           tinyint          not null default 0 COMMENT '员工角色',
     `real_name`               varchar(64)      not null default '' COMMENT '员工姓名',
     `entry_time`              timestamp        not null default now() COMMENT '入职时间',
     `email`                   varchar(512)     not null default '' COMMENT '邮箱',
@@ -57,7 +56,22 @@ CREATE TABLE t_employee_info
 
 
 CREATE INDEX idx_real_name ON t_employee_info (real_name);
-CREATE INDEX idx_employee_role ON t_employee_info (employee_role);
+
+DROP TABLE IF EXISTS t_login_role;
+CREATE TABLE t_login_role
+(
+    `role_id`       varchar(32) NOT NULL default '' COMMENT '登录ID',
+    `deleted`                 bigint           not null default 0 COMMENT '逻辑删除',
+    `login_id`      varchar(32)      not null default '' COMMENT '登录ID',
+    `created_time`  timestamp   not null default now() COMMENT '创建时间',
+    `updated_time`  timestamp   not null default now() COMMENT '更新时间',
+    `created_id`    varchar(32) not null default '' COMMENT '创建者',
+    `updated_id`    varchar(32) not null default '' COMMENT '更新者',
+    `employee_role` tinyint     not null default 0 COMMENT '员工角色',
+    PRIMARY KEY (role_id)
+) COMMENT = '员工信息表';
+CREATE UNIQUE INDEX  union_idx_logic_delete ON t_login_role (login_id, employee_role, deleted);
+
 
 DROP TABLE IF EXISTS t_order;
 CREATE TABLE t_order
@@ -350,7 +364,7 @@ CREATE TABLE t_api
     PRIMARY KEY (api_id)
 ) COMMENT = 'API列表';
 
-create unique index union_idx_logic_del on t_api(method, uri, deleted);
+create unique index union_idx_logic_del on t_api (method, uri, deleted);
 
 DROP TABLE IF EXISTS t_permission;
 CREATE TABLE t_permission
@@ -392,7 +406,7 @@ CREATE TABLE t_middle_login_permission
     `updated_id`    varchar(32) not null default '' COMMENT '更新者',
     `deleted`       bigint      not null default 0 COMMENT '逻辑删除',
     `id`            varchar(32) NOT NULL default '' COMMENT '主键',
-    `login_id`     varchar(32) not null default '' COMMENT '用户ID',
+    `login_id`      varchar(32) not null default '' COMMENT '用户ID',
     `permission_id` int         not null default 0 COMMENT '权限ID',
     PRIMARY KEY (id)
 ) COMMENT = '用户具有权限中间表';

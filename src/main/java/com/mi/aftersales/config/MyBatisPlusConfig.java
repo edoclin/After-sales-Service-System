@@ -29,6 +29,7 @@ public class MyBatisPlusConfig implements MetaObjectHandler, IdentifierGenerator
                         (metaObject.getOriginalObject() instanceof MiddleLoginPermission) ||
                         (metaObject.getOriginalObject() instanceof Permission) ||
                         (metaObject.getOriginalObject() instanceof MiddlePermissionApi) ||
+                        (metaObject.getOriginalObject() instanceof OrderStatusLog) ||
                         (metaObject.getOriginalObject() instanceof Api);
     }
 

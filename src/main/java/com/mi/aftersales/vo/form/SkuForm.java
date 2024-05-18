@@ -7,7 +7,6 @@ import lombok.experimental.Accessors;
 
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
-import java.time.LocalDateTime;
 
 /**
  * @author edoclin
@@ -29,9 +28,9 @@ public class SkuForm {
     @NotEmpty(message = "商品SKU名称不能为空")
     private String skuDisplayName;
 
-    @Schema(description = "商品封面图片ID")
-    @NotEmpty(message = "商品封面图片ID不能为空")
-    private String spuCoverFileId;
+    @Schema(description = "商品Spu封面图片ID")
+    @NotEmpty(message = "商品Spu封面图片ID不能为空")
+    private String skuCoverFileId;
 
     @Schema(description = "客户是否可见")
     private Boolean visible = false;

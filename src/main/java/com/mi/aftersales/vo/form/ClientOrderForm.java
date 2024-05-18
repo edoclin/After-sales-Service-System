@@ -32,7 +32,7 @@ public class ClientOrderForm {
     private String sn;
 
     @Schema(description = "工单类型（SEND_FOR：寄修；TO_STOP：送修）")
-    private OrderTypeEnum orderType = OrderTypeEnum.SEND_FOR;
+    private String orderType = "SEND_FOR";
 
     @Schema(description = "客户描述故障")
     private String clientFaultDesc;
@@ -42,4 +42,7 @@ public class ClientOrderForm {
 
     @Schema(description = "取件时间/到店时间")
     private LocalDateTime arrivalTime;
+
+    @Schema(description = "用户上传文件Ids")
+    private String[] fileIds;
 }

@@ -6,7 +6,6 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.feiniaojin.gracefulresponse.GracefulResponseException;
 import com.mi.aftersales.entity.File;
 import com.mi.aftersales.entity.Sku;
-import com.mi.aftersales.entity.Spu;
 import com.mi.aftersales.exception.graceful.ServerErrorException;
 import com.mi.aftersales.service.IFileService;
 import com.mi.aftersales.service.ISkuService;
@@ -15,11 +14,10 @@ import com.mi.aftersales.util.COSUtil;
 import com.mi.aftersales.util.DateUtil;
 import com.mi.aftersales.util.query.ConditionQuery;
 import com.mi.aftersales.util.query.QueryUtil;
+import com.mi.aftersales.vo.form.SkuVisibleSetForm;
 import com.mi.aftersales.vo.result.ClientSkuVo;
-import com.mi.aftersales.vo.result.ClientSpuVo;
 import com.mi.aftersales.vo.PageResult;
 import com.mi.aftersales.vo.result.SkuVo;
-import com.mi.aftersales.vo.result.SpuVo;
 import com.mi.aftersales.vo.form.SkuForm;
 import com.mi.aftersales.vo.form.UpdateSkuVisibleForm;
 import io.swagger.v3.oas.annotations.Operation;
@@ -59,7 +57,7 @@ public class SkuController {
             throw new GracefulResponseException("商品SPU不存在！");
         }
 
-        if (BeanUtil.isEmpty(iFileService.getById(form.getSpuCoverFileId()))) {
+        if (BeanUtil.isEmpty(iFileService.getById(form.getSkuCoverFileId()))) {
             throw new GracefulResponseException("商品SKU封面图片不存在！");
         }
         Sku sku = new Sku();
@@ -90,8 +88,8 @@ public class SkuController {
     @Operation(summary = "客户查询商品Sku", description = "客户查询商品Sku")
     @Parameter(name = "spuId", description = "商品所属SpuID", example = "", required = true)
     public PageResult<ClientSkuVo> list4Client(@RequestBody @Valid ConditionQuery form, @PathVariable String spuId) {
-        if (BeanUtil.isEmpty(iSkuService.getById(spuId))) {
-            throw new GracefulResponseException("商品所属SPU不存在！");
+        if (BeanUtil.isEmpty(iSpuService.getById(spuId))) {
+            throw new GracefulResponseException("商品Spu不存在！");
         }
 
         PageResult<ClientSkuVo> result = new PageResult<>();
@@ -132,5 +130,20 @@ public class SkuController {
             result.getData().add(skuVo);
         });
         return result;
+    }
+
+    @PostMapping(path = "/visible")
+    @Operation(summary = "设置商品Sku是否可见（管理员）", description = "设置商品Sku是否可见（管理员）")
+    public void list(@RequestBody @Valid SkuVisibleSetForm form) {
+        Sku byId = iSkuService.getById(form.getSkuId());
+        if (BeanUtil.isEmpty(byId)) {
+            throw new GracefulResponseException("商品Sku不存在！");
+        }
+
+        byId.setVisible(form.getVisible());
+        if (!iSkuService.updateById(byId)) {
+            throw new ServerErrorException();
+        }
+
     }
 }

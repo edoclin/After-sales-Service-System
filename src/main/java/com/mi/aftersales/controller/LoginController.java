@@ -13,10 +13,7 @@ import com.feiniaojin.gracefulresponse.GracefulResponseException;
 import com.mi.aftersales.config.yaml.bean.OAuthConfig;
 import com.mi.aftersales.config.yaml.bean.OAuthList;
 import com.mi.aftersales.config.yaml.bean.CustomSmsConfig;
-import com.mi.aftersales.entity.Api;
-import com.mi.aftersales.entity.Login;
-import com.mi.aftersales.entity.MiddleLoginPermission;
-import com.mi.aftersales.entity.MiddlePermissionApi;
+import com.mi.aftersales.entity.*;
 import com.mi.aftersales.entity.enums.LoginOAuthSourceEnum;
 import com.mi.aftersales.entity.enums.LoginTypeEnum;
 import com.mi.aftersales.controller.enums.SmsCodeType;
@@ -93,6 +90,12 @@ public class LoginController {
     @Resource
     private CustomSmsConfig customSmsConfig;
 
+    @Resource
+    private IEmployeeInfoService iEmployeeInfoService;
+
+    @Resource
+    private ILoginRoleService iLoginRoleService;
+
     @GetMapping(path = "/sms")
     @Operation(summary = "发送短信验证码", description = "发送短信验证码")
     public SmsResultVo sendSmsCode(@RequestBody @Valid SendSmsCodeForm form) {
@@ -155,7 +158,7 @@ public class LoginController {
                 String tempToken = SaTempUtil.createToken(CharSequenceUtil.format("{}:{}", data.getSource(), data.getUuid()), 300);
                 loginResultVo.setTempToken(tempToken);
             } else {
-                loginAndSetPermissions(login.getLoginId());
+                login(login);
                 loginResultVo.setTokenName(StpUtil.getTokenName()).setTokenValue(StpUtil.getTokenValue()).setLoginId(login.getLoginId());
             }
         } else {
@@ -207,7 +210,7 @@ public class LoginController {
                 }
 
                 if (iLoginService.saveOrUpdate(login)) {
-                    loginAndSetPermissions(login.getLoginId());
+                    login(login);
                     loginResultVo.setTokenName(StpUtil.getTokenName()).setTokenValue(StpUtil.getTokenValue()).setLoginId(login.getLoginId());
                 }
 
@@ -238,7 +241,7 @@ public class LoginController {
                 // 验证码正确
                 Login login = iLoginService.getOne(Wrappers.lambdaQuery(Login.class).eq(Login::getMobile, form.getMobile()));
                 if (BeanUtil.isNotEmpty(login)) {
-                    loginAndSetPermissions(login.getLoginId());
+                    login(login);
                     loginResultVo.setTokenName(StpUtil.getTokenName()).setTokenValue(StpUtil.getTokenValue()).setLoginId(login.getLoginId());
                 } else {
                     if (Boolean.TRUE.equals(form.getAutoRegister())) {
@@ -248,7 +251,7 @@ public class LoginController {
                         login.setLoginType(LoginTypeEnum.CLIENT);
                         login.setLoginId(IdUtil.getSnowflakeNextIdStr());
                         if (iLoginService.save(login)) {
-                            loginAndSetPermissions(login.getLoginId());
+                            login(login);
                             loginResultVo.setTokenName(StpUtil.getTokenName()).setTokenValue(StpUtil.getTokenValue()).setLoginId(login.getLoginId());
                         }
                     } else {
@@ -292,18 +295,27 @@ public class LoginController {
      * @author: edoclin
      * @created: 2024/5/16 23:29
      **/
-    private void loginAndSetPermissions(String loginId) {
-        StpUtil.login(loginId);
+    private void login(Login login) {
+        StpUtil.login(login.getLoginId());
         List<String> permissions = new ArrayList<>();
-        iMiddleLoginPermissionService.lambdaQuery().eq(MiddleLoginPermission::getLoginId, loginId).list().forEach(middleLoginPermission -> {
-            iMiddlePermissionApiService.lambdaQuery().eq(MiddlePermissionApi::getPermissionId, middleLoginPermission.getPermissionId()).list().forEach(middlePermissionApi -> {
-                Api api = iApiService.getById(middlePermissionApi.getApiId());
+        iMiddleLoginPermissionService.lambdaQuery().eq(MiddleLoginPermission::getLoginId, login.getLoginId()).list().forEach(middleLoginPermission -> iMiddlePermissionApiService.lambdaQuery().eq(MiddlePermissionApi::getPermissionId, middleLoginPermission.getPermissionId()).list().forEach(middlePermissionApi -> {
+            Api api = iApiService.getById(middlePermissionApi.getApiId());
 
-                if (BeanUtil.isNotEmpty(api)) {
-                    permissions.add(CharSequenceUtil.format("{}-{}", api.getMethod().name().toUpperCase(), api.getUri()));
-                }
-            });
-        });
+            if (BeanUtil.isNotEmpty(api)) {
+                permissions.add(CharSequenceUtil.format("{}-{}", api.getMethod().name().toUpperCase(), api.getUri()));
+            }
+        }));
         StpUtil.getSession().set(SaSession.PERMISSION_LIST, permissions);
+
+        ArrayList<String> roles = new ArrayList<>();
+
+        // 默认具有CLIENT角色
+        roles.add(LoginTypeEnum.CLIENT.name());
+        iLoginRoleService.lambdaQuery().eq(LoginRole::getLoginId, login.getLoginId()).list().forEach(loginRole -> {
+            roles.add(loginRole.getEmployeeRole().name());
+        });
+
+        StpUtil.getSession().set(SaSession.ROLE_LIST, roles);
+
     }
 }

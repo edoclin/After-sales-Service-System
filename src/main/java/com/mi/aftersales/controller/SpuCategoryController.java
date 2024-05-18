@@ -7,7 +7,7 @@ import com.mi.aftersales.entity.SpuCategory;
 import com.mi.aftersales.service.ISpuCategoryService;
 import com.mi.aftersales.vo.result.SpuCategory4ClientVo;
 import com.mi.aftersales.vo.form.SpuCategoryForm;
-import com.mi.aftersales.vo.form.SpuCategorySetVisibleForm;
+import com.mi.aftersales.vo.form.SpuCategoryVisibleSetForm;
 import io.swagger.v3.oas.annotations.Operation;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.web.bind.annotation.*;
@@ -58,7 +58,7 @@ public class SpuCategoryController {
     @GetMapping(path = "/visible")
     @CheckPermission
     @Operation(summary = "SPU分类客户是否可见", description = "SPU分类客户是否可见")
-    public void setVisible(@RequestBody @Valid SpuCategorySetVisibleForm form) {
+    public void setVisible(@RequestBody @Valid SpuCategoryVisibleSetForm form) {
         SpuCategory byId = iSpuCategoryService.getById(form.getCategoryId());
 
         if (BeanUtil.isNotEmpty(byId)) {

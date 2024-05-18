@@ -16,4 +16,6 @@ import java.util.List;
  */
 public interface ISpuCategoryService extends IService<SpuCategory> {
     List<SpuCategory4ClientVo> listSpuCategory4Client(Integer parentId);
+
+    List<String> listAllSpuCategoryName(Integer categoryId);
 }

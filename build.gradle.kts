@@ -21,6 +21,7 @@ val freemarkerVersion = "2.3.31"
 val redissonVersion = "3.18.0"
 val springDocVersion = "1.8.0"
 val sms4jVersion = "3.2.1"
+val rocketmqVersion = "2.3.0"
 
 java {
     sourceCompatibility = JavaVersion.VERSION_17
@@ -45,8 +46,14 @@ dependencies {
     implementation("org.springdoc:springdoc-openapi-ui:$springDocVersion")
     implementation("org.dromara.sms4j:sms4j-spring-boot-starter:$sms4jVersion")
     implementation("org.springframework.boot:spring-boot-starter-aop")
+    // https://mvnrepository.com/artifact/org.apache.rocketmq/rocketmq-spring-boot-starter
+    implementation("org.apache.rocketmq:rocketmq-spring-boot-starter:$rocketmqVersion")
+
     // 状态机
     implementation("org.springframework.statemachine:spring-statemachine-core:$statemachineVersion")
+    // https://mvnrepository.com/artifact/org.springframework.data/spring-data-redis
+    implementation("org.springframework.statemachine:spring-statemachine-data-redis:$statemachineVersion")
+
     implementation("cn.hutool:hutool-all:$hutoolVersion")
     implementation("cn.dev33:sa-token-spring-boot-starter:$saTokenVersion")
     implementation("cn.dev33:sa-token-redis-jackson:$saTokenVersion")

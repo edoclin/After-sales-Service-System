@@ -4,6 +4,8 @@ import com.baomidou.mybatisplus.annotation.*;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
+
+import com.mi.aftersales.entity.enums.EmployeeRoleEnum;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import lombok.Setter;
@@ -49,9 +51,6 @@ public class EmployeeInfo implements Serializable {
     @Schema(description = "更新者")
     @TableField(fill = FieldFill.UPDATE)
     private String updatedId = "";
-
-    @Schema(description = "员工角色")
-    private Byte employeeRole;
 
     @Schema(description = "员工姓名")
     private String realName;

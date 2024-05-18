@@ -5,6 +5,9 @@ import com.baomidou.mybatisplus.annotation.*;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+
+import com.mi.aftersales.entity.enums.OrderStatusEnum;
+import com.mi.aftersales.entity.enums.OrderTypeEnum;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import lombok.Setter;
@@ -61,7 +64,7 @@ public class Order implements Serializable {
     private String sn;
 
     @Schema(description = "工单类型;1:到店;2寄修")
-    private Byte orderType;
+    private OrderTypeEnum orderType;
 
     @Schema(description = "客户故障描述")
     private String clientFaultDesc;
@@ -73,7 +76,7 @@ public class Order implements Serializable {
     private String engineerFaultDesc;
 
     @Schema(description = "工单状态")
-    private Byte orderStatus;
+    private OrderStatusEnum orderStatus;
 
     @Schema(description = "物料费;用户支付物料费,默认所有物料总价*1.2")
     private BigDecimal materialFee;

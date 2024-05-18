@@ -4,6 +4,8 @@ import com.baomidou.mybatisplus.annotation.*;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
+
+import com.mi.aftersales.entity.enums.OrderStatusEnum;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import lombok.Setter;
@@ -54,7 +56,7 @@ public class OrderStatusLog implements Serializable {
     private String orderId;
 
     @Schema(description = "当前工单状态")
-    private Byte orderStatus;
+    private OrderStatusEnum orderStatus;
 
     @Schema(description = "状态详情(JSON);每个状态对应不同的JAVABEAN信息")
     private String statusDetail;
