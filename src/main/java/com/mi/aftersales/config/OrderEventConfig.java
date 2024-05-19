@@ -5,13 +5,19 @@ import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.text.CharSequenceUtil;
 import com.feiniaojin.gracefulresponse.GracefulResponseException;
 import com.mi.aftersales.config.enums.OrderStatusChangeEventEnum;
+import com.mi.aftersales.controller.enums.SmsCodeType;
+import com.mi.aftersales.entity.Login;
 import com.mi.aftersales.entity.Order;
 import com.mi.aftersales.entity.OrderStatusLog;
 import com.mi.aftersales.entity.enums.OrderStatusEnum;
 import com.mi.aftersales.exception.graceful.ServerErrorException;
+import com.mi.aftersales.service.ILoginService;
 import com.mi.aftersales.service.IOrderService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.rocketmq.spring.core.RocketMQTemplate;
+import org.dromara.sms4j.api.SmsBlend;
+import org.dromara.sms4j.api.entity.SmsResponse;
+import org.dromara.sms4j.core.factory.SmsFactory;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.support.MessageBuilder;
@@ -22,6 +28,7 @@ import org.springframework.transaction.annotation.Transactional;
 import javax.annotation.Resource;
 
 import static com.mi.aftersales.util.RocketMqTopic.ROCKETMQ_TOPIC_4_ORDER_LOG;
+import static com.mi.aftersales.util.RocketMqTopic.ROCKETMQ_TOPIC_4_SMS;
 
 
 /**
@@ -37,12 +44,19 @@ public class OrderEventConfig {
     @Resource
     private IOrderService iOrderService;
 
+    @Resource
+    private ILoginService iLoginService;
 
     @Resource
     private RedisTemplate<String, String> redisTemplate;
 
     @Resource
     private RocketMQTemplate rocketmqTemplate;
+
+    public void sendSms(String orderId) {
+        Message<String> msg = MessageBuilder.withPayload(orderId).build();
+        rocketmqTemplate.send(ROCKETMQ_TOPIC_4_SMS, msg);
+    }
 
 
     /**
@@ -59,7 +73,6 @@ public class OrderEventConfig {
             throw new GracefulResponseException("工单状态转换：工单Id不合法！");
         }
         order.setOrderStatus(OrderStatusEnum.WAITING);
-
         OrderStatusLog orderStatusLog = new OrderStatusLog();
 
         orderStatusLog
@@ -75,6 +88,8 @@ public class OrderEventConfig {
         if (Boolean.FALSE.equals(iOrderService.updateById(order))) {
             throw new ServerErrorException();
         }
+
+        sendSms(order.getOrderId());
 
         // 加入待办工单
         redisTemplate.opsForSet().add(IOrderService.NAMESPACE_4_PENDING_ORDER, order.getOrderId());
@@ -113,6 +128,8 @@ public class OrderEventConfig {
 
         // 移除待办工单
         redisTemplate.opsForSet().remove(IOrderService.NAMESPACE_4_PENDING_ORDER, order.getOrderId());
+
+        sendSms(order.getOrderId());
         return true;
     }
 

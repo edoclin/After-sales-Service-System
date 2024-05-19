@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 public class RocketMqTopic {
     public static final String ROCKETMQ_TOPIC_4_ORDER_LOG = "order-log-topic";
     public static final String ROCKETMQ_TOPIC_4_ALIPAY_ORDER = "alipay-order";
+    public static final String ROCKETMQ_TOPIC_4_SMS = "sms";
 
     private RocketMqTopic() {}
 }

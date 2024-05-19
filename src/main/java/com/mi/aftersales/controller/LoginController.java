@@ -106,8 +106,10 @@ public class LoginController {
         String smsCode = redisTemplate4Sms.opsForValue().get(key);
         if (CharSequenceUtil.isBlank(smsCode)) {
             String code = randomGenerator.generate();
+
             SmsBlend smsBlend = SmsFactory.getSmsBlend(SmsCodeType.LOGIN.getValue());
             SmsResponse smsResponse = smsBlend.sendMessage(form.getMobile(), code);
+
             code += "_" + DateUtil.currentSeconds();
             redisTemplate4Sms.opsForValue().set(key, code, customSmsConfig.getValidTime(), TimeUnit.SECONDS);
             smsResultVo.setSuccess(true);
