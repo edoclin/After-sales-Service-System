@@ -8,6 +8,6 @@ import com.feiniaojin.gracefulresponse.api.ExceptionMapper;
  * @author: edoclin
  * @created: 2024/5/12 12:33
  **/
-@ExceptionMapper(code = "1", msg = "服务器繁忙")
+@ExceptionMapper(code = "-1", msg = "服务器繁忙")
 public class ServerErrorException extends RuntimeException {
 }

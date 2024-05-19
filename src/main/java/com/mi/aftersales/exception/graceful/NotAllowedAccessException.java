@@ -8,6 +8,6 @@ import com.feiniaojin.gracefulresponse.api.ExceptionMapper;
  * @author: edoclin
  * @created: 2024/5/12 12:33
  **/
-@ExceptionMapper(code = "3", msg = "用户无访问该接口权限")
+@ExceptionMapper(code = "-1", msg = "用户无访问该接口权限")
 public class NotAllowedAccessException extends RuntimeException {
 }

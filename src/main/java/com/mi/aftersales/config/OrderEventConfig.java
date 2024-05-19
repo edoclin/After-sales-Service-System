@@ -21,6 +21,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 
+import static com.mi.aftersales.util.RocketMqTopic.ROCKETMQ_TOPIC_4_ORDER_LOG;
+
 
 /**
  * @description: 订单状态机
@@ -32,9 +34,6 @@ import javax.annotation.Resource;
 @Slf4j
 @Transactional
 public class OrderEventConfig {
-
-    public static final String ROCKETMQ_TOPIC_4_ORDER_LOG = "order-log-topic";
-
     @Resource
     private IOrderService iOrderService;
 
@@ -54,7 +53,7 @@ public class OrderEventConfig {
      **/
     @OnTransition(source = IOrderService.CREATED, target = IOrderService.WAITING)
     public boolean createOrderTransition(Message<OrderStatusChangeEventEnum> message) {
-        Order order = iOrderService.getById((String) message.getHeaders().get("order-id"));
+        Order order = iOrderService.getById((String) message.getHeaders().get(IOrderService.STATE_MACHINE_HEADER_ORDER_NAME));
 
         if (BeanUtil.isEmpty(order)) {
             throw new GracefulResponseException("工单状态转换：工单Id不合法！");
@@ -91,7 +90,7 @@ public class OrderEventConfig {
 
     @OnTransition(source = IOrderService.WAITING, target = IOrderService.ACCEPTED)
     public boolean acceptOrderTransition(Message<OrderStatusChangeEventEnum> message) {
-        Order order = iOrderService.getById((String) message.getHeaders().get("order-id"));
+        Order order = iOrderService.getById((String) message.getHeaders().get(IOrderService.STATE_MACHINE_HEADER_ORDER_NAME));
 
         if (BeanUtil.isEmpty(order)) {
             throw new GracefulResponseException("工单状态转换：工单Id不合法！");

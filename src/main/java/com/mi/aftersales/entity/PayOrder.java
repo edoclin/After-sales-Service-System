@@ -5,6 +5,9 @@ import com.baomidou.mybatisplus.annotation.*;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+
+import com.mi.aftersales.entity.enums.PayMethodEnum;
+import com.mi.aftersales.entity.enums.PayStatusEnum;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import lombok.Setter;
@@ -55,7 +58,7 @@ public class PayOrder implements Serializable {
     private String orderId;
 
     @Schema(description = "支付方式")
-    private Byte payMethod;
+    private PayMethodEnum payMethod;
 
     @Schema(description = "支付记录详情(JSON)")
     private String payDetail;
@@ -64,5 +67,5 @@ public class PayOrder implements Serializable {
     private BigDecimal amount;
 
     @Schema(description = "支付状态")
-    private Byte payStatus;
+    private PayStatusEnum payStatus;
 }

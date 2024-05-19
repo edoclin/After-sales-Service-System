@@ -28,4 +28,5 @@ public interface IOrderService extends IService<Order> {
     String PAID = "PAID";
     String RETURNING = "RETURNING";
     String CLOSED = "CLOSED";
+    String STATE_MACHINE_HEADER_ORDER_NAME = "order-id";
 }

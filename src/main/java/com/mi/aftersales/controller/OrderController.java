@@ -7,6 +7,7 @@ import cn.hutool.core.date.LocalDateTimeUtil;
 import cn.hutool.core.text.CharSequenceUtil;
 import cn.hutool.core.util.ObjectUtil;
 import com.feiniaojin.gracefulresponse.GracefulResponseException;
+import com.mi.aftersales.aspect.anno.CheckLogin;
 import com.mi.aftersales.config.OrderStateMachineBuilder;
 import com.mi.aftersales.config.enums.OrderStatusChangeEventEnum;
 import com.mi.aftersales.entity.Fapiao;
@@ -57,7 +58,6 @@ public class OrderController {
     private StateMachinePersister<OrderStatusEnum, OrderStatusChangeEventEnum, String> orderRedisPersister;
     @Resource
     private OrderStateMachineBuilder orderStateMachineBuilder;
-
 
     @Resource
     private IFapiaoService iFapiaoService;
@@ -155,7 +155,9 @@ public class OrderController {
         if (ObjectUtil.isNotNull(pendingOrders)) {
             pendingOrders.forEach(orderId -> {
                 Order order = iOrderService.getById(orderId);
-                orders.add(order);
+                if (BeanUtil.isNotEmpty(order)) {
+                    orders.add(order);
+                }
             });
 
             orders.sort(Comparator.comparing(Order::getCreatedTime));
@@ -178,13 +180,15 @@ public class OrderController {
 
     @GetMapping(path = "/engineer/accept/{orderId}")
     @Operation(summary = "工程师接受工单", description = "工程师接受工单")
-    public void listPendingOrder(@PathVariable String orderId) {
+    @CheckLogin
+    public void engineerAcceptOrder(@PathVariable String orderId) {
         // todo check role
-
         if (Boolean.TRUE.equals(redisTemplate.opsForSet().isMember(IOrderService.NAMESPACE_4_PENDING_ORDER, orderId))) {
-            RLock fairLock = redissonClient.getFairLock(orderId);
+            RLock fairLock = redissonClient.getFairLock(NAMESPACE_4_ORDER_LOCK + orderId);
             if (fairLock.tryLock()) {
-                sendEvent(statusFlow(OrderStatusChangeEventEnum.ENGINEER_COMPLETED_ACCEPT, orderId));
+                if (!sendEvent(statusFlow(OrderStatusChangeEventEnum.ENGINEER_COMPLETED_ACCEPT, orderId))) {
+                    throw new GracefulResponseException("状态转换非法！");
+                }
                 fairLock.unlock();
             } else {
                 throw new GracefulResponseException("该工单已被受理！");
@@ -192,14 +196,33 @@ public class OrderController {
         } else {
             throw new GracefulResponseException("该工单已被受理！");
         }
+    }
 
+
+    @GetMapping(path = "/engineer/checking/{orderId}")
+    @Operation(summary = "工程师开始检测", description = "工程师开始检测")
+    public void engineerCheckingOrder(@PathVariable String orderId) {
+        // todo check role
+        Order order = iOrderService.getById(orderId);
+
+        if (BeanUtil.isEmpty(order)) {
+            throw new GracefulResponseException("不存在的工单信息！");
+        }
+
+        if (!CharSequenceUtil.equals(order.getEngineerLoginId(), StpUtil.getLoginIdAsString())) {
+            throw new GracefulResponseException("当前用户无权操作！");
+        }
+
+        if (!sendEvent(statusFlow(OrderStatusChangeEventEnum.ENGINEER_START_CHECKING, orderId))) {
+            throw new GracefulResponseException("状态转换非法！");
+        }
     }
 
     /*
      * 订单状态流程转换
      * */
-    private Message<OrderStatusChangeEventEnum> statusFlow(OrderStatusChangeEventEnum payload, String orderId) {
-        return MessageBuilder.withPayload(payload).setHeader("order-id", orderId).build();
+    public static Message<OrderStatusChangeEventEnum> statusFlow(OrderStatusChangeEventEnum payload, String orderId) {
+        return MessageBuilder.withPayload(payload).setHeader(IOrderService.STATE_MACHINE_HEADER_ORDER_NAME, orderId).build();
     }
 
 
@@ -209,20 +232,20 @@ public class OrderController {
      * @param message
      * @return
      */
-    private synchronized boolean sendEvent(Message<OrderStatusChangeEventEnum> message) {
+    public synchronized boolean sendEvent(Message<OrderStatusChangeEventEnum> message) {
         boolean result;
         StateMachine<OrderStatusEnum, OrderStatusChangeEventEnum> stateMachine = null;
         try {
             stateMachine = orderStateMachineBuilder.build();
             stateMachine.start();
-            if (redisTemplate.hasKey(NAMESPACE_4_MACHINE_PERSIST + message.getHeaders().get("order-id"))) {
+            if (Boolean.TRUE.equals(redisTemplate.hasKey(NAMESPACE_4_MACHINE_PERSIST + message.getHeaders().get(IOrderService.STATE_MACHINE_HEADER_ORDER_NAME)))) {
                 // 存在持久化对象则恢复
-                orderRedisPersister.restore(stateMachine, NAMESPACE_4_MACHINE_PERSIST + message.getHeaders().get("order-id"));
+                orderRedisPersister.restore(stateMachine, NAMESPACE_4_MACHINE_PERSIST + message.getHeaders().get(IOrderService.STATE_MACHINE_HEADER_ORDER_NAME));
             }
             result = stateMachine.sendEvent(message);
-            orderRedisPersister.persist(stateMachine, NAMESPACE_4_MACHINE_PERSIST + message.getHeaders().get("order-id"));
+            orderRedisPersister.persist(stateMachine, NAMESPACE_4_MACHINE_PERSIST + message.getHeaders().get(IOrderService.STATE_MACHINE_HEADER_ORDER_NAME));
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            throw new GracefulResponseException(e.getMessage());
         } finally {
             if (stateMachine != null) {
                 stateMachine.stop();

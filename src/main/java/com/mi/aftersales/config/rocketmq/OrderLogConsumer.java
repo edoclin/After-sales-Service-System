@@ -15,6 +15,8 @@ import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
 
+import static com.mi.aftersales.util.RocketMqTopic.ROCKETMQ_TOPIC_4_ORDER_LOG;
+
 /**
  * @description: 工单状态日志消费
  * @return:
@@ -23,7 +25,7 @@ import javax.annotation.Resource;
  **/
 @Component
 @Slf4j
-@RocketMQMessageListener(topic = OrderEventConfig.ROCKETMQ_TOPIC_4_ORDER_LOG, consumerGroup = "aftersales_consumer_group")
+@RocketMQMessageListener(topic = ROCKETMQ_TOPIC_4_ORDER_LOG, consumerGroup = "aftersales_consumer_group")
 public class OrderLogConsumer implements RocketMQListener<OrderStatusLog> {
 
     @Resource

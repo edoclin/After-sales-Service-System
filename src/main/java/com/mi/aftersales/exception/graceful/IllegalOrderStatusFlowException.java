@@ -8,6 +8,6 @@ import com.feiniaojin.gracefulresponse.api.ExceptionMapper;
  * @author: edoclin
  * @created: 2024/5/12 12:33
  **/
-@ExceptionMapper(code = "-2", msg = "用户未登录")
-public class NotLoginException extends RuntimeException {
+@ExceptionMapper(code = "-1", msg = "订单状态转换非法！")
+public class IllegalOrderStatusFlowException extends RuntimeException {
 }
