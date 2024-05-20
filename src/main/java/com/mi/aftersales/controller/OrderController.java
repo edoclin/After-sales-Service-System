@@ -12,10 +12,7 @@ import com.mi.aftersales.aspect.anno.CheckLogin;
 import com.mi.aftersales.config.OrderStateMachineBuilder;
 import com.mi.aftersales.config.enums.OrderStatusChangeEventEnum;
 import com.mi.aftersales.config.yaml.bean.OrderConfig;
-import com.mi.aftersales.entity.Fapiao;
-import com.mi.aftersales.entity.Order;
-import com.mi.aftersales.entity.Sku;
-import com.mi.aftersales.entity.Spu;
+import com.mi.aftersales.entity.*;
 import com.mi.aftersales.entity.enums.OrderStatusEnum;
 import com.mi.aftersales.entity.enums.OrderTypeEnum;
 import com.mi.aftersales.exception.graceful.ServerErrorException;
@@ -40,6 +37,8 @@ import org.springframework.web.bind.annotation.*;
 import javax.annotation.Resource;
 import javax.validation.Valid;
 import java.util.*;
+
+import static com.mi.aftersales.util.RocketMqTopic.ROCKETMQ_TOPIC_4_ORDER_LOG;
 
 /**
  * <p>
@@ -206,28 +205,30 @@ public class OrderController {
         }
     }
 
-
     @GetMapping(path = "/engineer/checking/{orderId}")
     @Operation(summary = "工程师开始检测", description = "工程师开始检测")
-    public void engineerCheckingOrder(@PathVariable String orderId) {
+    @CheckLogin
+    public void startRepairMachine(@PathVariable String orderId){
         // todo check role
         Order order = iOrderService.getById(orderId);
 
         if (BeanUtil.isEmpty(order)) {
-            throw new GracefulResponseException("不存在的工单信息！");
+            throw new GracefulResponseException("非法的工单Id！");
         }
 
-        if (!CharSequenceUtil.equals(order.getEngineerLoginId(), StpUtil.getLoginIdAsString())) {
-            throw new GracefulResponseException("当前用户无权操作！");
+        if(!CharSequenceUtil.equals(order.getEngineerLoginId(),StpUtil.getLoginIdAsString())){
+            throw new GracefulResponseException("该工单不属于当前用户！");
         }
 
-        if (!sendEvent(statusFlow(OrderStatusChangeEventEnum.ENGINEER_START_CHECKING, orderId))) {
+        if(!sendEvent(statusFlow(OrderStatusChangeEventEnum.ENGINEER_START_CHECKING, orderId))){
             throw new GracefulResponseException("状态转换非法！");
         }
+
     }
 
 
-    @PutMapping(path = "/engineer/upload/{orderId}")
+
+    @PutMapping(path = "/engineer/faultDesc")
     @Operation(summary = "工程师上传故障描述", description = "工程师拆机维修，工程师故障描述")
     public void faultDescription(@RequestBody @Valid FaultDescriptionForm form) {
         // todo check role
@@ -236,6 +237,11 @@ public class OrderController {
         if (BeanUtil.isEmpty(order)) {
             throw new GracefulResponseException("该工单已撤销");
         }
+
+        if(!CharSequenceUtil.equals(order.getEngineerLoginId(),StpUtil.getLoginIdAsString())){
+            throw new GracefulResponseException("该工单不属于当前用户！");
+        }
+
         order.setEngineerFaultDesc(form.getEngineerFaultDesc());
         order.setEngineerNotice(form.getEngineerNotice());
         try {
@@ -244,6 +250,17 @@ public class OrderController {
             log.error(e.getMessage());
             throw new ServerErrorException();
         }
+
+        // todo 用消息队列写OrderStatus日志，更新Order表就对应一条记录
+
+        // example
+        OrderStatusLog orderStatusLog = new OrderStatusLog();
+        orderStatusLog.setOrderId(order.getOrderId());
+        orderStatusLog.setOrderStatus(order.getOrderStatus());
+        orderStatusLog.setStatusDetail("工程师上传故障描述");
+
+        Message<OrderStatusLog> msg = MessageBuilder.withPayload(orderStatusLog).build();
+        rocketmqTemplate.send(ROCKETMQ_TOPIC_4_ORDER_LOG, msg);
     }
 
     /*
