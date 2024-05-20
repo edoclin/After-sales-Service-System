@@ -70,20 +70,15 @@ public class OrderEventConfig {
         order.setOrderStatus(OrderStatusEnum.WAITING);
         OrderStatusLog orderStatusLog = new OrderStatusLog();
 
-        orderStatusLog
-                .setCreatedId(StpUtil.getLoginIdAsString())
-                .setOrderId(order.getOrderId())
-                .setOrderStatus(order.getOrderStatus())
-                .setStatusDetail(CharSequenceUtil.format("工单创建成功，等待工程师处理！"));
+        orderStatusLog.setCreatedId(StpUtil.getLoginIdAsString()).setOrderId(order.getOrderId()).setOrderStatus(order.getOrderStatus()).setStatusDetail(CharSequenceUtil.format("工单创建成功，等待工程师处理！"));
 
-        Message<OrderStatusLog> msg = MessageBuilder.withPayload(orderStatusLog).build();
-
-        rocketmqTemplate.send(ROCKETMQ_TOPIC_4_ORDER_LOG, msg);
 
         if (Boolean.FALSE.equals(iOrderService.updateById(order))) {
             throw new ServerErrorException();
         }
 
+        Message<OrderStatusLog> msg = MessageBuilder.withPayload(orderStatusLog).build();
+        rocketmqTemplate.send(ROCKETMQ_TOPIC_4_ORDER_LOG, msg);
         sendSms(order.getOrderId());
 
         // 加入待办工单，设置时间戳
@@ -113,14 +108,12 @@ public class OrderEventConfig {
 
         orderStatusLog.setOrderId(order.getOrderId()).setOrderStatus(order.getOrderStatus()).setStatusDetail(CharSequenceUtil.format("工单已被受理，等待工程师（{}）处理！", StpUtil.getLoginIdAsString()));
 
-        Message<OrderStatusLog> msg = MessageBuilder.withPayload(orderStatusLog).build();
-
-        rocketmqTemplate.send(ROCKETMQ_TOPIC_4_ORDER_LOG, msg);
-
         if (Boolean.FALSE.equals(iOrderService.updateById(order))) {
             throw new ServerErrorException();
         }
 
+        Message<OrderStatusLog> msg = MessageBuilder.withPayload(orderStatusLog).build();
+        rocketmqTemplate.send(ROCKETMQ_TOPIC_4_ORDER_LOG, msg);
         // 移除待办工单
         redisTemplate.opsForZSet().remove(IOrderService.NAMESPACE_4_PENDING_ORDER, order.getOrderId());
 
@@ -149,13 +142,13 @@ public class OrderEventConfig {
 
         orderStatusLog.setOrderId(order.getOrderId()).setOrderStatus(order.getOrderStatus());
 
+
+        if (Boolean.FALSE.equals(iOrderService.updateById(order))) {
+            throw new ServerErrorException();
+        }
         Message<OrderStatusLog> msg = MessageBuilder.withPayload(orderStatusLog).build();
 
         rocketmqTemplate.send(ROCKETMQ_TOPIC_4_ORDER_LOG, msg);
-
-        if (Boolean.FALSE.equals(iOrderService.updateById(order))){
-            throw new ServerErrorException();
-        }
 
         return true;
     }
