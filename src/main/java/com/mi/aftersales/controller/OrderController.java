@@ -22,6 +22,7 @@ import com.mi.aftersales.exception.graceful.ServerErrorException;
 import com.mi.aftersales.service.*;
 import com.mi.aftersales.util.DateUtil;
 import com.mi.aftersales.vo.form.ClientOrderForm;
+import com.mi.aftersales.vo.form.FaultDescriptionForm;
 import com.mi.aftersales.vo.result.EngineerSimpleOrderVo;
 import io.swagger.v3.oas.annotations.Operation;
 import org.apache.rocketmq.spring.core.RocketMQTemplate;
@@ -222,6 +223,26 @@ public class OrderController {
 
         if (!sendEvent(statusFlow(OrderStatusChangeEventEnum.ENGINEER_START_CHECKING, orderId))) {
             throw new GracefulResponseException("状态转换非法！");
+        }
+    }
+
+
+    @PutMapping(path = "/engineer/upload/{orderId}")
+    @Operation(summary = "工程师上传故障描述", description = "工程师拆机维修，工程师故障描述")
+    public void faultDescription(@RequestBody @Valid FaultDescriptionForm form) {
+        // todo check role
+
+        Order order = iOrderService.getById(form.getOrderId());
+        if (BeanUtil.isEmpty(order)) {
+            throw new GracefulResponseException("该工单已撤销");
+        }
+        order.setEngineerFaultDesc(form.getEngineerFaultDesc());
+        order.setEngineerNotice(form.getEngineerNotice());
+        try {
+            iOrderService.updateById(order);
+        } catch (Exception e) {
+            log.error(e.getMessage());
+            throw new ServerErrorException();
         }
     }
 

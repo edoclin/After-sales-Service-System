@@ -136,6 +136,27 @@ public class OrderEventConfig {
      **/
     @OnTransition(source = IOrderService.ACCEPTED, target = IOrderService.CHECKING)
     public boolean checkingOrderTransition(Message<OrderStatusChangeEventEnum> message) {
+
+        Order order = iOrderService.getById((String) message.getHeaders().get("order-id"));
+
+        if (BeanUtil.isEmpty(order)) {
+            throw new GracefulResponseException("工单状态转换：工单Id不合法！");
+        }
+
+        order.setOrderStatus(OrderStatusEnum.CHECKING);
+
+        OrderStatusLog orderStatusLog = new OrderStatusLog();
+
+        orderStatusLog.setOrderId(order.getOrderId()).setOrderStatus(order.getOrderStatus());
+
+        Message<OrderStatusLog> msg = MessageBuilder.withPayload(orderStatusLog).build();
+
+        rocketmqTemplate.send(ROCKETMQ_TOPIC_4_ORDER_LOG, msg);
+
+        if (Boolean.FALSE.equals(iOrderService.updateById(order))){
+            throw new ServerErrorException();
+        }
+
         return true;
     }
 
