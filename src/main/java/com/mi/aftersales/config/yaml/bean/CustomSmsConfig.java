@@ -25,4 +25,6 @@ public class CustomSmsConfig {
      * @created: 2024/5/14 23:11
      **/
     private Long period;
+
+    private Boolean enable = Boolean.FALSE;
 }

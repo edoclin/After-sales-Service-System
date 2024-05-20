@@ -2,6 +2,7 @@ package com.mi.aftersales.config;
 
 import cn.dev33.satoken.stp.StpUtil;
 import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.date.LocalDateTimeUtil;
 import cn.hutool.core.text.CharSequenceUtil;
 import com.feiniaojin.gracefulresponse.GracefulResponseException;
 import com.mi.aftersales.config.enums.OrderStatusChangeEventEnum;
@@ -26,6 +27,8 @@ import org.springframework.statemachine.annotation.WithStateMachine;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
+
+import java.time.LocalDateTime;
 
 import static com.mi.aftersales.util.RocketMqTopic.ROCKETMQ_TOPIC_4_ORDER_LOG;
 import static com.mi.aftersales.util.RocketMqTopic.ROCKETMQ_TOPIC_4_SMS;
@@ -91,8 +94,8 @@ public class OrderEventConfig {
 
         sendSms(order.getOrderId());
 
-        // 加入待办工单
-        redisTemplate.opsForSet().add(IOrderService.NAMESPACE_4_PENDING_ORDER, order.getOrderId());
+        // 加入待办工单，设置时间戳
+        redisTemplate.opsForZSet().add(IOrderService.NAMESPACE_4_PENDING_ORDER, order.getOrderId(), System.currentTimeMillis());
         return true;
     }
 
@@ -127,7 +130,7 @@ public class OrderEventConfig {
         }
 
         // 移除待办工单
-        redisTemplate.opsForSet().remove(IOrderService.NAMESPACE_4_PENDING_ORDER, order.getOrderId());
+        redisTemplate.opsForZSet().remove(IOrderService.NAMESPACE_4_PENDING_ORDER, order.getOrderId());
 
         sendSms(order.getOrderId());
         return true;

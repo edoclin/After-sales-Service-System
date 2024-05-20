@@ -2,6 +2,7 @@ package com.mi.aftersales.controller;
 
 import cn.dev33.satoken.stp.StpUtil;
 import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.convert.ConvertException;
 import cn.hutool.core.date.LocalDateTimeUtil;
 import cn.hutool.core.text.CharSequenceUtil;
@@ -10,6 +11,7 @@ import com.feiniaojin.gracefulresponse.GracefulResponseException;
 import com.mi.aftersales.aspect.anno.CheckLogin;
 import com.mi.aftersales.config.OrderStateMachineBuilder;
 import com.mi.aftersales.config.enums.OrderStatusChangeEventEnum;
+import com.mi.aftersales.config.yaml.bean.OrderConfig;
 import com.mi.aftersales.entity.Fapiao;
 import com.mi.aftersales.entity.Order;
 import com.mi.aftersales.entity.Sku;
@@ -53,6 +55,8 @@ public class OrderController {
 
     public static final String NAMESPACE_4_MACHINE_PERSIST = "machine:persist:";
     public static final String NAMESPACE_4_ORDER_LOCK = "order:lock:";
+    @Resource
+    private OrderConfig orderConfig;
 
     @Resource(name = "orderRedisPersister")
     private StateMachinePersister<OrderStatusEnum, OrderStatusChangeEventEnum, String> orderRedisPersister;
@@ -151,7 +155,9 @@ public class OrderController {
 //        StpUtil.checkRole(EmployeeRoleEnum.ENGINEER.name());
         ArrayList<EngineerSimpleOrderVo> result = new ArrayList<>();
         ArrayList<Order> orders = new ArrayList<>();
-        Set<String> pendingOrders = redisTemplate.opsForSet().members(IOrderService.NAMESPACE_4_PENDING_ORDER);
+//        Set<String> pendingOrders = redisTemplate.opsForSet().members(IOrderService.NAMESPACE_4_PENDING_ORDER);
+        // 按工单提交先后顺序，一次只能查询topN个
+        Set<String> pendingOrders = redisTemplate.opsForZSet().range(IOrderService.NAMESPACE_4_PENDING_ORDER, 0, orderConfig.getTopN() - 1);
         if (ObjectUtil.isNotNull(pendingOrders)) {
             pendingOrders.forEach(orderId -> {
                 Order order = iOrderService.getById(orderId);
@@ -159,9 +165,6 @@ public class OrderController {
                     orders.add(order);
                 }
             });
-
-            orders.sort(Comparator.comparing(Order::getCreatedTime));
-
             orders.forEach(order -> {
                 EngineerSimpleOrderVo item = new EngineerSimpleOrderVo();
                 BeanUtil.copyProperties(order, item, DateUtil.copyDate2yyyyMMddHHmm());
@@ -174,7 +177,6 @@ public class OrderController {
                 result.add(item);
             });
         }
-
         return result;
     }
 
@@ -183,7 +185,12 @@ public class OrderController {
     @CheckLogin
     public void engineerAcceptOrder(@PathVariable String orderId) {
         // todo check role
-        if (Boolean.TRUE.equals(redisTemplate.opsForSet().isMember(IOrderService.NAMESPACE_4_PENDING_ORDER, orderId))) {
+
+        Set<String> orderRange = redisTemplate.opsForZSet().range(IOrderService.NAMESPACE_4_PENDING_ORDER, 0, orderConfig.getTopN());
+        if (CollUtil.isEmpty(orderRange)) {
+            throw new GracefulResponseException("当前待办工单为空！");
+        }
+        if (Boolean.TRUE.equals(orderRange.contains(orderId))) {
             RLock fairLock = redissonClient.getFairLock(NAMESPACE_4_ORDER_LOCK + orderId);
             if (fairLock.tryLock()) {
                 if (!sendEvent(statusFlow(OrderStatusChangeEventEnum.ENGINEER_COMPLETED_ACCEPT, orderId))) {

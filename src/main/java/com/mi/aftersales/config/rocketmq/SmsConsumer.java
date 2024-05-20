@@ -6,6 +6,7 @@ import cn.hutool.core.text.CharSequenceUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONUtil;
 import com.feiniaojin.gracefulresponse.GracefulResponseException;
+import com.mi.aftersales.config.yaml.bean.CustomSmsConfig;
 import com.mi.aftersales.controller.enums.SmsCodeType;
 import com.mi.aftersales.entity.Login;
 import com.mi.aftersales.entity.Order;
@@ -17,6 +18,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.rocketmq.spring.annotation.RocketMQMessageListener;
 import org.apache.rocketmq.spring.core.RocketMQListener;
 import org.dromara.sms4j.api.SmsBlend;
+import org.dromara.sms4j.api.entity.SmsResponse;
 import org.dromara.sms4j.core.factory.SmsFactory;
 import org.springframework.stereotype.Component;
 
@@ -42,20 +44,30 @@ public class SmsConsumer implements RocketMQListener<String> {
     @Resource
     private IOrderService iOrderService;
 
+    @Resource
+    private CustomSmsConfig customSmsConfig;
+
     @Override
     public void onMessage(String orderId) {
-        Order order = iOrderService.getById(orderId);
 
-        if (BeanUtil.isEmpty(order)) {
-            throw new GracefulResponseException("非法工单！");
+        if (Boolean.TRUE.equals(customSmsConfig.getEnable())) {
+            Order order = iOrderService.getById(orderId);
+
+            if (BeanUtil.isEmpty(order)) {
+                throw new GracefulResponseException("非法工单！");
+            }
+
+            Login login = iLoginService.getById(order.getClientLoginId());
+            if (BeanUtil.isEmpty(login)) {
+                throw new GracefulResponseException("非法用户！");
+            }
+            SmsBlend smsBlend = SmsFactory.getSmsBlend(SmsCodeType.ORDER_NOTIFY.getValue());
+            SmsResponse smsResponse = smsBlend.sendMessage(login.getMobile(), orderId.substring(orderId.length() - 6));
+            log.info(CharSequenceUtil.format("工单状态提醒短信发送成功（{}）", login.getMobile()));
+        } else {
+            log.warn(CharSequenceUtil.format("当前短信未激活状态（enable is false）"));
+
         }
 
-        Login login = iLoginService.getById(order.getClientLoginId());
-        if (BeanUtil.isEmpty(login)) {
-            throw new GracefulResponseException("非法用户！");
-        }
-        SmsBlend smsBlend = SmsFactory.getSmsBlend(SmsCodeType.ORDER_NOTIFY.getValue());
-        smsBlend.sendMessage(login.getMobile(), orderId.substring(orderId.length() - 6));
-        log.info(CharSequenceUtil.format("工单状态提醒短信发送成功（{}）", login.getMobile()));
     }
 }
