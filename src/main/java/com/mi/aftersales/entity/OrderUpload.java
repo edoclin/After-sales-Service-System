@@ -4,6 +4,8 @@ import com.baomidou.mybatisplus.annotation.*;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
+
+import com.mi.aftersales.entity.enums.OrderUploaderTypeEnum;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import lombok.Setter;
@@ -51,7 +53,7 @@ public class OrderUpload implements Serializable {
     private String fileId;
 
     @Schema(description = "上传者类型;1:客户上传;2:工程师上传")
-    private Byte uploaderType;
+    private OrderUploaderTypeEnum uploaderType;
 
     @Schema(description = "所属订单ID")
     private String orderId;
