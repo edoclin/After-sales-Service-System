@@ -15,11 +15,13 @@ import com.mi.aftersales.config.yaml.bean.OrderConfig;
 import com.mi.aftersales.entity.*;
 import com.mi.aftersales.entity.enums.OrderStatusEnum;
 import com.mi.aftersales.entity.enums.OrderTypeEnum;
+import com.mi.aftersales.entity.enums.OrderUploaderTypeEnum;
 import com.mi.aftersales.exception.graceful.ServerErrorException;
 import com.mi.aftersales.service.*;
 import com.mi.aftersales.util.DateUtil;
 import com.mi.aftersales.vo.form.ClientOrderForm;
 import com.mi.aftersales.vo.form.FaultDescriptionForm;
+import com.mi.aftersales.vo.message.OrderUploadMessage;
 import com.mi.aftersales.vo.result.EngineerSimpleOrderVo;
 import io.swagger.v3.oas.annotations.Operation;
 import org.apache.rocketmq.spring.core.RocketMQTemplate;
@@ -32,13 +34,17 @@ import org.springframework.messaging.Message;
 import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.statemachine.StateMachine;
 import org.springframework.statemachine.persist.StateMachinePersister;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import javax.validation.Valid;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
 
 import static com.mi.aftersales.util.RocketMqTopic.ROCKETMQ_TOPIC_4_ORDER_LOG;
+import static com.mi.aftersales.util.RocketMqTopic.ROCKETMQ_TOPIC_4_ORDER_UPLOAD;
 
 /**
  * <p>
@@ -99,6 +105,7 @@ public class OrderController {
 
     @PostMapping(path = "/client/create")
     @Operation(summary = "客户创建工单", description = "客户创建工单")
+    @Transactional
     public void postOrder(@RequestBody @Valid ClientOrderForm form) {
 
         Fapiao fapiao = iFapiaoService.getById(form.getFapiaoId());
@@ -139,8 +146,17 @@ public class OrderController {
 
 
         order.setClientLoginId(StpUtil.getLoginIdAsString());
+        try {
+            iOrderService.save(order);
+            if (sendEvent(statusFlow(OrderStatusChangeEventEnum.CLIENT_COMPLETED_ORDER_CREATED, order.getOrderId()))) {
+                throw new ServerErrorException();
+            }
 
-        if (Boolean.FALSE.equals(iOrderService.save(order) && sendEvent(statusFlow(OrderStatusChangeEventEnum.CLIENT_COMPLETED_ORDER_CREATED, order.getOrderId())))) {
+            // 关联工单文件
+            Message<OrderUploadMessage> msg = MessageBuilder.withPayload(new OrderUploadMessage().setOrderId(order.getOrderId()).setFileIds(form.getFileIds()).setUploaderType(OrderUploaderTypeEnum.CLIENT)).build();
+            rocketmqTemplate.send(ROCKETMQ_TOPIC_4_ORDER_UPLOAD, msg);
+        } catch (Exception e) {
+            log.error(e.getMessage());
             throw new ServerErrorException();
         }
 
@@ -155,7 +171,6 @@ public class OrderController {
 //        StpUtil.checkRole(EmployeeRoleEnum.ENGINEER.name());
         ArrayList<EngineerSimpleOrderVo> result = new ArrayList<>();
         ArrayList<Order> orders = new ArrayList<>();
-//        Set<String> pendingOrders = redisTemplate.opsForSet().members(IOrderService.NAMESPACE_4_PENDING_ORDER);
         // 按工单提交先后顺序，一次只能查询topN个
         Set<String> pendingOrders = redisTemplate.opsForZSet().range(IOrderService.NAMESPACE_4_PENDING_ORDER, 0, orderConfig.getTopN() - 1);
         if (ObjectUtil.isNotNull(pendingOrders)) {
@@ -208,7 +223,7 @@ public class OrderController {
     @GetMapping(path = "/engineer/checking/{orderId}")
     @Operation(summary = "工程师开始检测", description = "工程师开始检测")
     @CheckLogin
-    public void startRepairMachine(@PathVariable String orderId){
+    public void startRepairMachine(@PathVariable String orderId) {
         // todo check role
         Order order = iOrderService.getById(orderId);
 
@@ -216,16 +231,15 @@ public class OrderController {
             throw new GracefulResponseException("非法的工单Id！");
         }
 
-        if(!CharSequenceUtil.equals(order.getEngineerLoginId(),StpUtil.getLoginIdAsString())){
+        if (!CharSequenceUtil.equals(order.getEngineerLoginId(), StpUtil.getLoginIdAsString())) {
             throw new GracefulResponseException("该工单不属于当前用户！");
         }
 
-        if(!sendEvent(statusFlow(OrderStatusChangeEventEnum.ENGINEER_START_CHECKING, orderId))){
+        if (!sendEvent(statusFlow(OrderStatusChangeEventEnum.ENGINEER_START_CHECKING, orderId))) {
             throw new GracefulResponseException("状态转换非法！");
         }
 
     }
-
 
 
     @PutMapping(path = "/engineer/faultDesc")
@@ -238,7 +252,7 @@ public class OrderController {
             throw new GracefulResponseException("该工单已撤销");
         }
 
-        if(!CharSequenceUtil.equals(order.getEngineerLoginId(),StpUtil.getLoginIdAsString())){
+        if (!CharSequenceUtil.equals(order.getEngineerLoginId(), StpUtil.getLoginIdAsString())) {
             throw new GracefulResponseException("该工单不属于当前用户！");
         }
 
@@ -251,9 +265,7 @@ public class OrderController {
             throw new ServerErrorException();
         }
 
-        // todo 用消息队列写OrderStatus日志，更新Order表就对应一条记录
-
-        // example
+        // 用消息队列写OrderStatus日志，更新Order表就对应一条记录
         OrderStatusLog orderStatusLog = new OrderStatusLog();
         orderStatusLog.setOrderId(order.getOrderId());
         orderStatusLog.setOrderStatus(order.getOrderStatus());
