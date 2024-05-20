@@ -307,6 +307,10 @@ public class OrderController {
             if (stateMachine != null) {
                 stateMachine.stop();
             }
+
+            if (stateMachine.isComplete()) {
+                // todo 工单结束，删除持久化
+            }
         }
         return result;
     }
