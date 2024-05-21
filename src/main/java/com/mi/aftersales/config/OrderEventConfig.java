@@ -146,8 +146,8 @@ public class OrderEventConfig {
         if (Boolean.FALSE.equals(iOrderService.updateById(order))) {
             throw new ServerErrorException();
         }
-        Message<OrderStatusLog> msg = MessageBuilder.withPayload(orderStatusLog).build();
 
+        Message<OrderStatusLog> msg = MessageBuilder.withPayload(orderStatusLog).build();
         rocketmqTemplate.send(ROCKETMQ_TOPIC_4_ORDER_LOG, msg);
 
         return true;
@@ -161,18 +161,18 @@ public class OrderEventConfig {
      **/
     @OnTransition(source = IOrderService.CHECKING, target = IOrderService.FEE_CONFIRMING)
     public boolean confirmingFeeOrderTransition(Message<OrderStatusChangeEventEnum> message) {
-        return true;
+        return updateOrderStatus(message, OrderStatusEnum.FEE_CONFIRMING, "工程师检测完成，发送费用账单");
     }
 
     /**
-     * @description: 工程师完成计费，等待用户确认
+     * @description: 用户确认维修
      * @return:
      * @author: edoclin
      * @created: 2024/5/18 17:32
      **/
     @OnTransition(source = IOrderService.FEE_CONFIRMING, target = IOrderService.FEE_CONFIRMED)
     public boolean confirmedFeeOrderTransition(Message<OrderStatusChangeEventEnum> message) {
-        return true;
+        return updateOrderStatus(message, OrderStatusEnum.FEE_CONFIRMED, OrderStatusEnum.FEE_CONFIRMED.getDesc());
     }
 
     /**
@@ -183,7 +183,7 @@ public class OrderEventConfig {
      **/
     @OnTransition(source = IOrderService.FEE_CONFIRMED, target = IOrderService.MATERIAL_APPLYING)
     public boolean applyingMaterialOrderTransition(Message<OrderStatusChangeEventEnum> message) {
-        return true;
+        return updateOrderStatus(message, OrderStatusEnum.MATERIAL_APPLYING, OrderStatusEnum.MATERIAL_APPLYING.getDesc());
     }
 
     /**
@@ -194,7 +194,10 @@ public class OrderEventConfig {
      **/
     @OnTransition(source = IOrderService.MATERIAL_APPLYING, target = IOrderService.MATERIAL_DISTRIBUTING)
     public boolean distributingMaterialOrderTransition(Message<OrderStatusChangeEventEnum> message) {
-        return true;
+
+
+
+        return updateOrderStatus(message, OrderStatusEnum.MATERIAL_DISTRIBUTING, OrderStatusEnum.MATERIAL_DISTRIBUTING.getDesc());
     }
 
     /**
@@ -205,7 +208,8 @@ public class OrderEventConfig {
      **/
     @OnTransition(source = IOrderService.MATERIAL_DISTRIBUTING, target = IOrderService.REPAIRING)
     public boolean repairOrderTransition(Message<OrderStatusChangeEventEnum> message) {
-        return true;
+        return updateOrderStatus(message, OrderStatusEnum.REPAIRING, OrderStatusEnum.REPAIRING.getDesc());
+
     }
 
     /**
@@ -216,7 +220,8 @@ public class OrderEventConfig {
      **/
     @OnTransition(source = IOrderService.REPAIRING, target = IOrderService.RE_CHECKING)
     public boolean reCheckingOrderTransition(Message<OrderStatusChangeEventEnum> message) {
-        return true;
+        return updateOrderStatus(message, OrderStatusEnum.RE_CHECKING, OrderStatusEnum.RE_CHECKING.getDesc());
+
     }
 
     /**
@@ -227,7 +232,8 @@ public class OrderEventConfig {
      **/
     @OnTransition(source = IOrderService.RE_CHECKING, target = IOrderService.TO_BE_PAID)
     public boolean toBePaidOrderTransition(Message<OrderStatusChangeEventEnum> message) {
-        return true;
+        return updateOrderStatus(message, OrderStatusEnum.TO_BE_PAID, OrderStatusEnum.TO_BE_PAID.getDesc());
+
     }
 
     /**
@@ -238,18 +244,30 @@ public class OrderEventConfig {
      **/
     @OnTransition(source = IOrderService.TO_BE_PAID, target = IOrderService.PAID)
     public boolean paidOrderTransition(Message<OrderStatusChangeEventEnum> message) {
-        return true;
+        return updateOrderStatus(message, OrderStatusEnum.PAID, OrderStatusEnum.PAID.getDesc());
     }
 
     /**
-     * @description: 工程师返回物品
+     * @description: 用户拒绝维修
+     * @return:
+     * @author: edoclin
+     * @created: 2024/5/20 21:50
+     **/
+    @OnTransition(source = IOrderService.FEE_CONFIRMING, target = IOrderService.RETURNING)
+    public boolean rejectRepairTransition(Message<OrderStatusChangeEventEnum> message) {
+        return updateOrderStatus(message, OrderStatusEnum.RETURNING, "用户拒绝维修！");
+    }
+
+
+    /**
+     * @description: 用户完成支付，工程师返回物品
      * @return:
      * @author: edoclin
      * @created: 2024/5/18 17:32
      **/
     @OnTransition(source = IOrderService.PAID, target = IOrderService.RETURNING)
     public boolean returningOrderTransition(Message<OrderStatusChangeEventEnum> message) {
-        return true;
+        return updateOrderStatus(message, OrderStatusEnum.RETURNING, "用户完成支付，工程师返回物品！");
     }
 
     /**
@@ -260,8 +278,28 @@ public class OrderEventConfig {
      **/
     @OnTransition(source = IOrderService.RETURNING, target = IOrderService.CLOSED)
     public boolean closedOrderTransition(Message<OrderStatusChangeEventEnum> message) {
-        return true;
+        return updateOrderStatus(message, OrderStatusEnum.CLOSED, OrderStatusEnum.CLOSED.getDesc());
+
     }
 
 
+    private boolean updateOrderStatus(Message<OrderStatusChangeEventEnum> message, OrderStatusEnum target, String detail) {
+        Order order = iOrderService.getById((String) message.getHeaders().get("order-id"));
+        if (BeanUtil.isEmpty(order)) {
+            throw new GracefulResponseException("工单状态转换：工单Id不合法！");
+        }
+        order.setOrderStatus(target);
+        OrderStatusLog orderStatusLog = new OrderStatusLog();
+        orderStatusLog.setOrderId(order.getOrderId()).setOrderStatus(order.getOrderStatus());
+        if (Boolean.FALSE.equals(iOrderService.updateById(order))) {
+            throw new ServerErrorException();
+        }
+        orderStatusLog.setStatusDetail(detail);
+
+        Message<OrderStatusLog> msg = MessageBuilder.withPayload(orderStatusLog).build();
+        rocketmqTemplate.send(ROCKETMQ_TOPIC_4_ORDER_LOG, msg);
+
+        sendSms(order.getOrderId());
+        return true;
+    }
 }

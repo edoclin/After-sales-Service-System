@@ -5,6 +5,8 @@ import com.baomidou.mybatisplus.annotation.*;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+
+import com.mi.aftersales.entity.enums.MaterialActionEnum;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import lombok.Setter;
@@ -58,7 +60,7 @@ public class MaterialLog implements Serializable {
     private String operatorId;
 
     @Schema(description = "日志事件;1:入库;2:出库")
-    private Byte action;
+    private MaterialActionEnum action;
 
     @Schema(description = "变动量")
     private BigDecimal delta;

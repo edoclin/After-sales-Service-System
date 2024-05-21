@@ -1,9 +1,7 @@
 package com.mi.aftersales.entity;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableLogic;
-import com.baomidou.mybatisplus.annotation.TableName;
+import com.baomidou.mybatisplus.annotation.*;
+
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
@@ -31,7 +29,7 @@ public class LoginRole implements Serializable {
     private static final long serialVersionUID = 1L;
 
     @Schema(description = "登录ID")
-    @TableId(value = "role_id", type = IdType.AUTO)
+    @TableId(value = "role_id", type = IdType.ASSIGN_UUID)
     private String roleId;
 
     @Schema(description = "逻辑删除")
@@ -42,15 +40,19 @@ public class LoginRole implements Serializable {
     private String loginId;
 
     @Schema(description = "创建时间")
+    @TableField(fill = FieldFill.INSERT)
     private LocalDateTime createdTime;
 
     @Schema(description = "更新时间")
+    @TableField(fill = FieldFill.UPDATE)
     private LocalDateTime updatedTime;
 
     @Schema(description = "创建者")
+    @TableField(fill = FieldFill.INSERT)
     private String createdId;
 
     @Schema(description = "更新者")
+    @TableField(fill = FieldFill.UPDATE)
     private String updatedId;
 
     @Schema(description = "员工角色")

@@ -13,14 +13,17 @@ import com.mi.aftersales.config.OrderStateMachineBuilder;
 import com.mi.aftersales.config.enums.OrderStatusChangeEventEnum;
 import com.mi.aftersales.config.yaml.bean.OrderConfig;
 import com.mi.aftersales.entity.*;
+import com.mi.aftersales.entity.enums.MaterialActionEnum;
 import com.mi.aftersales.entity.enums.OrderStatusEnum;
 import com.mi.aftersales.entity.enums.OrderTypeEnum;
 import com.mi.aftersales.entity.enums.OrderUploaderTypeEnum;
-import com.mi.aftersales.exception.graceful.ServerErrorException;
+import com.mi.aftersales.exception.graceful.*;
 import com.mi.aftersales.service.*;
 import com.mi.aftersales.util.DateUtil;
 import com.mi.aftersales.vo.form.ClientOrderForm;
 import com.mi.aftersales.vo.form.FaultDescriptionForm;
+import com.mi.aftersales.vo.form.MaterialDistributeForm;
+import com.mi.aftersales.vo.form.OrderFeeConfirmForm;
 import com.mi.aftersales.vo.message.OrderUploadMessage;
 import com.mi.aftersales.vo.result.EngineerSimpleOrderVo;
 import io.swagger.v3.oas.annotations.Operation;
@@ -39,12 +42,13 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import javax.validation.Valid;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
-import static com.mi.aftersales.util.RocketMqTopic.ROCKETMQ_TOPIC_4_ORDER_LOG;
-import static com.mi.aftersales.util.RocketMqTopic.ROCKETMQ_TOPIC_4_ORDER_UPLOAD;
+import static com.mi.aftersales.util.RocketMqTopic.*;
 
 /**
  * <p>
@@ -61,8 +65,12 @@ public class OrderController {
 
     public static final String NAMESPACE_4_MACHINE_PERSIST = "machine:persist:";
     public static final String NAMESPACE_4_ORDER_LOCK = "order:lock:";
+    public static final String NAMESPACE_4_MATERIAL_LOCK = "material:lock:";
     @Resource
     private OrderConfig orderConfig;
+
+    @Resource
+    private IMaterialService iMaterialService;
 
     @Resource(name = "orderRedisPersister")
     private StateMachinePersister<OrderStatusEnum, OrderStatusChangeEventEnum, String> orderRedisPersister;
@@ -71,6 +79,9 @@ public class OrderController {
 
     @Resource
     private IFapiaoService iFapiaoService;
+
+    @Resource
+    private IMiddleOrderMaterialService iMiddleOrderMaterialService;
 
     @Resource
     private IOrderService iOrderService;
@@ -200,20 +211,30 @@ public class OrderController {
     @CheckLogin
     public void engineerAcceptOrder(@PathVariable String orderId) {
         // todo check role
-
         Set<String> orderRange = redisTemplate.opsForZSet().range(IOrderService.NAMESPACE_4_PENDING_ORDER, 0, orderConfig.getTopN());
         if (CollUtil.isEmpty(orderRange)) {
             throw new GracefulResponseException("当前待办工单为空！");
         }
         if (Boolean.TRUE.equals(orderRange.contains(orderId))) {
             RLock fairLock = redissonClient.getFairLock(NAMESPACE_4_ORDER_LOCK + orderId);
-            if (fairLock.tryLock()) {
-                if (!sendEvent(statusFlow(OrderStatusChangeEventEnum.ENGINEER_COMPLETED_ACCEPT, orderId))) {
-                    throw new GracefulResponseException("状态转换非法！");
+            // 非阻塞加锁
+
+            try {
+                if (fairLock.tryLock(10, TimeUnit.SECONDS)) {
+                    if (!sendEvent(statusFlow(OrderStatusChangeEventEnum.ENGINEER_COMPLETED_ACCEPT, orderId))) {
+                        throw new IllegalOrderStatusFlowException();
+                    }
+                } else {
+                    throw new GracefulResponseException("抢单失败！");
                 }
-                fairLock.unlock();
-            } else {
-                throw new GracefulResponseException("该工单已被受理！");
+            } catch (InterruptedException e) {
+                log.error(e.getMessage());
+                throw new GracefulResponseException("抢单失败！");
+            } finally {
+                // 确保释放
+                if (fairLock.isLocked()) {
+                    fairLock.unlock();
+                }
             }
         } else {
             throw new GracefulResponseException("该工单已被受理！");
@@ -236,7 +257,7 @@ public class OrderController {
         }
 
         if (!sendEvent(statusFlow(OrderStatusChangeEventEnum.ENGINEER_START_CHECKING, orderId))) {
-            throw new GracefulResponseException("状态转换非法！");
+            throw new IllegalOrderStatusFlowException();
         }
 
     }
@@ -249,7 +270,7 @@ public class OrderController {
 
         Order order = iOrderService.getById(form.getOrderId());
         if (BeanUtil.isEmpty(order)) {
-            throw new GracefulResponseException("该工单已撤销");
+            throw new GracefulResponseException("非法的工单Id！");
         }
 
         if (!CharSequenceUtil.equals(order.getEngineerLoginId(), StpUtil.getLoginIdAsString())) {
@@ -273,6 +294,161 @@ public class OrderController {
 
         Message<OrderStatusLog> msg = MessageBuilder.withPayload(orderStatusLog).build();
         rocketmqTemplate.send(ROCKETMQ_TOPIC_4_ORDER_LOG, msg);
+    }
+
+
+    @PutMapping(path = "/engineer/feeConfirm")
+    @Operation(summary = "工程师确认计费", description = "工程师确认计费")
+    @CheckLogin
+    public void engineerFeeConfirm(@RequestBody @Valid OrderFeeConfirmForm form) {
+        // todo check role
+        Order order = iOrderService.getById(form.getOrderId());
+        if (BeanUtil.isEmpty(order)) {
+            throw new GracefulResponseException("非法的工单Id！");
+        }
+
+        if (!CharSequenceUtil.equals(order.getEngineerLoginId(), StpUtil.getLoginIdAsString())) {
+            throw new GracefulResponseException("该工单不属于当前用户！");
+        }
+
+        order.setManualFee(form.getManualFee());
+
+        List<MiddleOrderMaterial> batch = new ArrayList<>();
+
+        order.setMaterialFee(new BigDecimal("0"));
+        form.getMaterials().forEach(materialNum -> {
+            Material material = iMaterialService.getById(materialNum.getMaterialId());
+            if (BeanUtil.isNotEmpty(material)) {
+                order.setMaterialFee(order.getMaterialFee().add(material.getPrice().multiply(materialNum.getNum())));
+                batch.add(new MiddleOrderMaterial().setOrderId(form.getOrderId()).setMaterialId(material.getMaterialId()).setMaterialAmount(materialNum.getNum()));
+            }
+        });
+
+        try {
+            iOrderService.updateById(order);
+            if (!sendEvent(statusFlow(OrderStatusChangeEventEnum.ENGINEER_COMPLETED_FEE_CONFIRM, order.getOrderId()))) {
+                throw new IllegalOrderStatusFlowException();
+            }
+
+            // 异步更新工单物料
+            Message<List<MiddleOrderMaterial>> msg = MessageBuilder.withPayload(batch).build();
+            rocketmqTemplate.send(ROCKETMQ_TOPIC_4_ORDER_MATERIAL, msg);
+        } catch (Exception e) {
+            log.error(e.getMessage());
+            throw new ServerErrorException();
+        }
+    }
+
+
+    @PutMapping(path = "/client/feeConfirm/{orderId}")
+    @Operation(summary = "用户确认计费（确认维修）", description = "用户确认计费（确认维修）")
+    @CheckLogin
+    public void clientConfirmFee(@PathVariable String orderId) {
+        Order order = iOrderService.getById(orderId);
+        if (BeanUtil.isEmpty(order)) {
+            throw new IllegalOrderIdException();
+        }
+        if (!CharSequenceUtil.equals(order.getClientLoginId(), StpUtil.getLoginIdAsString())) {
+            throw new IllegalOrderLoginIdException();
+        }
+        if (!sendEvent(statusFlow(OrderStatusChangeEventEnum.CLIENT_COMPLETED_FEE_CONFIRM, order.getOrderId()))) {
+            throw new IllegalOrderStatusFlowException();
+        }
+    }
+
+    @PutMapping(path = "/client/reject/{orderId}")
+    @Operation(summary = "用户拒绝维修（返回物品）", description = "用户拒绝维修（返回物品）")
+    @CheckLogin
+    public void clientRejectRepair(@PathVariable String orderId) {
+        Order order = iOrderService.getById(orderId);
+        if (BeanUtil.isEmpty(order)) {
+            throw new IllegalOrderIdException();
+        }
+        if (!CharSequenceUtil.equals(order.getClientLoginId(), StpUtil.getLoginIdAsString())) {
+            throw new IllegalOrderLoginIdException();
+        }
+        if (!sendEvent(statusFlow(OrderStatusChangeEventEnum.CLIENT_REJECT_REPAIR, order.getOrderId()))) {
+            throw new IllegalOrderStatusFlowException();
+        }
+    }
+
+    @PutMapping(path = "/engineer/materialApply/{orderId}")
+    @Operation(summary = "工程师申请物料", description = "工程师申请物料")
+    @CheckLogin
+    public void engineerMaterialApply(@PathVariable String orderId) {
+        // todo check role
+        // 当工单状态 == MATERIAL_APPLY时，库管开始处理申请
+        Order order = iOrderService.getById(orderId);
+        if (BeanUtil.isEmpty(order)) {
+            throw new IllegalOrderIdException();
+        }
+        if (!CharSequenceUtil.equals(order.getEngineerLoginId(), StpUtil.getLoginIdAsString())) {
+            throw new IllegalOrderLoginIdException();
+        }
+        if (!sendEvent(statusFlow(OrderStatusChangeEventEnum.ENGINEER_APPLIED_MATERIAL, order.getOrderId()))) {
+            throw new IllegalOrderStatusFlowException();
+        }
+    }
+
+    @PutMapping(path = "/material/distribute")
+    @Operation(summary = "库管处理请求（分发物料）", description = "库管处理请求（分发物料）")
+    @CheckLogin
+    @Transactional
+    public void materialDistribute(@RequestBody @Valid MaterialDistributeForm form) {
+        // todo check role
+        // 当工单状态 == MATERIAL_APPLY时，库管开始处理申请
+        Order order = iOrderService.getById(form.getOrderId());
+        if (BeanUtil.isEmpty(order)) {
+            throw new IllegalOrderIdException();
+        }
+
+        RLock fairLock = redissonClient.getFairLock(NAMESPACE_4_MATERIAL_LOCK);
+        try {
+
+            List<MaterialLog> materialLogs = new ArrayList<>();
+            List<Material> batch = new ArrayList<>();
+            if (fairLock.tryLock(30, TimeUnit.DAYS)) {
+                // 修改库存
+                form.getMaterials().forEach(materialNum -> {
+                    Material material = iMaterialService.getById(materialNum.getMaterialId());
+                    if (BeanUtil.isEmpty(material)) {
+                        throw new IllegalMaterialIdException();
+                    }
+
+                    if (material.getStock().compareTo(materialNum.getNum()) > 0) {
+                        material.setStock(material.getStock().subtract(materialNum.getNum()));
+                    } else {
+                        throw new GracefulResponseException(CharSequenceUtil.format("物料（{}）库存不足！", materialNum.getMaterialId()));
+                    }
+
+                    batch.add(material);
+                    MaterialLog materialLog = new MaterialLog();
+                    materialLog.setMaterialId(materialNum.getMaterialId())
+                            .setAction(MaterialActionEnum.STOCK_OUT)
+                            .setDelta(materialNum.getNum())
+                            .setOperatorId(StpUtil.getLoginIdAsString())
+                            .setLogDetail(CharSequenceUtil.format("工单（id：{}，工程师：{}）申请物料", order.getOrderId(), order.getEngineerLoginId()));
+                    materialLogs.add(materialLog);
+                });
+
+                // 异步物料变动日志
+                Message<List<MaterialLog>> msg = MessageBuilder.withPayload(materialLogs).build();
+                rocketmqTemplate.send(ROCKETMQ_TOPIC_4_MATERIAL_LOG, msg);
+            }
+        } catch (GracefulResponseException e) {
+            log.error(e.getMsg());
+            throw new GracefulResponseException(e.getMsg());
+        } catch (Exception e) {
+            log.error(e.getMessage());
+            throw new ServerErrorException();
+        } finally {
+            if (fairLock.isLocked()) {
+                fairLock.unlock();
+            }
+        }
+        if (!sendEvent(statusFlow(OrderStatusChangeEventEnum.MANAGER_DISTRIBUTED_MATERIAL, order.getOrderId()))) {
+            throw new IllegalOrderStatusFlowException();
+        }
     }
 
     /*
