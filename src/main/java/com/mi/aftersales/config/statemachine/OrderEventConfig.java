@@ -1,4 +1,4 @@
-package com.mi.aftersales.config;
+package com.mi.aftersales.config.statemachine;
 
 import cn.dev33.satoken.stp.StpUtil;
 import cn.hutool.core.bean.BeanUtil;
@@ -70,7 +70,7 @@ public class OrderEventConfig {
         order.setOrderStatus(OrderStatusEnum.WAITING);
         OrderStatusLog orderStatusLog = new OrderStatusLog();
 
-        orderStatusLog.setCreatedId(StpUtil.getLoginIdAsString()).setOrderId(order.getOrderId()).setOrderStatus(order.getOrderStatus()).setStatusDetail(CharSequenceUtil.format("工单创建成功，等待工程师处理！"));
+        orderStatusLog.setCreatedId(order.getClientLoginId()).setOrderId(order.getOrderId()).setOrderStatus(order.getOrderStatus()).setStatusDetail(CharSequenceUtil.format("工单创建成功，等待工程师处理！"));
 
 
         if (Boolean.FALSE.equals(iOrderService.updateById(order))) {
@@ -280,6 +280,17 @@ public class OrderEventConfig {
     public boolean closedOrderTransition(Message<OrderStatusChangeEventEnum> message) {
         return updateOrderStatus(message, OrderStatusEnum.CLOSED, OrderStatusEnum.CLOSED.getDesc());
 
+    }
+
+    /**
+     * @description: 客户关闭工单
+     * @return:
+     * @author: edoclin
+     * @created: 2024/5/18 17:32
+     **/
+    @OnTransition(source = IOrderService.FEE_CONFIRMED, target = IOrderService.REPAIRING)
+    public boolean startRepairOrderTransition(Message<OrderStatusChangeEventEnum> message) {
+        return updateOrderStatus(message, OrderStatusEnum.REPAIRING, OrderStatusEnum.REPAIRING.getDesc());
     }
 
 

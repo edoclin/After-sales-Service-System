@@ -96,7 +96,7 @@ public class LoginController {
     @Resource
     private ILoginRoleService iLoginRoleService;
 
-    @PostMapping(path = "/client/sms")
+    @GetMapping(path = "/sms")
     @Operation(summary = "发送短信验证码", description = "发送短信验证码")
     public SmsResultVo sendSmsCode(@RequestBody @Valid SendSmsCodeForm form) {
         SmsResultVo smsResultVo = new SmsResultVo();
