@@ -4,8 +4,6 @@ package com.mi.aftersales.config.rocketmq;
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.text.CharSequenceUtil;
 import cn.hutool.json.JSONUtil;
-import com.mi.aftersales.config.OrderEventConfig;
-import com.mi.aftersales.entity.Order;
 import com.mi.aftersales.entity.OrderStatusLog;
 import com.mi.aftersales.service.IOrderStatusLogService;
 import lombok.extern.slf4j.Slf4j;

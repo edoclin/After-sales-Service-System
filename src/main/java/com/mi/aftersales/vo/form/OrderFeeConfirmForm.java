@@ -28,5 +28,5 @@ public class OrderFeeConfirmForm {
     private List<MaterialNum> materials;
 
     @Schema(description = "工程师预估手工费")
-    private BigDecimal manualFee;
+    private BigDecimal manualFee = BigDecimal.valueOf(50L);
 }

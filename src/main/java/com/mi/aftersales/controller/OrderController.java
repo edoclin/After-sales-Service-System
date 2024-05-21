@@ -9,14 +9,11 @@ import cn.hutool.core.text.CharSequenceUtil;
 import cn.hutool.core.util.ObjectUtil;
 import com.feiniaojin.gracefulresponse.GracefulResponseException;
 import com.mi.aftersales.aspect.anno.CheckLogin;
-import com.mi.aftersales.config.OrderStateMachineBuilder;
+import com.mi.aftersales.config.statemachine.OrderStateMachineBuilder;
 import com.mi.aftersales.config.enums.OrderStatusChangeEventEnum;
 import com.mi.aftersales.config.yaml.bean.OrderConfig;
 import com.mi.aftersales.entity.*;
-import com.mi.aftersales.entity.enums.MaterialActionEnum;
-import com.mi.aftersales.entity.enums.OrderStatusEnum;
-import com.mi.aftersales.entity.enums.OrderTypeEnum;
-import com.mi.aftersales.entity.enums.OrderUploaderTypeEnum;
+import com.mi.aftersales.entity.enums.*;
 import com.mi.aftersales.exception.graceful.*;
 import com.mi.aftersales.service.*;
 import com.mi.aftersales.util.DateUtil;
@@ -27,6 +24,7 @@ import com.mi.aftersales.vo.form.OrderFeeConfirmForm;
 import com.mi.aftersales.vo.message.OrderUploadMessage;
 import com.mi.aftersales.vo.result.EngineerSimpleOrderVo;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import org.apache.rocketmq.spring.core.RocketMQTemplate;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
@@ -159,7 +157,8 @@ public class OrderController {
         order.setClientLoginId(StpUtil.getLoginIdAsString());
         try {
             iOrderService.save(order);
-            if (sendEvent(statusFlow(OrderStatusChangeEventEnum.CLIENT_COMPLETED_ORDER_CREATED, order.getOrderId()))) {
+            if (!sendEvent(statusFlow(OrderStatusChangeEventEnum.CLIENT_COMPLETED_ORDER_CREATED, order.getOrderId()))) {
+                log.error(CharSequenceUtil.format("工单（{}）状态转换失败", order.getOrderId()));
                 throw new ServerErrorException();
             }
 
@@ -178,8 +177,7 @@ public class OrderController {
     @GetMapping(path = "/engineer/pending")
     @Operation(summary = "工程师查询待办工单", description = "工程师查询待办工单")
     public List<EngineerSimpleOrderVo> listPendingOrder() {
-        // todo 检查角色
-//        StpUtil.checkRole(EmployeeRoleEnum.ENGINEER.name());
+        StpUtil.checkRole(EmployeeRoleEnum.ENGINEER.name());
         ArrayList<EngineerSimpleOrderVo> result = new ArrayList<>();
         ArrayList<Order> orders = new ArrayList<>();
         // 按工单提交先后顺序，一次只能查询topN个
@@ -210,7 +208,7 @@ public class OrderController {
     @Operation(summary = "工程师接受工单", description = "工程师接受工单")
     @CheckLogin
     public void engineerAcceptOrder(@PathVariable String orderId) {
-        // todo check role
+        StpUtil.checkRole(EmployeeRoleEnum.ENGINEER.name());
         Set<String> orderRange = redisTemplate.opsForZSet().range(IOrderService.NAMESPACE_4_PENDING_ORDER, 0, orderConfig.getTopN());
         if (CollUtil.isEmpty(orderRange)) {
             throw new GracefulResponseException("当前待办工单为空！");
@@ -241,19 +239,19 @@ public class OrderController {
         }
     }
 
-    @GetMapping(path = "/engineer/checking/{orderId}")
+    @PutMapping(path = "/engineer/checking/{orderId}")
     @Operation(summary = "工程师开始检测", description = "工程师开始检测")
     @CheckLogin
     public void startRepairMachine(@PathVariable String orderId) {
-        // todo check role
+        StpUtil.checkRole(EmployeeRoleEnum.ENGINEER.name());
         Order order = iOrderService.getById(orderId);
 
         if (BeanUtil.isEmpty(order)) {
-            throw new GracefulResponseException("非法的工单Id！");
+            throw new IllegalOrderIdException();
         }
 
         if (!CharSequenceUtil.equals(order.getEngineerLoginId(), StpUtil.getLoginIdAsString())) {
-            throw new GracefulResponseException("该工单不属于当前用户！");
+            throw new IllegalOrderLoginIdException();
         }
 
         if (!sendEvent(statusFlow(OrderStatusChangeEventEnum.ENGINEER_START_CHECKING, orderId))) {
@@ -266,15 +264,14 @@ public class OrderController {
     @PutMapping(path = "/engineer/faultDesc")
     @Operation(summary = "工程师上传故障描述", description = "工程师拆机维修，工程师故障描述")
     public void faultDescription(@RequestBody @Valid FaultDescriptionForm form) {
-        // todo check role
-
+        StpUtil.checkRole(EmployeeRoleEnum.ENGINEER.name());
         Order order = iOrderService.getById(form.getOrderId());
         if (BeanUtil.isEmpty(order)) {
-            throw new GracefulResponseException("非法的工单Id！");
+            throw new IllegalOrderIdException();
         }
 
         if (!CharSequenceUtil.equals(order.getEngineerLoginId(), StpUtil.getLoginIdAsString())) {
-            throw new GracefulResponseException("该工单不属于当前用户！");
+            throw new IllegalOrderLoginIdException();
         }
 
         order.setEngineerFaultDesc(form.getEngineerFaultDesc());
@@ -301,14 +298,14 @@ public class OrderController {
     @Operation(summary = "工程师确认计费", description = "工程师确认计费")
     @CheckLogin
     public void engineerFeeConfirm(@RequestBody @Valid OrderFeeConfirmForm form) {
-        // todo check role
+        StpUtil.checkRole(EmployeeRoleEnum.ENGINEER.name());
         Order order = iOrderService.getById(form.getOrderId());
         if (BeanUtil.isEmpty(order)) {
-            throw new GracefulResponseException("非法的工单Id！");
+            throw new IllegalOrderIdException();
         }
 
         if (!CharSequenceUtil.equals(order.getEngineerLoginId(), StpUtil.getLoginIdAsString())) {
-            throw new GracefulResponseException("该工单不属于当前用户！");
+            throw new IllegalOrderLoginIdException();
         }
 
         order.setManualFee(form.getManualFee());
@@ -333,9 +330,9 @@ public class OrderController {
             // 异步更新工单物料
             Message<List<MiddleOrderMaterial>> msg = MessageBuilder.withPayload(batch).build();
             rocketmqTemplate.send(ROCKETMQ_TOPIC_4_ORDER_MATERIAL, msg);
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
             log.error(e.getMessage());
-            throw new ServerErrorException();
+            throw e;
         }
     }
 
@@ -351,7 +348,9 @@ public class OrderController {
         if (!CharSequenceUtil.equals(order.getClientLoginId(), StpUtil.getLoginIdAsString())) {
             throw new IllegalOrderLoginIdException();
         }
-        if (!sendEvent(statusFlow(OrderStatusChangeEventEnum.CLIENT_COMPLETED_FEE_CONFIRM, order.getOrderId()))) {
+        Message<OrderStatusChangeEventEnum> build = MessageBuilder.withPayload(OrderStatusChangeEventEnum.CLIENT_CONFIRMING).setHeader(IOrderService.STATE_MACHINE_HEADER_ORDER_NAME, orderId).setHeader(IOrderService.CLIENT_CHOICE, OrderStatusChangeEventEnum.CLIENT_COMPLETED_FEE_CONFIRM).build();
+
+        if (!sendEvent(build)) {
             throw new IllegalOrderStatusFlowException();
         }
     }
@@ -367,41 +366,26 @@ public class OrderController {
         if (!CharSequenceUtil.equals(order.getClientLoginId(), StpUtil.getLoginIdAsString())) {
             throw new IllegalOrderLoginIdException();
         }
-        if (!sendEvent(statusFlow(OrderStatusChangeEventEnum.CLIENT_REJECT_REPAIR, order.getOrderId()))) {
+
+        Message<OrderStatusChangeEventEnum> build = MessageBuilder.withPayload(OrderStatusChangeEventEnum.CLIENT_CONFIRMING).setHeader(IOrderService.STATE_MACHINE_HEADER_ORDER_NAME, orderId).setHeader(IOrderService.CLIENT_CHOICE, OrderStatusChangeEventEnum.CLIENT_REJECT_REPAIR).build();
+
+        if (!sendEvent(build)) {
             throw new IllegalOrderStatusFlowException();
         }
     }
 
-    @PutMapping(path = "/engineer/materialApply/{orderId}")
-    @Operation(summary = "工程师申请物料", description = "工程师申请物料")
-    @CheckLogin
-    public void engineerMaterialApply(@PathVariable String orderId) {
-        // todo check role
-        // 当工单状态 == MATERIAL_APPLY时，库管开始处理申请
-        Order order = iOrderService.getById(orderId);
-        if (BeanUtil.isEmpty(order)) {
-            throw new IllegalOrderIdException();
-        }
-        if (!CharSequenceUtil.equals(order.getEngineerLoginId(), StpUtil.getLoginIdAsString())) {
-            throw new IllegalOrderLoginIdException();
-        }
-        if (!sendEvent(statusFlow(OrderStatusChangeEventEnum.ENGINEER_APPLIED_MATERIAL, order.getOrderId()))) {
-            throw new IllegalOrderStatusFlowException();
-        }
-    }
 
     @PutMapping(path = "/material/distribute")
     @Operation(summary = "库管处理请求（分发物料）", description = "库管处理请求（分发物料）")
     @CheckLogin
     @Transactional
     public void materialDistribute(@RequestBody @Valid MaterialDistributeForm form) {
-        // todo check role
+        StpUtil.checkRole(EmployeeRoleEnum.MATERIAL_MANAGER.name());
         // 当工单状态 == MATERIAL_APPLY时，库管开始处理申请
         Order order = iOrderService.getById(form.getOrderId());
         if (BeanUtil.isEmpty(order)) {
             throw new IllegalOrderIdException();
         }
-
         RLock fairLock = redissonClient.getFairLock(NAMESPACE_4_MATERIAL_LOCK);
         try {
 
@@ -423,11 +407,7 @@ public class OrderController {
 
                     batch.add(material);
                     MaterialLog materialLog = new MaterialLog();
-                    materialLog.setMaterialId(materialNum.getMaterialId())
-                            .setAction(MaterialActionEnum.STOCK_OUT)
-                            .setDelta(materialNum.getNum())
-                            .setOperatorId(StpUtil.getLoginIdAsString())
-                            .setLogDetail(CharSequenceUtil.format("工单（id：{}，工程师：{}）申请物料", order.getOrderId(), order.getEngineerLoginId()));
+                    materialLog.setMaterialId(materialNum.getMaterialId()).setAction(MaterialActionEnum.STOCK_OUT).setDelta(materialNum.getNum()).setOperatorId(StpUtil.getLoginIdAsString()).setLogDetail(CharSequenceUtil.format("工单（id：{}，工程师：{}）申请物料", order.getOrderId(), order.getEngineerLoginId()));
                     materialLogs.add(materialLog);
                 });
 
@@ -447,6 +427,116 @@ public class OrderController {
             }
         }
         if (!sendEvent(statusFlow(OrderStatusChangeEventEnum.MANAGER_DISTRIBUTED_MATERIAL, order.getOrderId()))) {
+            throw new IllegalOrderStatusFlowException();
+        }
+    }
+
+    @PutMapping(path = "/engineer/repair/{orderId}/{material}")
+    @Operation(summary = "工程师开始维修", description = "工程师开始维修")
+    @Parameter(name = "material", description = "无需物料：false")
+    @CheckLogin
+    @Transactional
+    public void engineerStartRepairing(@PathVariable String orderId, @PathVariable Boolean material) {
+        StpUtil.checkRole(EmployeeRoleEnum.ENGINEER.name());
+
+        Order order = iOrderService.getById(orderId);
+        if (BeanUtil.isEmpty(order)) {
+            throw new IllegalOrderIdException();
+        }
+
+        if (!CharSequenceUtil.equals(order.getEngineerLoginId(), StpUtil.getLoginIdAsString())) {
+            throw new IllegalOrderLoginIdException();
+        }
+        Message<OrderStatusChangeEventEnum> build;
+
+        if (material) {
+
+            build = MessageBuilder.withPayload(OrderStatusChangeEventEnum.ENGINEER_RECEIVED_MATERIAL).setHeader(IOrderService.STATE_MACHINE_HEADER_ORDER_NAME, orderId).build();
+        } else {
+            build = MessageBuilder.withPayload(OrderStatusChangeEventEnum.ENGINEER_MATERIAL_CONFIRMING).setHeader(IOrderService.STATE_MACHINE_HEADER_ORDER_NAME, orderId).setHeader(IOrderService.ENGINEER_CHOICE, OrderStatusChangeEventEnum.ENGINEER_START_REPAIR).build();
+        }
+        if (!sendEvent(build)) {
+            throw new IllegalOrderStatusFlowException();
+        }
+    }
+
+    @PutMapping(path = "/engineer/recheck/{orderId}")
+    @Operation(summary = "工程师开始复检", description = "工程师开始复检")
+    @CheckLogin
+    @Transactional
+    public void engineerStartRechecking(@PathVariable String orderId) {
+        StpUtil.checkRole(EmployeeRoleEnum.ENGINEER.name());
+
+        Order order = iOrderService.getById(orderId);
+        if (BeanUtil.isEmpty(order)) {
+            throw new IllegalOrderIdException();
+        }
+
+        if (!CharSequenceUtil.equals(order.getEngineerLoginId(), StpUtil.getLoginIdAsString())) {
+            throw new IllegalOrderLoginIdException();
+        }
+
+        if (!sendEvent(statusFlow(OrderStatusChangeEventEnum.ENGINEER_START_RECHECK, order.getOrderId()))) {
+            throw new IllegalOrderStatusFlowException();
+        }
+    }
+
+    @PutMapping(path = "/engineer/toBePaid/{orderId}")
+    @Operation(summary = "工程师完成维修，发送账单，等待支付", description = "工程师完成维修，发送账单，等待支付")
+    @CheckLogin
+    @Transactional
+    public void engineerFinishedRepair(@PathVariable String orderId) {
+        StpUtil.checkRole(EmployeeRoleEnum.ENGINEER.name());
+        Order order = iOrderService.getById(orderId);
+        if (BeanUtil.isEmpty(order)) {
+            throw new IllegalOrderIdException();
+        }
+
+        if (!CharSequenceUtil.equals(order.getEngineerLoginId(), StpUtil.getLoginIdAsString())) {
+            throw new IllegalOrderLoginIdException();
+        }
+
+        if (!sendEvent(statusFlow(OrderStatusChangeEventEnum.ENGINEER_COMPLETED_RECHECK, order.getOrderId()))) {
+            throw new IllegalOrderStatusFlowException();
+        }
+    }
+
+    @PutMapping(path = "/engineer/return/{orderId}")
+    @Operation(summary = "工程师开始返还物品", description = "工程师开始返还物品")
+    @CheckLogin
+    @Transactional
+    public void engineerReturn(@PathVariable String orderId) {
+        StpUtil.checkRole(EmployeeRoleEnum.ENGINEER.name());
+        Order order = iOrderService.getById(orderId);
+        if (BeanUtil.isEmpty(order)) {
+            throw new IllegalOrderIdException();
+        }
+
+        if (!CharSequenceUtil.equals(order.getEngineerLoginId(), StpUtil.getLoginIdAsString())) {
+            throw new IllegalOrderLoginIdException();
+        }
+
+        if (!sendEvent(statusFlow(OrderStatusChangeEventEnum.ENGINEER_COMPLETED_RETURN, order.getOrderId()))) {
+            throw new IllegalOrderStatusFlowException();
+        }
+    }
+
+    @PutMapping(path = "/client/close/{orderId}")
+    @Operation(summary = "用户关闭工单", description = "用户关闭工单")
+    @CheckLogin
+    @Transactional
+    public void clientClose(@PathVariable String orderId) {
+        StpUtil.checkRole(EmployeeRoleEnum.ENGINEER.name());
+        Order order = iOrderService.getById(orderId);
+        if (BeanUtil.isEmpty(order)) {
+            throw new IllegalOrderIdException();
+        }
+
+        if (!CharSequenceUtil.equals(order.getClientLoginId(), StpUtil.getLoginIdAsString())) {
+            throw new IllegalOrderLoginIdException();
+        }
+
+        if (!sendEvent(statusFlow(OrderStatusChangeEventEnum.CLIENT_CLOSED, order.getOrderId()))) {
             throw new IllegalOrderStatusFlowException();
         }
     }
@@ -476,17 +566,20 @@ public class OrderController {
                 orderRedisPersister.restore(stateMachine, NAMESPACE_4_MACHINE_PERSIST + message.getHeaders().get(IOrderService.STATE_MACHINE_HEADER_ORDER_NAME));
             }
             result = stateMachine.sendEvent(message);
-            orderRedisPersister.persist(stateMachine, NAMESPACE_4_MACHINE_PERSIST + message.getHeaders().get(IOrderService.STATE_MACHINE_HEADER_ORDER_NAME));
+            if (!stateMachine.isComplete()) {
+                orderRedisPersister.persist(stateMachine, NAMESPACE_4_MACHINE_PERSIST + message.getHeaders().get(IOrderService.STATE_MACHINE_HEADER_ORDER_NAME));
+            }
         } catch (Exception e) {
             throw new GracefulResponseException(e.getMessage());
         } finally {
             if (stateMachine != null) {
+                if (stateMachine.isComplete()) {
+                    // todo 工单结束，删除持久化
+                    redisTemplate.delete(NAMESPACE_4_MACHINE_PERSIST + message.getHeaders().get(IOrderService.STATE_MACHINE_HEADER_ORDER_NAME));
+                }
                 stateMachine.stop();
             }
 
-            if (stateMachine.isComplete()) {
-                // todo 工单结束，删除持久化
-            }
         }
         return result;
     }
