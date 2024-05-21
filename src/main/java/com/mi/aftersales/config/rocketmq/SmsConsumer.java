@@ -27,7 +27,7 @@ import javax.annotation.Resource;
 import static com.mi.aftersales.util.RocketMqTopic.ROCKETMQ_TOPIC_4_SMS;
 
 /**
- * @description: 工单状态日志消费
+ * @description:
  * @return:
  * @author: edoclin
  * @created: 2024/5/18 18:24

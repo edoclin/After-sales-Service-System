@@ -17,6 +17,9 @@ public enum OrderStatusChangeEventEnum {
     // 工程师确认费用 -> 4.费用确认
     ENGINEER_COMPLETED_FEE_CONFIRM,
     CLIENT_COMPLETED_FEE_CONFIRM,
+
+    // 用户拒绝维修，返回用户
+    CLIENT_REJECT_REPAIR,
     // 工程师申请物料 -> 5.物料申请
     ENGINEER_APPLIED_MATERIAL,
     // 管理员发放物料 -> 6.物料派发

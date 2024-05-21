@@ -8,6 +8,6 @@ import com.feiniaojin.gracefulresponse.api.ExceptionMapper;
  * @author: edoclin
  * @created: 2024/5/12 12:33
  **/
-@ExceptionMapper(code = "-1", msg = "工单状态转换非法！")
-public class IllegalOrderStatusFlowException extends RuntimeException {
+@ExceptionMapper(code = "-1", msg = "非法的物料Id！")
+public class IllegalMaterialIdException extends RuntimeException {
 }

@@ -14,6 +14,8 @@ public class RocketMqTopic {
     public static final String ROCKETMQ_TOPIC_4_ALIPAY_ORDER = "alipay-order-topic";
     public static final String ROCKETMQ_TOPIC_4_SMS = "sms-topic";
     public static final String ROCKETMQ_TOPIC_4_ORDER_UPLOAD = "order-upload-topic";
+    public static final String ROCKETMQ_TOPIC_4_ORDER_MATERIAL = "order-material-topic";
+    public static final String ROCKETMQ_TOPIC_4_MATERIAL_LOG = "material-log-topic";
 
     private RocketMqTopic() {}
 }

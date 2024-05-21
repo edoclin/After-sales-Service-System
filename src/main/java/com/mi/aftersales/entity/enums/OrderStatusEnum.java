@@ -1,6 +1,7 @@
 package com.mi.aftersales.entity.enums;
 
 import com.baomidou.mybatisplus.annotation.IEnum;
+import lombok.Getter;
 
 /**
  * @description:
@@ -37,5 +38,9 @@ public enum OrderStatusEnum implements IEnum<Integer> {
     @Override
     public Integer getValue() {
         return value;
+    }
+
+    public String getDesc() {
+        return desc;
     }
 }
