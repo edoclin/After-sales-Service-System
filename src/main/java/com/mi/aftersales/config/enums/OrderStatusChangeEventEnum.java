@@ -17,12 +17,17 @@ public enum OrderStatusChangeEventEnum {
     // 工程师确认费用 -> 4.费用确认
     ENGINEER_COMPLETED_FEE_CONFIRM,
     CLIENT_COMPLETED_FEE_CONFIRM,
+    CLIENT_CONFIRMING,
+    ENGINEER_MATERIAL_CONFIRMING,
+    // 用户拒绝维修，返回用户
+    CLIENT_REJECT_REPAIR,
     // 工程师申请物料 -> 5.物料申请
     ENGINEER_APPLIED_MATERIAL,
     // 管理员发放物料 -> 6.物料派发
     MANAGER_DISTRIBUTED_MATERIAL,
     // 工程师收到物料 -> 7.维修
     ENGINEER_RECEIVED_MATERIAL,
+
     // 无需物料， 直接开始维修-> 7.维修
     ENGINEER_START_REPAIR,
     // 工程师开始复检 -> 8复检

@@ -29,4 +29,6 @@ public interface IOrderService extends IService<Order> {
     String RETURNING = "RETURNING";
     String CLOSED = "CLOSED";
     String STATE_MACHINE_HEADER_ORDER_NAME = "order-id";
+    String CLIENT_CHOICE = "client-choice";
+    String ENGINEER_CHOICE = "engineer-choice";
 }

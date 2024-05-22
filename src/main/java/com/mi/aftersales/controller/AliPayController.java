@@ -18,8 +18,11 @@ import com.mi.aftersales.config.yaml.bean.AliPayConfig;
 import com.mi.aftersales.entity.Order;
 import com.mi.aftersales.entity.OrderStatusLog;
 import com.mi.aftersales.entity.PayOrder;
+import com.mi.aftersales.entity.enums.OrderStatusEnum;
 import com.mi.aftersales.entity.enums.PayMethodEnum;
 import com.mi.aftersales.entity.enums.PayStatusEnum;
+import com.mi.aftersales.exception.graceful.IllegalOrderIdException;
+import com.mi.aftersales.exception.graceful.IllegalOrderLoginIdException;
 import com.mi.aftersales.exception.graceful.IllegalOrderStatusFlowException;
 import com.mi.aftersales.service.IOrderService;
 import com.mi.aftersales.service.IPayOrderService;
@@ -76,11 +79,15 @@ class AliPayController {
         Order order = iOrderService.getById(orderId);
 
         if (BeanUtil.isEmpty(order)) {
-            throw new GracefulResponseException("订单号无效！");
+            throw new IllegalOrderIdException();
         }
 
         if (!CharSequenceUtil.equals(order.getClientLoginId(), StpUtil.getLoginIdAsString())) {
-            throw new GracefulResponseException("订单不属于当前用户！");
+            throw new IllegalOrderLoginIdException();
+        }
+
+        if (!OrderStatusEnum.TO_BE_PAID.equals(order.getOrderStatus() )) {
+            throw new GracefulResponseException("该工单尚未到达支付流程！");
         }
 
         AlipayClient alipayClient = new DefaultAlipayClient(aliPayConfig.getAlipayGatewayUrl(), aliPayConfig.getAppId(), aliPayConfig.getPrivateKey(), "json", "utf-8", aliPayConfig.getPublicKey(), aliPayConfig.getSignType());
@@ -106,11 +113,7 @@ class AliPayController {
         result.setBody(response.getBody());
 
 
-        payOrder
-                .setPayMethod(PayMethodEnum.ALIPAY)
-                .setAmount(amount)
-                .setPayStatus(PayStatusEnum.WAITING)
-                .setOrderId(orderId);
+        payOrder.setPayMethod(PayMethodEnum.ALIPAY).setAmount(amount).setPayStatus(PayStatusEnum.WAITING).setOrderId(orderId);
 
         // 异步创建订单
         Message<PayOrder> msg = MessageBuilder.withPayload(payOrder).build();
@@ -140,12 +143,13 @@ class AliPayController {
         payOrder.setPayStatus(PayStatusEnum.PAID);
         payOrder.setPayDetail(JSONUtil.toJsonStr(new PayDetailVo().setPaidTime(LocalDateTime.now())));
 
-        // 异步更新订单
-        Message<PayOrder> msg = MessageBuilder.withPayload(payOrder).build();
-        rocketmqTemplate.send(ROCKETMQ_TOPIC_4_ALIPAY_ORDER, msg);
-
         if (!orderController.sendEvent(OrderController.statusFlow(OrderStatusChangeEventEnum.CLIENT_COMPLETED_PAY, payOrder.getOrderId()))) {
             throw new IllegalOrderStatusFlowException();
         }
+
+        // 异步更新支付订单
+        Message<PayOrder> msg = MessageBuilder.withPayload(payOrder).build();
+        rocketmqTemplate.send(ROCKETMQ_TOPIC_4_ALIPAY_ORDER, msg);
+
     }
 }
