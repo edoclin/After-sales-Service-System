@@ -12,5 +12,6 @@ import com.baomidou.mybatisplus.extension.service.IService;
  * @since 2024-05-14
  */
 public interface IMaterialService extends IService<Material> {
+    String NAMESPACE_4_MATERIAL_LOCK = "material:lock:";
 
 }
