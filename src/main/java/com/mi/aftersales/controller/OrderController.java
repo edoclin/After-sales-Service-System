@@ -33,6 +33,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.support.MessageBuilder;
+import org.springframework.statemachine.ObjectStateMachine;
 import org.springframework.statemachine.StateMachine;
 import org.springframework.statemachine.persist.StateMachinePersister;
 import org.springframework.transaction.annotation.Transactional;
@@ -375,6 +376,34 @@ public class OrderController {
     }
 
 
+    @PutMapping(path = "/material/apply/{orderId}")
+    @Operation(summary = "工程师申请物料", description = "工程师申请物料")
+    @CheckLogin
+    @Transactional
+    public void materialApply(@PathVariable String orderId) {
+        StpUtil.checkRole(EmployeeRoleEnum.ENGINEER.name());
+
+        Order order = iOrderService.getById(orderId);
+        if (BeanUtil.isEmpty(order)) {
+            throw new IllegalOrderIdException();
+        }
+
+        if (!CharSequenceUtil.equals(order.getEngineerLoginId(), StpUtil.getLoginIdAsString())) {
+            throw new IllegalOrderLoginIdException();
+        }
+
+        Message<OrderStatusChangeEventEnum> build = MessageBuilder
+                .withPayload(OrderStatusChangeEventEnum.ENGINEER_MATERIAL_CONFIRMING)
+                .setHeader(IOrderService.STATE_MACHINE_HEADER_ORDER_NAME, orderId)
+                .setHeader(IOrderService.ENGINEER_CHOICE, OrderStatusChangeEventEnum.ENGINEER_APPLIED_MATERIAL).build();
+
+        if (!sendEvent(build)) {
+            throw new IllegalOrderStatusFlowException();
+        }
+
+
+    }
+
     @PutMapping(path = "/material/distribute")
     @Operation(summary = "库管处理请求（分发物料）", description = "库管处理请求（分发物料）")
     @CheckLogin
@@ -548,7 +577,6 @@ public class OrderController {
         return MessageBuilder.withPayload(payload).setHeader(IOrderService.STATE_MACHINE_HEADER_ORDER_NAME, orderId).build();
     }
 
-
     /**
      * 发送状态转换事件
      *
@@ -557,7 +585,7 @@ public class OrderController {
      */
     public synchronized boolean sendEvent(Message<OrderStatusChangeEventEnum> message) {
         boolean result;
-        StateMachine<OrderStatusEnum, OrderStatusChangeEventEnum> stateMachine = null;
+        ObjectStateMachine<OrderStatusEnum, OrderStatusChangeEventEnum> stateMachine = null;
         try {
             stateMachine = orderStateMachineBuilder.build();
             stateMachine.start();
@@ -566,20 +594,17 @@ public class OrderController {
                 orderRedisPersister.restore(stateMachine, NAMESPACE_4_MACHINE_PERSIST + message.getHeaders().get(IOrderService.STATE_MACHINE_HEADER_ORDER_NAME));
             }
             result = stateMachine.sendEvent(message);
-            if (!stateMachine.isComplete()) {
-                orderRedisPersister.persist(stateMachine, NAMESPACE_4_MACHINE_PERSIST + message.getHeaders().get(IOrderService.STATE_MACHINE_HEADER_ORDER_NAME));
-            }
+            orderRedisPersister.persist(stateMachine, NAMESPACE_4_MACHINE_PERSIST + message.getHeaders().get(IOrderService.STATE_MACHINE_HEADER_ORDER_NAME));
         } catch (Exception e) {
             throw new GracefulResponseException(e.getMessage());
         } finally {
             if (stateMachine != null) {
-                if (stateMachine.isComplete()) {
-                    // todo 工单结束，删除持久化
+                // todo 工单结束，删除持久化，目前还存在问题！！！
+                if (OrderStatusEnum.CLOSED.equals(stateMachine.getState().getId())) {
                     redisTemplate.delete(NAMESPACE_4_MACHINE_PERSIST + message.getHeaders().get(IOrderService.STATE_MACHINE_HEADER_ORDER_NAME));
                 }
                 stateMachine.stop();
             }
-
         }
         return result;
     }
