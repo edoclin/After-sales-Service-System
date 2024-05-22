@@ -9,8 +9,8 @@ import cn.hutool.core.text.CharSequenceUtil;
 import cn.hutool.core.util.ObjectUtil;
 import com.feiniaojin.gracefulresponse.GracefulResponseException;
 import com.mi.aftersales.aspect.anno.CheckLogin;
-import com.mi.aftersales.config.statemachine.OrderStateMachineBuilder;
 import com.mi.aftersales.config.enums.OrderStatusChangeEventEnum;
+import com.mi.aftersales.config.statemachine.OrderStateMachineBuilder;
 import com.mi.aftersales.config.yaml.bean.OrderConfig;
 import com.mi.aftersales.entity.*;
 import com.mi.aftersales.entity.enums.*;
@@ -34,7 +34,6 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.statemachine.ObjectStateMachine;
-import org.springframework.statemachine.StateMachine;
 import org.springframework.statemachine.persist.StateMachinePersister;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
@@ -47,6 +46,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
+import static com.mi.aftersales.service.IMaterialService.NAMESPACE_4_MATERIAL_LOCK;
 import static com.mi.aftersales.util.RocketMqTopic.*;
 
 /**
@@ -64,7 +64,6 @@ public class OrderController {
 
     public static final String NAMESPACE_4_MACHINE_PERSIST = "machine:persist:";
     public static final String NAMESPACE_4_ORDER_LOCK = "order:lock:";
-    public static final String NAMESPACE_4_MATERIAL_LOCK = "material:lock:";
     @Resource
     private OrderConfig orderConfig;
 
