@@ -6,6 +6,7 @@ import com.mi.aftersales.config.statemachine.guard.ClientChoiceGuard;
 import com.mi.aftersales.entity.enums.OrderStatusEnum;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.statemachine.ObjectStateMachine;
 import org.springframework.statemachine.StateMachine;
 import org.springframework.statemachine.action.Action;
 import org.springframework.statemachine.config.EnableStateMachine;
@@ -32,7 +33,7 @@ public class OrderStateMachineBuilder {
     @Resource
     private OrderEventConfig orderEventConfig;
 
-    public StateMachine<OrderStatusEnum, OrderStatusChangeEventEnum> build() throws Exception {
+    public ObjectStateMachine<OrderStatusEnum, OrderStatusChangeEventEnum> build() throws Exception {
         StateMachineBuilder.Builder<OrderStatusEnum, OrderStatusChangeEventEnum> builder = StateMachineBuilder.builder();
         builder.configureConfiguration().withConfiguration().machineId(MACHINE_ID).beanFactory(beanFactory);
 
@@ -121,7 +122,7 @@ public class OrderStateMachineBuilder {
                 // 无需申请物料，直接开始维修
                 .and().withExternal().source(OrderStatusEnum.FEE_CONFIRMED_CHOICE).target(OrderStatusEnum.REPAIRING).event(OrderStatusChangeEventEnum.ENGINEER_START_REPAIR);
 */
-        return builder.build();
+        return (ObjectStateMachine<OrderStatusEnum, OrderStatusChangeEventEnum>) builder.build();
     }
 
     public Action<OrderStatusEnum, OrderStatusChangeEventEnum> clientAcceptFee() {
