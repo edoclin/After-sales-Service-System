@@ -20,6 +20,7 @@ import java.math.BigDecimal;
 @Schema(title = "库管添加物料",description = "库管添加物料")
 public class ManngerAddMaterialForm {
 
+
     @Schema(description = "物料名称")
     @Length(min = 1, max = 256, message = "")
     @NotEmpty(message = "物料名称不能为空")

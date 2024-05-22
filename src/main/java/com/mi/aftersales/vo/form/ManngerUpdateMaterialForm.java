@@ -20,6 +20,7 @@ import java.math.BigDecimal;
 @Schema(title = "库管更新物料信息",description = "库管更新物料信息")
 public class ManngerUpdateMaterialForm {
 
+
     @Schema(description = "物料ID")
     @NotEmpty(message = "物料ID不能为空")
     private String materialId;

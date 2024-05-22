@@ -76,6 +76,7 @@ public class MaterialController {
         }
     }
 
+
     @PutMapping(path = "/materialManager/update")
     @Operation(summary = "库管更新物料信息", description = "库管更新物料信息")
     public void updateMaterial(@RequestBody @Valid ManngerUpdateMaterialForm form) {
