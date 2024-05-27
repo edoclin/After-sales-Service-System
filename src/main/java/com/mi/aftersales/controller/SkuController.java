@@ -86,7 +86,7 @@ public class SkuController {
 
     @PostMapping(path = "/client/{spuId}")
     @Operation(summary = "客户查询商品Sku", description = "客户查询商品Sku")
-    @Parameter(name = "spuId", description = "商品所属SpuID", example = "", required = true)
+    @Parameter(name = "spuId", description = "商品所属SpuID", required = true)
     public PageResult<ClientSkuVo> list4Client(@RequestBody @Valid ConditionQuery form, @PathVariable String spuId) {
         if (BeanUtil.isEmpty(iSpuService.getById(spuId))) {
             throw new GracefulResponseException("商品Spu不存在！");
@@ -108,7 +108,7 @@ public class SkuController {
     }
 
     @PostMapping(path = "/list/{spuId}")
-    @Operation(summary = "查询商品（管理员）", description = "查询商品（管理员）")
+    @Operation(summary = "查询商品Sku（管理员）", description = "查询商品Sku（管理员）")
     public PageResult<SkuVo> list(@RequestBody ConditionQuery query, @PathVariable String spuId) {
         if (BeanUtil.isEmpty(iSpuService.getById(spuId))) {
             throw new GracefulResponseException("商品所属Spu不存在！");

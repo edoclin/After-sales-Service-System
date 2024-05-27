@@ -17,8 +17,8 @@ import javax.validation.constraints.NotNull;
 @Accessors(chain = true)
 @Schema(title = "管理员添加商品SKU", description = "管理员添加商品SKU")
 public class SkuForm {
-    @Schema(description = "商品SKU_ID")
-    @NotNull(message = "商品SKU_ID不能为空")
+    @Schema(description = "商品SPU_ID")
+    @NotNull(message = "商品SPU_ID不能为空")
     private String spuId;
 
     @Schema(description = "商品SKU展示权重（越大排序越靠前）")
