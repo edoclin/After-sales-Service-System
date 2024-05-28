@@ -18,7 +18,7 @@ import java.math.BigDecimal;
 @Setter
 @Accessors(chain = true)
 @Schema(title = "库管添加物料",description = "库管添加物料")
-public class ManngerAddMaterialForm {
+public class MaterialForm {
 
 
     @Schema(description = "物料名称")
@@ -50,6 +50,4 @@ public class ManngerAddMaterialForm {
     @Schema(description = "库存告警阈值")
     @Min(value = 0, message = "库存告警阈值必须大于等于0")
     private BigDecimal alertNum;
-
-
 }
