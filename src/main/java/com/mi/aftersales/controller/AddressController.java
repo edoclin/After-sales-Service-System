@@ -10,14 +10,13 @@ import com.mi.aftersales.entity.Address;
 import com.mi.aftersales.exception.graceful.ServerErrorException;
 import com.mi.aftersales.service.IAddressService;
 import com.mi.aftersales.vo.form.ClientAddressForm;
-import com.mi.aftersales.vo.result.ClientAddressResult;
+import com.mi.aftersales.vo.result.ClientAddressVo;
 import io.swagger.v3.oas.annotations.Operation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
-import javax.sound.midi.Track;
 import javax.validation.Valid;
 import java.util.ArrayList;
 import java.util.List;
@@ -61,10 +60,10 @@ public class AddressController {
     @GetMapping(path = "/")
     @Operation(summary = "客户查询地址", description = "客户查询地址")
     @CheckLogin
-    public List<ClientAddressResult> listAddress() {
-        ArrayList<ClientAddressResult> result = new ArrayList<>();
+    public List<ClientAddressVo> listAddress() {
+        ArrayList<ClientAddressVo> result = new ArrayList<>();
         iAddressService.lambdaQuery().eq(Address::getLoginId, StpUtil.getLoginIdAsString()).list().forEach(address -> {
-            ClientAddressResult item = new ClientAddressResult();
+            ClientAddressVo item = new ClientAddressVo();
 
             BeanUtil.copyProperties(address, item);
 

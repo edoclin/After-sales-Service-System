@@ -28,4 +28,5 @@ public class LoginResultVo {
     private Boolean needMobile;
     @Schema(description = "绑定手机临时Token")
     private String tempToken;
+
 }

@@ -8,6 +8,8 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Accessors;
 
+import java.io.Serializable;
+
 /**
  * @description:
  * @return:
@@ -19,7 +21,7 @@ import lombok.experimental.Accessors;
 @Accessors(chain = true)
 @Schema(title = "工单文件消息", description = "工单文件消息")
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
-public class OrderUploadMessage {
+public class OrderUploadMessage implements Serializable {
     @Schema(description = "工单Id")
     private String orderId;
     @Schema(description = "文件Ids")

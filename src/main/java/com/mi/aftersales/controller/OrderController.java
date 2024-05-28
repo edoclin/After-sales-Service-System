@@ -7,6 +7,7 @@ import cn.hutool.core.convert.ConvertException;
 import cn.hutool.core.date.LocalDateTimeUtil;
 import cn.hutool.core.text.CharSequenceUtil;
 import cn.hutool.core.util.ObjectUtil;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.feiniaojin.gracefulresponse.GracefulResponseException;
 import com.mi.aftersales.aspect.anno.CheckLogin;
 import com.mi.aftersales.config.enums.OrderStatusChangeEventEnum;
@@ -16,13 +17,17 @@ import com.mi.aftersales.entity.*;
 import com.mi.aftersales.entity.enums.*;
 import com.mi.aftersales.exception.graceful.*;
 import com.mi.aftersales.service.*;
+import com.mi.aftersales.util.COSUtil;
 import com.mi.aftersales.util.DateUtil;
+import com.mi.aftersales.util.query.ConditionQuery;
+import com.mi.aftersales.util.query.QueryUtil;
+import com.mi.aftersales.vo.OrderStatusLogResult;
 import com.mi.aftersales.vo.form.ClientOrderForm;
 import com.mi.aftersales.vo.form.FaultDescriptionForm;
 import com.mi.aftersales.vo.form.MaterialDistributeForm;
 import com.mi.aftersales.vo.form.OrderFeeConfirmForm;
 import com.mi.aftersales.vo.message.OrderUploadMessage;
-import com.mi.aftersales.vo.result.EngineerSimpleOrderVo;
+import com.mi.aftersales.vo.result.*;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import org.apache.rocketmq.spring.core.RocketMQTemplate;
@@ -82,6 +87,9 @@ public class OrderController {
     private IMiddleOrderMaterialService iMiddleOrderMaterialService;
 
     @Resource
+    private IOrderStatusLogService iOrderStatusLogService;
+
+    @Resource
     private IOrderService iOrderService;
 
     @Resource
@@ -111,6 +119,72 @@ public class OrderController {
     @Resource
     private IOrderUploadService iOrderUploadService;
 
+
+    @PostMapping(path = "/client")
+    @Operation(summary = "客户查询工单", description = "客户查询工单")
+    public List<ClientOrderSimpleVo> listClientOrder(@RequestBody ConditionQuery query) {
+
+        QueryWrapper<Order> wrapper = QueryUtil.buildWrapper(query, Order.class);
+        wrapper = wrapper.eq("client_login_id", StpUtil.getLoginId());
+        List<ClientOrderSimpleVo> result = new ArrayList<>();
+        iOrderService.list(wrapper).forEach(order -> {
+            ClientOrderSimpleVo item = new ClientOrderSimpleVo();
+            BeanUtil.copyProperties(order, item, DateUtil.copyDate2yyyyMMddHHmm());
+            item.setOrderStatus(order.getOrderStatus().getDesc());
+            item.setOrderStatusValue(order.getOrderStatus().getValue());
+            result.add(item);
+        });
+        return result;
+
+    }
+
+    @GetMapping(path = "/client/{orderId}")
+    @Operation(summary = "客户查询工单详情", description = "客户查询工单详情")
+    public ClientOrderDetailVo orderDetailById(@PathVariable String orderId) {
+        Order order = iOrderService.getById(orderId);
+
+        if (BeanUtil.isEmpty(order)) {
+            throw new IllegalOrderIdException();
+        }
+
+        if (!CharSequenceUtil.equals(order.getClientLoginId(), StpUtil.getLoginIdAsString())) {
+            throw new IllegalLoginIdException();
+        }
+
+        ClientOrderDetailVo clientOrderDetailVo = new ClientOrderDetailVo();
+        BeanUtil.copyProperties(order, clientOrderDetailVo, DateUtil.copyDate2yyyyMMddHHmm());
+        clientOrderDetailVo.setOrderStatus(order.getOrderStatus().getDesc());
+        clientOrderDetailVo.setOrderStatusValue(order.getOrderStatus().getValue());
+
+
+        // 状态日志
+        iOrderStatusLogService.lambdaQuery().eq(OrderStatusLog::getOrderId, order.getOrderId()).orderByAsc(OrderStatusLog::getOrderStatus).list().forEach(log -> {
+            ClientOrderStatusLogVo logVo = new ClientOrderStatusLogVo();
+            BeanUtil.copyProperties(log, logVo, DateUtil.copyDate2yyyyMMddHHmm());
+            logVo.setOrderStatus(log.getOrderStatus().getDesc());
+            logVo.setOrderStatusValue(log.getOrderStatus().getValue());
+            clientOrderDetailVo.getStatusLogs().add(logVo);
+        });
+
+
+        // 客户上传文件
+        iOrderUploadService.lambdaQuery().eq(OrderUpload::getOrderId, order.getOrderId()).eq(OrderUpload::getUploaderType, OrderUploaderTypeEnum.CLIENT).list().forEach(file -> {
+            File byId = iFileService.getById(file.getFileId());
+            if (BeanUtil.isNotEmpty(byId)) {
+                clientOrderDetailVo.getClientFileUrl().add(new FileVo().setUrl(COSUtil.generateAccessUrl(byId.getAccessKey())).setType("image").setFileId(file.getFileId()));
+            }
+        });
+
+        // 工程师上传文件
+        iOrderUploadService.lambdaQuery().eq(OrderUpload::getOrderId, order.getOrderId()).eq(OrderUpload::getUploaderType, OrderUploaderTypeEnum.ENGINEER).list().forEach(file -> {
+            File byId = iFileService.getById(file.getFileId());
+            if (BeanUtil.isNotEmpty(byId)) {
+                clientOrderDetailVo.getEngineerFileUrl().add(new FileVo().setUrl(COSUtil.generateAccessUrl(byId.getAccessKey())).setType("video").setFileId(file.getFileId()));
+            }
+        });
+
+        return clientOrderDetailVo;
+    }
 
     @PostMapping(path = "/client/create")
     @Operation(summary = "客户创建工单", description = "客户创建工单")
@@ -161,6 +235,7 @@ public class OrderController {
                 log.error(CharSequenceUtil.format("工单（{}）状态转换失败", order.getOrderId()));
                 throw new ServerErrorException();
             }
+
 
             // 关联工单文件
             Message<OrderUploadMessage> msg = MessageBuilder.withPayload(new OrderUploadMessage().setOrderId(order.getOrderId()).setFileIds(form.getFileIds()).setUploaderType(OrderUploaderTypeEnum.CLIENT)).build();
@@ -391,10 +466,7 @@ public class OrderController {
             throw new IllegalOrderLoginIdException();
         }
 
-        Message<OrderStatusChangeEventEnum> build = MessageBuilder
-                .withPayload(OrderStatusChangeEventEnum.ENGINEER_MATERIAL_CONFIRMING)
-                .setHeader(IOrderService.STATE_MACHINE_HEADER_ORDER_NAME, orderId)
-                .setHeader(IOrderService.ENGINEER_CHOICE, OrderStatusChangeEventEnum.ENGINEER_APPLIED_MATERIAL).build();
+        Message<OrderStatusChangeEventEnum> build = MessageBuilder.withPayload(OrderStatusChangeEventEnum.ENGINEER_MATERIAL_CONFIRMING).setHeader(IOrderService.STATE_MACHINE_HEADER_ORDER_NAME, orderId).setHeader(IOrderService.ENGINEER_CHOICE, OrderStatusChangeEventEnum.ENGINEER_APPLIED_MATERIAL).build();
 
         if (!sendEvent(build)) {
             throw new IllegalOrderStatusFlowException();
