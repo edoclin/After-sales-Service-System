@@ -48,12 +48,13 @@ public class OrderUploadConsumer implements RocketMQListener<OrderUploadMessage>
                     OrderUpload orderUpload = new OrderUpload();
                     orderUpload.setOrderId(orderUploadMessage.getOrderId());
                     orderUpload.setFileId(fileId);
+                    orderUpload.setUploaderType(orderUploadMessage.getUploaderType());
                     batch.add(orderUpload);
                 }
             }
             try {
                 iOrderUploadService.saveBatch(batch);
-                log.info(CharSequenceUtil.format("工单文件上传消费成功！（{}）"));
+                log.info(CharSequenceUtil.format("工单文件上传消费成功！（{}）", orderUploadMessage.getOrderId()));
             } catch (Exception e) {
                 log.error(e.getMessage(), e);
             }

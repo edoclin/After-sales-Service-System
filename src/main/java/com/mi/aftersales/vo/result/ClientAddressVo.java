@@ -15,7 +15,7 @@ import lombok.experimental.Accessors;
 @Accessors(chain = true)
 @Schema(title = "客户查询地址", description = "客户查询地址")
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
-public class ClientAddressResult {
+public class ClientAddressVo {
     @Schema(description = "地址Id")
     private String addressId;
 

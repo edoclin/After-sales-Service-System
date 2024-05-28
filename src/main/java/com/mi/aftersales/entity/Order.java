@@ -8,6 +8,7 @@ import java.time.LocalDateTime;
 
 import com.mi.aftersales.entity.enums.OrderStatusEnum;
 import com.mi.aftersales.entity.enums.OrderTypeEnum;
+import com.mi.aftersales.util.query.EnableQuery;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import lombok.Setter;
@@ -32,14 +33,17 @@ public class Order implements Serializable {
 
     @Schema(description = "工单ID")
     @TableId(value = "order_id", type = IdType.ASSIGN_UUID)
+    @EnableQuery
     private String orderId;
 
     @Schema(description = "创建时间")
     @TableField(fill = FieldFill.INSERT)
+    @EnableQuery
     private LocalDateTime createdTime;
 
     @Schema(description = "更新时间")
     @TableField(fill = FieldFill.UPDATE)
+    @EnableQuery
     private LocalDateTime updatedTime;
 
     @Schema(description = "创建者")
@@ -61,6 +65,7 @@ public class Order implements Serializable {
     private String fapiaoId;
 
     @Schema(description = "商品序列号")
+    @EnableQuery
     private String sn;
 
     @Schema(description = "工单类型;1:到店;2寄修")
@@ -76,6 +81,7 @@ public class Order implements Serializable {
     private String engineerFaultDesc;
 
     @Schema(description = "工单状态")
+    @EnableQuery
     private OrderStatusEnum orderStatus;
 
     @Schema(description = "物料费;用户支付物料费,默认所有物料总价*1.2")
