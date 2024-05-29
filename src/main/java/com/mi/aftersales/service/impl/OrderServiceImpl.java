@@ -144,34 +144,29 @@ public class OrderServiceImpl implements OrderService {
         clientOrderDetailVo.setOrderStatusValue(order.getOrderStatus().getValue());
 
         // 状态日志
-        iOrderStatusLogRepository.lambdaQuery().eq(OrderStatusLog::getOrderId, order.getOrderId())
-                .orderByAsc(OrderStatusLog::getOrderStatus).list().forEach(log -> {
-                    ClientOrderStatusLogVo logVo = new ClientOrderStatusLogVo();
-                    BeanUtil.copyProperties(log, logVo, DateUtil.copyDate2yyyyMMddHHmm());
-                    logVo.setOrderStatus(log.getOrderStatus().getDesc());
-                    logVo.setOrderStatusValue(log.getOrderStatus().getValue());
-                    clientOrderDetailVo.getStatusLogs().add(logVo);
-                });
+        iOrderStatusLogRepository.lambdaQuery().eq(OrderStatusLog::getOrderId, order.getOrderId()).orderByAsc(OrderStatusLog::getOrderStatus).list().forEach(log -> {
+            ClientOrderStatusLogVo logVo = new ClientOrderStatusLogVo();
+            BeanUtil.copyProperties(log, logVo, DateUtil.copyDate2yyyyMMddHHmm());
+            logVo.setOrderStatus(log.getOrderStatus().getDesc());
+            logVo.setOrderStatusValue(log.getOrderStatus().getValue());
+            clientOrderDetailVo.getStatusLogs().add(logVo);
+        });
 
         // 客户上传文件
-        iOrderUploadRepository.lambdaQuery().eq(OrderUpload::getOrderId, order.getOrderId())
-                .eq(OrderUpload::getUploaderType, OrderUploaderTypeEnum.CLIENT).list().forEach(file -> {
-                    File byId = iFileRepository.getById(file.getFileId());
-                    if (BeanUtil.isNotEmpty(byId)) {
-                        clientOrderDetailVo.getClientFileUrl()
-                                .add(new FileVo().setUrl(COSUtil.generateAccessUrl(byId.getAccessKey())).setType("image").setFileId(file.getFileId()));
-                    }
-                });
+        iOrderUploadRepository.lambdaQuery().eq(OrderUpload::getOrderId, order.getOrderId()).eq(OrderUpload::getUploaderType, OrderUploaderTypeEnum.CLIENT).list().forEach(file -> {
+            File byId = iFileRepository.getById(file.getFileId());
+            if (BeanUtil.isNotEmpty(byId)) {
+                clientOrderDetailVo.getClientFileUrl().add(new FileVo().setUrl(COSUtil.generateAccessUrl(byId.getAccessKey())).setType("image").setFileId(file.getFileId()));
+            }
+        });
 
         // 工程师上传文件
-        iOrderUploadRepository.lambdaQuery().eq(OrderUpload::getOrderId, order.getOrderId())
-                .eq(OrderUpload::getUploaderType, OrderUploaderTypeEnum.ENGINEER).list().forEach(file -> {
-                    File byId = iFileRepository.getById(file.getFileId());
-                    if (BeanUtil.isNotEmpty(byId)) {
-                        clientOrderDetailVo.getEngineerFileUrl()
-                                .add(new FileVo().setUrl(COSUtil.generateAccessUrl(byId.getAccessKey())).setType("video").setFileId(file.getFileId()));
-                    }
-                });
+        iOrderUploadRepository.lambdaQuery().eq(OrderUpload::getOrderId, order.getOrderId()).eq(OrderUpload::getUploaderType, OrderUploaderTypeEnum.ENGINEER).list().forEach(file -> {
+            File byId = iFileRepository.getById(file.getFileId());
+            if (BeanUtil.isNotEmpty(byId)) {
+                clientOrderDetailVo.getEngineerFileUrl().add(new FileVo().setUrl(COSUtil.generateAccessUrl(byId.getAccessKey())).setType("video").setFileId(file.getFileId()));
+            }
+        });
 
         return clientOrderDetailVo;
     }
@@ -224,8 +219,7 @@ public class OrderServiceImpl implements OrderService {
             }
 
             // 关联工单文件
-            Message<OrderUploadMessage> msg = MessageBuilder.withPayload(new OrderUploadMessage()
-                    .setOrderId(order.getOrderId()).setFileIds(form.getFileIds()).setUploaderType(OrderUploaderTypeEnum.CLIENT)).build();
+            Message<OrderUploadMessage> msg = MessageBuilder.withPayload(new OrderUploadMessage().setOrderId(order.getOrderId()).setFileIds(form.getFileIds()).setUploaderType(OrderUploaderTypeEnum.CLIENT)).build();
             rocketmqTemplate.send(ROCKETMQ_TOPIC_4_ORDER_UPLOAD, msg);
         } catch (Exception e) {
             log.error(e.getMessage());
@@ -385,9 +379,7 @@ public class OrderServiceImpl implements OrderService {
         if (!CharSequenceUtil.equals(order.getClientLoginId(), loginId)) {
             throw new IllegalOrderLoginIdException();
         }
-        Message<OrderStatusChangeEventEnum> build = MessageBuilder.withPayload(OrderStatusChangeEventEnum.CLIENT_CONFIRMING)
-                .setHeader(STATE_MACHINE_HEADER_ORDER_NAME, orderId)
-                .setHeader(CLIENT_CHOICE, OrderStatusChangeEventEnum.CLIENT_COMPLETED_FEE_CONFIRM).build();
+        Message<OrderStatusChangeEventEnum> build = MessageBuilder.withPayload(OrderStatusChangeEventEnum.CLIENT_CONFIRMING).setHeader(STATE_MACHINE_HEADER_ORDER_NAME, orderId).setHeader(CLIENT_CHOICE, OrderStatusChangeEventEnum.CLIENT_COMPLETED_FEE_CONFIRM).build();
 
         if (!sendEvent(build)) {
             throw new IllegalOrderStatusFlowException();
@@ -405,9 +397,7 @@ public class OrderServiceImpl implements OrderService {
             throw new IllegalOrderLoginIdException();
         }
 
-        Message<OrderStatusChangeEventEnum> build = MessageBuilder.withPayload(OrderStatusChangeEventEnum.CLIENT_CONFIRMING)
-                .setHeader(STATE_MACHINE_HEADER_ORDER_NAME, orderId)
-                .setHeader(CLIENT_CHOICE, OrderStatusChangeEventEnum.CLIENT_REJECT_REPAIR).build();
+        Message<OrderStatusChangeEventEnum> build = MessageBuilder.withPayload(OrderStatusChangeEventEnum.CLIENT_CONFIRMING).setHeader(STATE_MACHINE_HEADER_ORDER_NAME, orderId).setHeader(CLIENT_CHOICE, OrderStatusChangeEventEnum.CLIENT_REJECT_REPAIR).build();
 
         if (!sendEvent(build)) {
             throw new IllegalOrderStatusFlowException();
@@ -426,9 +416,7 @@ public class OrderServiceImpl implements OrderService {
             throw new IllegalOrderLoginIdException();
         }
 
-        Message<OrderStatusChangeEventEnum> build = MessageBuilder.withPayload(OrderStatusChangeEventEnum.ENGINEER_MATERIAL_CONFIRMING)
-                .setHeader(STATE_MACHINE_HEADER_ORDER_NAME, orderId)
-                .setHeader(ENGINEER_CHOICE, OrderStatusChangeEventEnum.ENGINEER_APPLIED_MATERIAL).build();
+        Message<OrderStatusChangeEventEnum> build = MessageBuilder.withPayload(OrderStatusChangeEventEnum.ENGINEER_MATERIAL_CONFIRMING).setHeader(STATE_MACHINE_HEADER_ORDER_NAME, orderId).setHeader(ENGINEER_CHOICE, OrderStatusChangeEventEnum.ENGINEER_APPLIED_MATERIAL).build();
 
         if (!sendEvent(build)) {
             throw new IllegalOrderStatusFlowException();
@@ -463,9 +451,7 @@ public class OrderServiceImpl implements OrderService {
 
                     batch.add(material);
                     MaterialLog materialLog = new MaterialLog();
-                    materialLog.setMaterialId(materialNum.getMaterialId()).setAction(MaterialActionEnum.STOCK_OUT)
-                            .setDelta(materialNum.getNum()).setOperatorId(loginId)
-                            .setLogDetail(CharSequenceUtil.format("工单（id：{}，工程师：{}）申请物料", order.getOrderId(), order.getEngineerLoginId()));
+                    materialLog.setMaterialId(materialNum.getMaterialId()).setAction(MaterialActionEnum.STOCK_OUT).setDelta(materialNum.getNum()).setOperatorId(loginId).setLogDetail(CharSequenceUtil.format("工单（id：{}，工程师：{}）申请物料", order.getOrderId(), order.getEngineerLoginId()));
                     materialLogs.add(materialLog);
                 });
 
@@ -503,12 +489,9 @@ public class OrderServiceImpl implements OrderService {
         Message<OrderStatusChangeEventEnum> build;
 
         if (material) {
-            build = MessageBuilder.withPayload(OrderStatusChangeEventEnum.ENGINEER_RECEIVED_MATERIAL)
-                    .setHeader(STATE_MACHINE_HEADER_ORDER_NAME, orderId).build();
+            build = MessageBuilder.withPayload(OrderStatusChangeEventEnum.ENGINEER_RECEIVED_MATERIAL).setHeader(STATE_MACHINE_HEADER_ORDER_NAME, orderId).build();
         } else {
-            build = MessageBuilder.withPayload(OrderStatusChangeEventEnum.ENGINEER_MATERIAL_CONFIRMING)
-                    .setHeader(STATE_MACHINE_HEADER_ORDER_NAME, orderId)
-                    .setHeader(ENGINEER_CHOICE, OrderStatusChangeEventEnum.ENGINEER_START_REPAIR).build();
+            build = MessageBuilder.withPayload(OrderStatusChangeEventEnum.ENGINEER_MATERIAL_CONFIRMING).setHeader(STATE_MACHINE_HEADER_ORDER_NAME, orderId).setHeader(ENGINEER_CHOICE, OrderStatusChangeEventEnum.ENGINEER_START_REPAIR).build();
         }
         if (!sendEvent(build)) {
             throw new IllegalOrderStatusFlowException();
@@ -595,19 +578,19 @@ public class OrderServiceImpl implements OrderService {
         try {
             stateMachine = orderStateMachineBuilder.build();
             stateMachine.start();
-            if (Boolean.TRUE.equals(redisTemplate.hasKey("machine:persist:" + message.getHeaders().get(STATE_MACHINE_HEADER_ORDER_NAME)))) {
+            if (Boolean.TRUE.equals(redisTemplate.hasKey(NAMESPACE_4_MACHINE_STATE + message.getHeaders().get(STATE_MACHINE_HEADER_ORDER_NAME)))) {
                 // 存在持久化对象则恢复
-                orderRedisPersister.restore(stateMachine, "machine:persist:" + message.getHeaders().get(STATE_MACHINE_HEADER_ORDER_NAME));
+                orderRedisPersister.restore(stateMachine, NAMESPACE_4_MACHINE_STATE + message.getHeaders().get(STATE_MACHINE_HEADER_ORDER_NAME));
             }
             result = stateMachine.sendEvent(message);
-            orderRedisPersister.persist(stateMachine, "machine:persist:" + message.getHeaders().get(STATE_MACHINE_HEADER_ORDER_NAME));
+            orderRedisPersister.persist(stateMachine, NAMESPACE_4_MACHINE_STATE + message.getHeaders().get(STATE_MACHINE_HEADER_ORDER_NAME));
         } catch (Exception e) {
             throw new GracefulResponseException(e.getMessage());
         } finally {
             if (stateMachine != null) {
                 // todo 工单结束，删除持久化，目前还存在问题！！！
                 if (OrderStatusEnum.CLOSED.equals(stateMachine.getState().getId())) {
-                    redisTemplate.delete("machine:persist:" + message.getHeaders().get(STATE_MACHINE_HEADER_ORDER_NAME));
+                    redisTemplate.delete(NAMESPACE_4_MACHINE_STATE + message.getHeaders().get(STATE_MACHINE_HEADER_ORDER_NAME));
                 }
                 stateMachine.stop();
             }

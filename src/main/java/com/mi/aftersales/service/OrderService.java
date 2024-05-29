@@ -24,6 +24,7 @@ import java.util.List;
 public interface OrderService {
 
     String NAMESPACE_4_PENDING_ORDER = "order:pending:";
+    String NAMESPACE_4_MACHINE_STATE = "machine:persist:";
     String CREATED = "CREATED";
     String WAITING = "WAITING";
     String ACCEPTED = "ACCEPTED";
