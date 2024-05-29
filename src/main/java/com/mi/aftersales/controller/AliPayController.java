@@ -16,7 +16,6 @@ import com.mi.aftersales.aspect.anno.CheckLogin;
 import com.mi.aftersales.config.enums.OrderStatusChangeEventEnum;
 import com.mi.aftersales.config.yaml.bean.AliPayConfig;
 import com.mi.aftersales.entity.Order;
-import com.mi.aftersales.entity.OrderStatusLog;
 import com.mi.aftersales.entity.PayOrder;
 import com.mi.aftersales.entity.enums.OrderStatusEnum;
 import com.mi.aftersales.entity.enums.PayMethodEnum;
@@ -30,7 +29,6 @@ import com.mi.aftersales.vo.PayDetailVo;
 import com.mi.aftersales.vo.result.AlipayResult;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import lombok.val;
 import org.apache.rocketmq.spring.core.RocketMQTemplate;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.support.MessageBuilder;
@@ -62,9 +60,6 @@ class AliPayController {
     @Resource
     private IPayOrderService iPayOrderService;
 
-    //todo 重构到service
-    @Resource
-    private OrderController orderController;
 
     /**
      * @description: 支付宝订单生成
@@ -143,7 +138,7 @@ class AliPayController {
         payOrder.setPayStatus(PayStatusEnum.PAID);
         payOrder.setPayDetail(JSONUtil.toJsonStr(new PayDetailVo().setPaidTime(LocalDateTime.now())));
 
-        if (!orderController.sendEvent(OrderController.statusFlow(OrderStatusChangeEventEnum.CLIENT_COMPLETED_PAY, payOrder.getOrderId()))) {
+        if (!iOrderService.sendEvent(iOrderService.statusFlow(OrderStatusChangeEventEnum.CLIENT_COMPLETED_PAY, payOrder.getOrderId()))) {
             throw new IllegalOrderStatusFlowException();
         }
 

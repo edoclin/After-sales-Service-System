@@ -2,6 +2,7 @@ package com.mi.aftersales.service;
 
 import com.mi.aftersales.entity.LoginRole;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.mi.aftersales.vo.form.LoginRoleForm;
 
 /**
  * <p>
@@ -12,5 +13,10 @@ import com.baomidou.mybatisplus.extension.service.IService;
  * @since 2024-05-18
  */
 public interface ILoginRoleService extends IService<LoginRole> {
-
+    /**
+     * 添加或更新用户角色。
+     *
+     * @param form 用户角色表单
+     */
+    void addOrUpdateLoginRole(LoginRoleForm form);
 }

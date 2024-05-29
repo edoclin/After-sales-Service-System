@@ -9,6 +9,7 @@ import com.mi.aftersales.entity.Order;
 import com.mi.aftersales.entity.OrderStatusLog;
 import com.mi.aftersales.entity.enums.OrderStatusEnum;
 import com.mi.aftersales.exception.graceful.ServerErrorException;
+import com.mi.aftersales.mapper.OrderMapper;
 import com.mi.aftersales.service.ILoginService;
 import com.mi.aftersales.service.IOrderService;
 import lombok.extern.slf4j.Slf4j;
@@ -37,10 +38,7 @@ import static com.mi.aftersales.util.RocketMqTopic.ROCKETMQ_TOPIC_4_SMS;
 @Transactional
 public class OrderEventConfig {
     @Resource
-    private IOrderService iOrderService;
-
-    @Resource
-    private ILoginService iLoginService;
+    private OrderMapper orderMapper;
 
     @Resource
     private RedisTemplate<String, String> redisTemplate;
@@ -62,7 +60,7 @@ public class OrderEventConfig {
      **/
     @OnTransition(source = IOrderService.CREATED, target = IOrderService.WAITING)
     public boolean createOrderTransition(Message<OrderStatusChangeEventEnum> message) {
-        Order order = iOrderService.getById((String) message.getHeaders().get(IOrderService.STATE_MACHINE_HEADER_ORDER_NAME));
+        Order order = orderMapper.selectById((String) message.getHeaders().get(IOrderService.STATE_MACHINE_HEADER_ORDER_NAME));
 
         if (BeanUtil.isEmpty(order)) {
             throw new GracefulResponseException("工单状态转换：工单Id不合法！");
@@ -73,7 +71,7 @@ public class OrderEventConfig {
         orderStatusLog.setCreatedId(order.getClientLoginId()).setOrderId(order.getOrderId()).setOrderStatus(order.getOrderStatus()).setStatusDetail(CharSequenceUtil.format("工单创建成功，等待工程师处理！"));
 
 
-        if (Boolean.FALSE.equals(iOrderService.updateById(order))) {
+        if (Boolean.FALSE.equals(orderMapper.updateById(order))) {
             throw new ServerErrorException();
         }
 
@@ -95,7 +93,7 @@ public class OrderEventConfig {
 
     @OnTransition(source = IOrderService.WAITING, target = IOrderService.ACCEPTED)
     public boolean acceptOrderTransition(Message<OrderStatusChangeEventEnum> message) {
-        Order order = iOrderService.getById((String) message.getHeaders().get(IOrderService.STATE_MACHINE_HEADER_ORDER_NAME));
+        Order order = orderMapper.selectById((String) message.getHeaders().get(IOrderService.STATE_MACHINE_HEADER_ORDER_NAME));
 
         if (BeanUtil.isEmpty(order)) {
             throw new GracefulResponseException("工单状态转换：工单Id不合法！");
@@ -108,7 +106,7 @@ public class OrderEventConfig {
 
         orderStatusLog.setOrderId(order.getOrderId()).setOrderStatus(order.getOrderStatus()).setStatusDetail(CharSequenceUtil.format("工单已被受理，等待工程师（{}）处理！", StpUtil.getLoginIdAsString()));
 
-        if (Boolean.FALSE.equals(iOrderService.updateById(order))) {
+        if (Boolean.FALSE.equals(orderMapper.updateById(order))) {
             throw new ServerErrorException();
         }
 
@@ -130,7 +128,7 @@ public class OrderEventConfig {
     @OnTransition(source = IOrderService.ACCEPTED, target = IOrderService.CHECKING)
     public boolean checkingOrderTransition(Message<OrderStatusChangeEventEnum> message) {
 
-        Order order = iOrderService.getById((String) message.getHeaders().get("order-id"));
+        Order order = orderMapper.selectById((String) message.getHeaders().get("order-id"));
 
         if (BeanUtil.isEmpty(order)) {
             throw new GracefulResponseException("工单状态转换：工单Id不合法！");
@@ -143,7 +141,7 @@ public class OrderEventConfig {
         orderStatusLog.setOrderId(order.getOrderId()).setOrderStatus(order.getOrderStatus());
 
 
-        if (Boolean.FALSE.equals(iOrderService.updateById(order))) {
+        if (Boolean.FALSE.equals(orderMapper.updateById(order))) {
             throw new ServerErrorException();
         }
 
@@ -295,14 +293,14 @@ public class OrderEventConfig {
 
 
     private boolean updateOrderStatus(Message<OrderStatusChangeEventEnum> message, OrderStatusEnum target, String detail) {
-        Order order = iOrderService.getById((String) message.getHeaders().get("order-id"));
+        Order order = orderMapper.selectById((String) message.getHeaders().get("order-id"));
         if (BeanUtil.isEmpty(order)) {
             throw new GracefulResponseException("工单状态转换：工单Id不合法！");
         }
         order.setOrderStatus(target);
         OrderStatusLog orderStatusLog = new OrderStatusLog();
         orderStatusLog.setOrderId(order.getOrderId()).setOrderStatus(order.getOrderStatus());
-        if (Boolean.FALSE.equals(iOrderService.updateById(order))) {
+        if (Boolean.FALSE.equals(orderMapper.updateById(order))) {
             throw new ServerErrorException();
         }
         orderStatusLog.setStatusDetail(detail);

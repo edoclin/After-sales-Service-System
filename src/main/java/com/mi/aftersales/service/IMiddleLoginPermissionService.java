@@ -2,6 +2,7 @@ package com.mi.aftersales.service;
 
 import com.mi.aftersales.entity.MiddleLoginPermission;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.mi.aftersales.vo.form.LoginPermissionForm;
 
 /**
  * <p>
@@ -12,5 +13,10 @@ import com.baomidou.mybatisplus.extension.service.IService;
  * @since 2024-05-14
  */
 public interface IMiddleLoginPermissionService extends IService<MiddleLoginPermission> {
-
+    /**
+     * 关联用户权限。
+     *
+     * @param form 用户权限表单
+     */
+    void addLoginPermission(LoginPermissionForm form);
 }
