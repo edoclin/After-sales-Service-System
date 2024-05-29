@@ -3,7 +3,7 @@ package com.mi.aftersales.controller;
 import cn.dev33.satoken.stp.StpUtil;
 import com.mi.aftersales.aspect.anno.CheckLogin;
 import com.mi.aftersales.entity.enums.*;
-import com.mi.aftersales.service.iservice.*;
+import com.mi.aftersales.service.OrderService;
 import com.mi.aftersales.util.query.ConditionQuery;
 import com.mi.aftersales.vo.form.ClientOrderForm;
 import com.mi.aftersales.vo.form.FaultDescriptionForm;
@@ -30,25 +30,25 @@ import java.util.List;
 @RequestMapping("/aftersales/order")
 public class OrderController {
     @Resource
-    private IOrderService iOrderService;
+    private OrderService orderService;
 
     @PostMapping(path = "/client")
     @Operation(summary = "客户查询工单", description = "客户查询工单")
     public List<ClientOrderSimpleVo> listClientOrder(@RequestBody ConditionQuery query) {
-        return iOrderService.listClientOrders(query, StpUtil.getLoginIdAsString());
+        return orderService.listClientOrders(query, StpUtil.getLoginIdAsString());
     }
 
     @GetMapping(path = "/client/{orderId}")
     @Operation(summary = "客户查询工单详情", description = "客户查询工单详情")
     public ClientOrderDetailVo orderDetailById(@PathVariable String orderId) {
-        return iOrderService.getClientOrderDetail(orderId, StpUtil.getLoginIdAsString());
+        return orderService.getClientOrderDetail(orderId, StpUtil.getLoginIdAsString());
     }
 
     @PostMapping(path = "/client/create")
     @Operation(summary = "客户创建工单", description = "客户创建工单")
     @CheckLogin
     public void postOrder(@RequestBody @Valid ClientOrderForm form) {
-        iOrderService.createOrder(form, StpUtil.getLoginIdAsString());
+        orderService.createOrder(form, StpUtil.getLoginIdAsString());
     }
 
     @GetMapping(path = "/engineer/pending")
@@ -56,7 +56,7 @@ public class OrderController {
     @CheckLogin
     public List<EngineerSimpleOrderVo> listPendingOrder() {
         StpUtil.checkRole(EmployeeRoleEnum.ENGINEER.name());
-        return iOrderService.listPendingOrders();
+        return orderService.listPendingOrders();
     }
 
     @GetMapping(path = "/engineer/accept/{orderId}")
@@ -64,7 +64,7 @@ public class OrderController {
     @CheckLogin
     public void engineerAcceptOrder(@PathVariable String orderId) {
         StpUtil.checkRole(EmployeeRoleEnum.ENGINEER.name());
-        iOrderService.acceptOrder(orderId, StpUtil.getLoginIdAsString());
+        orderService.acceptOrder(orderId, StpUtil.getLoginIdAsString());
     }
 
     @PutMapping(path = "/engineer/checking/{orderId}")
@@ -72,7 +72,7 @@ public class OrderController {
     @CheckLogin
     public void startRepairMachine(@PathVariable String orderId) {
         StpUtil.checkRole(EmployeeRoleEnum.ENGINEER.name());
-        iOrderService.startChecking(orderId, StpUtil.getLoginIdAsString());
+        orderService.startChecking(orderId, StpUtil.getLoginIdAsString());
     }
 
     @PutMapping(path = "/engineer/faultDesc")
@@ -80,7 +80,7 @@ public class OrderController {
     @CheckLogin
     public void faultDescription(@RequestBody @Valid FaultDescriptionForm form) {
         StpUtil.checkRole(EmployeeRoleEnum.ENGINEER.name());
-        iOrderService.uploadFaultDescription(form, StpUtil.getLoginIdAsString());
+        orderService.uploadFaultDescription(form, StpUtil.getLoginIdAsString());
     }
 
     @PutMapping(path = "/engineer/feeConfirm")
@@ -88,21 +88,21 @@ public class OrderController {
     @CheckLogin
     public void engineerFeeConfirm(@RequestBody @Valid OrderFeeConfirmForm form) {
         StpUtil.checkRole(EmployeeRoleEnum.ENGINEER.name());
-        iOrderService.confirmFee(form, StpUtil.getLoginIdAsString());
+        orderService.confirmFee(form, StpUtil.getLoginIdAsString());
     }
 
     @PutMapping(path = "/client/feeConfirm/{orderId}")
     @Operation(summary = "用户确认计费（确认维修）", description = "用户确认计费（确认维修）")
     @CheckLogin
     public void clientConfirmFee(@PathVariable String orderId) {
-        iOrderService.clientConfirmFee(orderId, StpUtil.getLoginIdAsString());
+        orderService.clientConfirmFee(orderId, StpUtil.getLoginIdAsString());
     }
 
     @PutMapping(path = "/client/reject/{orderId}")
     @Operation(summary = "用户拒绝维修（返回物品）", description = "用户拒绝维修（返回物品）")
     @CheckLogin
     public void clientRejectRepair(@PathVariable String orderId) {
-        iOrderService.clientRejectRepair(orderId, StpUtil.getLoginIdAsString());
+        orderService.clientRejectRepair(orderId, StpUtil.getLoginIdAsString());
     }
 
     @PutMapping(path = "/material/apply/{orderId}")
@@ -110,7 +110,7 @@ public class OrderController {
     @CheckLogin
     public void materialApply(@PathVariable String orderId) {
         StpUtil.checkRole(EmployeeRoleEnum.ENGINEER.name());
-        iOrderService.applyMaterial(orderId, StpUtil.getLoginIdAsString());
+        orderService.applyMaterial(orderId, StpUtil.getLoginIdAsString());
     }
 
     @PutMapping(path = "/material/distribute")
@@ -118,7 +118,7 @@ public class OrderController {
     @CheckLogin
     public void materialDistribute(@RequestBody @Valid MaterialDistributeForm form) {
         StpUtil.checkRole(EmployeeRoleEnum.MATERIAL_MANAGER.name());
-        iOrderService.distributeMaterial(form, StpUtil.getLoginIdAsString());
+        orderService.distributeMaterial(form, StpUtil.getLoginIdAsString());
     }
 
     @PutMapping(path = "/engineer/repair/{orderId}/{material}")
@@ -127,7 +127,7 @@ public class OrderController {
     @CheckLogin
     public void engineerStartRepairing(@PathVariable String orderId, @PathVariable Boolean material) {
         StpUtil.checkRole(EmployeeRoleEnum.ENGINEER.name());
-        iOrderService.startRepair(orderId, material, StpUtil.getLoginIdAsString());
+        orderService.startRepair(orderId, material, StpUtil.getLoginIdAsString());
     }
 
     @PutMapping(path = "/engineer/recheck/{orderId}")
@@ -135,7 +135,7 @@ public class OrderController {
     @CheckLogin
     public void engineerStartRechecking(@PathVariable String orderId) {
         StpUtil.checkRole(EmployeeRoleEnum.ENGINEER.name());
-        iOrderService.startRechecking(orderId, StpUtil.getLoginIdAsString());
+        orderService.startRechecking(orderId, StpUtil.getLoginIdAsString());
     }
 
     @PutMapping(path = "/engineer/toBePaid/{orderId}")
@@ -143,7 +143,7 @@ public class OrderController {
     @CheckLogin
     public void engineerFinishedRepair(@PathVariable String orderId) {
         StpUtil.checkRole(EmployeeRoleEnum.ENGINEER.name());
-        iOrderService.finishRepair(orderId, StpUtil.getLoginIdAsString());
+        orderService.finishRepair(orderId, StpUtil.getLoginIdAsString());
     }
 
     @PutMapping(path = "/engineer/return/{orderId}")
@@ -151,13 +151,13 @@ public class OrderController {
     @CheckLogin
     public void engineerReturn(@PathVariable String orderId) {
         StpUtil.checkRole(EmployeeRoleEnum.ENGINEER.name());
-        iOrderService.returnItem(orderId, StpUtil.getLoginIdAsString());
+        orderService.returnItem(orderId, StpUtil.getLoginIdAsString());
     }
 
     @PutMapping(path = "/client/close/{orderId}")
     @Operation(summary = "用户关闭工单", description = "用户关闭工单")
     @CheckLogin
     public void clientClose(@PathVariable String orderId) {
-        iOrderService.closeOrder(orderId, StpUtil.getLoginIdAsString());
+        orderService.closeOrder(orderId, StpUtil.getLoginIdAsString());
     }
 }

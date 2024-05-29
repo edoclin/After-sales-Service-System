@@ -1,7 +1,7 @@
 package com.mi.aftersales.controller;
 
 import com.mi.aftersales.aspect.anno.CheckPermission;
-import com.mi.aftersales.service.iservice.ISpuCategoryService;
+import com.mi.aftersales.service.SpuCategoryService;
 import com.mi.aftersales.vo.result.SpuCategory4ClientVo;
 import com.mi.aftersales.vo.form.SpuCategoryForm;
 import com.mi.aftersales.vo.form.SpuCategoryVisibleSetForm;
@@ -24,25 +24,25 @@ import java.util.List;
 @RequestMapping("/aftersales/spuCategory")
 public class SpuCategoryController {
     @Resource
-    private ISpuCategoryService iSpuCategoryService;
+    private SpuCategoryService spuCategoryService;
 
     @PostMapping(path = "/")
     @CheckPermission
     @Operation(summary = "SPU分类添加", description = "SPU分类添加")
     public void postSpuCategory(@RequestBody @Valid SpuCategoryForm form) {
-        iSpuCategoryService.addSpuCategory(form);
+        spuCategoryService.addSpuCategory(form);
     }
 
     @GetMapping(path = "/list/client")
     @Operation(summary = "SPU分类目录", description = "SPU分类目录")
     public List<SpuCategory4ClientVo> listSpuCategory4Client() {
-        return iSpuCategoryService.listSpuCategory4Client(0);
+        return spuCategoryService.listSpuCategory4Client(0);
     }
 
     @PutMapping(path = "/visible")
     @CheckPermission
     @Operation(summary = "SPU分类客户是否可见", description = "SPU分类客户是否可见")
     public void setVisible(@RequestBody @Valid SpuCategoryVisibleSetForm form) {
-        iSpuCategoryService.setSpuCategoryVisibility(form);
+        spuCategoryService.setSpuCategoryVisibility(form);
     }
 }

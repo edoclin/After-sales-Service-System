@@ -1,17 +1,9 @@
 package com.mi.aftersales.controller;
 
-import cn.hutool.core.bean.BeanUtil;
-import cn.hutool.core.text.CharSequenceUtil;
-import com.feiniaojin.gracefulresponse.GracefulResponseException;
-import com.mi.aftersales.entity.ClientServiceCenter;
-import com.mi.aftersales.exception.graceful.ServerErrorException;
-import com.mi.aftersales.service.iservice.IClientServiceCenterService;
-import com.mi.aftersales.service.IClientServiceCenterService;
+import com.mi.aftersales.service.ClientServiceCenterService;
 import com.mi.aftersales.vo.form.ClientServiceCenterForm;
 import com.mi.aftersales.vo.form.UpdateClientServiceCenterForm;
 import io.swagger.v3.oas.annotations.Operation;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
@@ -29,7 +21,7 @@ import javax.validation.Valid;
 @RequestMapping("/aftersales/clientServiceCenter")
 public class ClientServiceCenterController {
     @Resource
-    private IClientServiceCenterService clientServiceCenterService;
+    private ClientServiceCenterService clientServiceCenterService;
 
     @PostMapping(path = "/")
     @Operation(summary = "添加用户服务中心", description = "添加用户服务中心")

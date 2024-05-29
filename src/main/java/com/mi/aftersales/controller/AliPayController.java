@@ -23,6 +23,7 @@ import com.mi.aftersales.entity.enums.PayStatusEnum;
 import com.mi.aftersales.exception.graceful.IllegalOrderIdException;
 import com.mi.aftersales.exception.graceful.IllegalOrderLoginIdException;
 import com.mi.aftersales.exception.graceful.IllegalOrderStatusFlowException;
+import com.mi.aftersales.service.OrderService;
 import com.mi.aftersales.service.iservice.IOrderService;
 import com.mi.aftersales.service.iservice.IPayOrderService;
 import com.mi.aftersales.vo.PayDetailVo;
@@ -55,6 +56,8 @@ class AliPayController {
 
     @Resource
     private IOrderService iOrderService;
+    @Resource
+    private OrderService orderService;
 
     @Resource
     private RocketMQTemplate rocketmqTemplate;
@@ -140,7 +143,7 @@ class AliPayController {
         payOrder.setPayStatus(PayStatusEnum.PAID);
         payOrder.setPayDetail(JSONUtil.toJsonStr(new PayDetailVo().setPaidTime(LocalDateTime.now())));
 
-        if (!iOrderService.sendEvent(iOrderService.statusFlow(OrderStatusChangeEventEnum.CLIENT_COMPLETED_PAY, payOrder.getOrderId()))) {
+        if (!orderService.sendEvent(orderService.statusFlow(OrderStatusChangeEventEnum.CLIENT_COMPLETED_PAY, payOrder.getOrderId()))) {
             throw new IllegalOrderStatusFlowException();
         }
 

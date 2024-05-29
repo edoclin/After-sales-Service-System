@@ -1,7 +1,7 @@
 package com.mi.aftersales.controller;
 
 import com.mi.aftersales.aspect.anno.CheckLogin;
-import com.mi.aftersales.service.iservice.IOrderStatusLogService;
+import com.mi.aftersales.service.OrderStatusLogService;
 import com.mi.aftersales.vo.OrderStatusLogResult;
 import io.swagger.v3.oas.annotations.Operation;
 
@@ -23,12 +23,12 @@ import java.util.List;
 public class OrderStatusLogController {
 
     @Resource
-    private IOrderStatusLogService iOrderStatusLogService;
+    private OrderStatusLogService orderStatusLogService;
 
     @GetMapping(path = "/{orderId}")
     @Operation(summary = "查询工单状态日志", description = "查询工单状态日志")
     @CheckLogin
     public List<OrderStatusLogResult> listOrderStatusLogById(@PathVariable String orderId) {
-        return iOrderStatusLogService.listOrderStatusLogByOrderId(orderId);
+        return orderStatusLogService.listOrderStatusLogByOrderId(orderId);
     }
 }

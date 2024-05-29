@@ -1,5 +1,6 @@
 package com.mi.aftersales.controller;
 
+import com.mi.aftersales.service.MaterialService;
 import com.mi.aftersales.service.iservice.IMaterialService;
 import com.mi.aftersales.vo.form.MaterialForm;
 import com.mi.aftersales.vo.form.ManngerUpdateMaterialForm;
@@ -22,7 +23,7 @@ import javax.validation.Valid;
 @RequestMapping("/aftersales/material")
 public class MaterialController {
     @Resource
-    private IMaterialService imaterialService;
+    private MaterialService materialService;
 
     @Resource
     private RedissonClient redissonClient;
@@ -35,7 +36,7 @@ public class MaterialController {
     @PostMapping(path = "/")
     @Operation(summary = "库管添加物料", description = "库管添加物料")
     public void addMaterial(@RequestBody @Valid MaterialForm form) {
-        imaterialService.addMaterial(form);
+        materialService.addMaterial(form);
     }
 
     /**
@@ -46,6 +47,6 @@ public class MaterialController {
     @PutMapping(path = "/")
     @Operation(summary = "库管更新物料信息", description = "库管更新物料信息")
     public void updateMaterial(@RequestBody @Valid ManngerUpdateMaterialForm form) {
-        imaterialService.updateMaterial(form, redissonClient);
+        materialService.updateMaterial(form, redissonClient);
     }
 }

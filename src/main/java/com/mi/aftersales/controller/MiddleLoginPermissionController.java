@@ -1,9 +1,7 @@
 package com.mi.aftersales.controller;
 
 import com.mi.aftersales.aspect.anno.CheckPermission;
-import com.mi.aftersales.service.iservice.ILoginService;
-import com.mi.aftersales.service.iservice.IMiddleLoginPermissionService;
-import com.mi.aftersales.service.iservice.IPermissionService;
+import com.mi.aftersales.service.MiddleLoginPermissionService;
 import com.mi.aftersales.vo.form.LoginPermissionForm;
 import io.swagger.v3.oas.annotations.Operation;
 import org.springframework.web.bind.annotation.*;
@@ -22,20 +20,13 @@ import javax.validation.Valid;
 @RestController
 @RequestMapping("/aftersales/middleLoginPermission")
 public class MiddleLoginPermissionController {
-
     @Resource
-    private ILoginService iLoginService;
-
-    @Resource
-    private IMiddleLoginPermissionService iMiddleLoginPermissionService;
-
-    @Resource
-    private IPermissionService iPermissionService;
+    private MiddleLoginPermissionService middleLoginPermissionService;
 
     @PostMapping(path = "/")
     @CheckPermission
     @Operation(summary = "关联用户权限", description = "关联用户权限")
     public void postMiddleLoginPermission(@RequestBody @Valid LoginPermissionForm form) {
-        iMiddleLoginPermissionService.addLoginPermission(form);
+        middleLoginPermissionService.addLoginPermission(form);
     }
 }
