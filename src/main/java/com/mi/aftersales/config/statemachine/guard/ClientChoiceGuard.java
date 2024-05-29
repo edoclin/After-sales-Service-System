@@ -2,7 +2,7 @@ package com.mi.aftersales.config.statemachine.guard;
 
 import com.mi.aftersales.config.enums.OrderStatusChangeEventEnum;
 import com.mi.aftersales.entity.enums.OrderStatusEnum;
-import com.mi.aftersales.service.IOrderService;
+import com.mi.aftersales.service.iservice.IOrderService;
 import org.springframework.statemachine.StateContext;
 import org.springframework.statemachine.guard.Guard;
 

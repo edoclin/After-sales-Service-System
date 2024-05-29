@@ -3,12 +3,9 @@ package com.mi.aftersales.config.rocketmq;
 
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.text.CharSequenceUtil;
-import cn.hutool.json.JSONUtil;
-import com.mi.aftersales.entity.OrderStatusLog;
 import com.mi.aftersales.entity.OrderUpload;
-import com.mi.aftersales.service.IFileService;
-import com.mi.aftersales.service.IOrderStatusLogService;
-import com.mi.aftersales.service.IOrderUploadService;
+import com.mi.aftersales.service.iservice.IFileService;
+import com.mi.aftersales.service.iservice.IOrderUploadService;
 import com.mi.aftersales.vo.message.OrderUploadMessage;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.rocketmq.spring.annotation.RocketMQMessageListener;
@@ -29,7 +26,7 @@ import static com.mi.aftersales.util.RocketMqTopic.ROCKETMQ_TOPIC_4_ORDER_UPLOAD
  **/
 @Component
 @Slf4j
-@RocketMQMessageListener(topic = ROCKETMQ_TOPIC_4_ORDER_UPLOAD, consumerGroup = "aftersales_consumer_group")
+@RocketMQMessageListener(topic = ROCKETMQ_TOPIC_4_ORDER_UPLOAD, consumerGroup = ROCKETMQ_TOPIC_4_ORDER_UPLOAD)
 public class OrderUploadConsumer implements RocketMQListener<OrderUploadMessage> {
 
     @Resource

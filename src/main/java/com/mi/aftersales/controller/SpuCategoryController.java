@@ -1,7 +1,7 @@
 package com.mi.aftersales.controller;
 
 import com.mi.aftersales.aspect.anno.CheckPermission;
-import com.mi.aftersales.service.ISpuCategoryService;
+import com.mi.aftersales.service.iservice.ISpuCategoryService;
 import com.mi.aftersales.vo.result.SpuCategory4ClientVo;
 import com.mi.aftersales.vo.form.SpuCategoryForm;
 import com.mi.aftersales.vo.form.SpuCategoryVisibleSetForm;

@@ -1,9 +1,9 @@
 package com.mi.aftersales.controller;
 
 import com.mi.aftersales.aspect.anno.CheckPermission;
-import com.mi.aftersales.service.ILoginService;
-import com.mi.aftersales.service.IMiddleLoginPermissionService;
-import com.mi.aftersales.service.IPermissionService;
+import com.mi.aftersales.service.iservice.ILoginService;
+import com.mi.aftersales.service.iservice.IMiddleLoginPermissionService;
+import com.mi.aftersales.service.iservice.IPermissionService;
 import com.mi.aftersales.vo.form.LoginPermissionForm;
 import io.swagger.v3.oas.annotations.Operation;
 import org.springframework.web.bind.annotation.*;

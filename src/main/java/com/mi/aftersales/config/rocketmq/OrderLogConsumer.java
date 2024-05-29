@@ -5,7 +5,7 @@ import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.text.CharSequenceUtil;
 import cn.hutool.json.JSONUtil;
 import com.mi.aftersales.entity.OrderStatusLog;
-import com.mi.aftersales.service.IOrderStatusLogService;
+import com.mi.aftersales.service.iservice.IOrderStatusLogService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.rocketmq.spring.annotation.RocketMQMessageListener;
 import org.apache.rocketmq.spring.core.RocketMQListener;
@@ -23,7 +23,8 @@ import static com.mi.aftersales.util.RocketMqTopic.ROCKETMQ_TOPIC_4_ORDER_LOG;
  **/
 @Component
 @Slf4j
-@RocketMQMessageListener(topic = ROCKETMQ_TOPIC_4_ORDER_LOG, consumerGroup = "aftersales_consumer_group")
+@RocketMQMessageListener(topic = ROCKETMQ_TOPIC_4_ORDER_LOG, consumerGroup = ROCKETMQ_TOPIC_4_ORDER_LOG)
+//@RocketMQMessageListener(topic = "order-log-topic", consumerGroup = "aftersales_consumer_group", messageModel = MessageModel.CLUSTERING)
 public class OrderLogConsumer implements RocketMQListener<OrderStatusLog> {
 
     @Resource

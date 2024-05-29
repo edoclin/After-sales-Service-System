@@ -2,7 +2,7 @@ package com.mi.aftersales.controller;
 
 import cn.dev33.satoken.stp.StpUtil;
 import com.mi.aftersales.aspect.anno.CheckLogin;
-import com.mi.aftersales.service.IAddressService;
+import com.mi.aftersales.service.iservice.IAddressService;
 import com.mi.aftersales.vo.form.ClientAddressForm;
 import com.mi.aftersales.vo.result.ClientAddressVo;
 import io.swagger.v3.oas.annotations.Operation;

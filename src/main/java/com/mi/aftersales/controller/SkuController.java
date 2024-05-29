@@ -1,6 +1,6 @@
 package com.mi.aftersales.controller;
 
-import com.mi.aftersales.service.ISkuService;
+import com.mi.aftersales.service.iservice.ISkuService;
 import com.mi.aftersales.util.query.ConditionQuery;
 import com.mi.aftersales.vo.form.SkuVisibleSetForm;
 import com.mi.aftersales.vo.result.ClientSkuVo;

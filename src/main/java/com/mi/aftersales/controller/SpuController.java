@@ -1,6 +1,6 @@
 package com.mi.aftersales.controller;
 
-import com.mi.aftersales.service.ISpuService;
+import com.mi.aftersales.service.iservice.ISpuService;
 import com.mi.aftersales.vo.result.ClientSpuVo;
 import com.mi.aftersales.vo.PageResult;
 import com.mi.aftersales.util.query.ConditionQuery;
