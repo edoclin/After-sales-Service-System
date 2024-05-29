@@ -8,7 +8,7 @@ import com.mi.aftersales.config.yaml.bean.InitConfig;
 import com.mi.aftersales.controller.PlaceholderController;
 import com.mi.aftersales.entity.*;
 import com.mi.aftersales.entity.enums.LoginTypeEnum;
-import com.mi.aftersales.service.iservice.*;
+import com.mi.aftersales.repository.*;
 import com.mi.aftersales.util.ApiUtil;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
@@ -38,22 +38,22 @@ public class InitApplicationRunner implements ApplicationRunner {
     private RedissonClient redissonClient;
 
     @Resource
-    private IApiService iApiService;
+    private IApiRepository iApiRepository;
 
     @Resource
     private InitConfig initConfig;
 
     @Resource
-    private ILoginService iLoginService;
+    private ILoginRepository iLoginRepository;
 
     @Resource
-    private IPermissionService iPermissionService;
+    private IPermissionRepository iPermissionRepository;
 
     @Resource
-    private IMiddlePermissionApiService iMiddlePermissionApiService;
+    private IMiddlePermissionApiRepository iMiddlePermissionApiRepository;
 
     @Resource
-    private IMiddleLoginPermissionService iMiddleLoginPermissionService;
+    private IMiddleLoginPermissionRepository iMiddleLoginPermissionRepository;
 
     /**
      * @description: 缓存API列表
@@ -65,7 +65,7 @@ public class InitApplicationRunner implements ApplicationRunner {
 
         redisTemplate.delete("apis:cached");
         ArrayList<String> apis = new ArrayList<>();
-        iApiService.list().forEach(api -> apis.add(CharSequenceUtil.format("{}-{}", api.getMethod().name().toUpperCase(), api.getUri())));
+        iApiRepository.list().forEach(api -> apis.add(CharSequenceUtil.format("{}-{}", api.getMethod().name().toUpperCase(), api.getUri())));
         redisTemplate.opsForList().leftPushAll("apis:cached", apis);
     }
 
@@ -77,54 +77,54 @@ public class InitApplicationRunner implements ApplicationRunner {
      **/
     public void initApiTable() {
         ApiUtil.allApi(ClassUtil.getPackage(PlaceholderController.class)).forEach(api -> {
-            Api one = iApiService.lambdaQuery().eq(Api::getMethod, api.getMethod()).eq(Api::getUri, api.getUri()).one();
+            Api one = iApiRepository.lambdaQuery().eq(Api::getMethod, api.getMethod()).eq(Api::getUri, api.getUri()).one();
             if (BeanUtil.isEmpty(one)) {
                 one = new Api();
             }
             BeanUtil.copyProperties(api, one, CopyOptions.create().setIgnoreNullValue(true));
-            iApiService.saveOrUpdate(one);
+            iApiRepository.saveOrUpdate(one);
         });
     }
 
 
     private void init() {
-        Permission permission = iPermissionService.lambdaQuery().eq(Permission::getPermissionKey, initConfig.getPermissionKey()).eq(Permission::getPermissionName, initConfig.getPermissionName()).one();
+        Permission permission = iPermissionRepository.lambdaQuery().eq(Permission::getPermissionKey, initConfig.getPermissionKey()).eq(Permission::getPermissionName, initConfig.getPermissionName()).one();
         // 创建默认权限
         if (BeanUtil.isEmpty(permission)) {
             permission = new Permission();
             permission.setPermissionKey(initConfig.getPermissionKey());
             permission.setPermissionName(initConfig.getPermissionName());
-            iPermissionService.save(permission);
+            iPermissionRepository.save(permission);
         }
 
         Permission finalPermission = permission;
         // 默认权限管理所有API
-        iApiService.list().forEach(api -> {
-            MiddlePermissionApi one = iMiddlePermissionApiService.lambdaQuery().eq(MiddlePermissionApi::getPermissionId, finalPermission.getPermissionId()).eq(MiddlePermissionApi::getApiId, api.getApiId()).one();
+        iApiRepository.list().forEach(api -> {
+            MiddlePermissionApi one = iMiddlePermissionApiRepository.lambdaQuery().eq(MiddlePermissionApi::getPermissionId, finalPermission.getPermissionId()).eq(MiddlePermissionApi::getApiId, api.getApiId()).one();
             if (BeanUtil.isEmpty(one)) {
                 one = new MiddlePermissionApi();
                 one.setPermissionId(finalPermission.getPermissionId());
                 one.setApiId(api.getApiId());
-                iMiddlePermissionApiService.save(one);
+                iMiddlePermissionApiRepository.save(one);
             }
         });
 
-        Login login = iLoginService.lambdaQuery().eq(Login::getMobile, initConfig.getLoginMobile()).one();
+        Login login = iLoginRepository.lambdaQuery().eq(Login::getMobile, initConfig.getLoginMobile()).one();
         // 创建默认用户
         if (BeanUtil.isEmpty(login)) {
             login = new Login();
             login.setMobile(initConfig.getLoginMobile());
             login.setLoginType(LoginTypeEnum.EMPLOYEE);
-            iLoginService.save(login);
+            iLoginRepository.save(login);
         }
 
-        MiddleLoginPermission one = iMiddleLoginPermissionService.lambdaQuery().eq(MiddleLoginPermission::getLoginId, initConfig.getLoginMobile()).eq(MiddleLoginPermission::getPermissionId, finalPermission.getPermissionId()).one();
+        MiddleLoginPermission one = iMiddleLoginPermissionRepository.lambdaQuery().eq(MiddleLoginPermission::getLoginId, initConfig.getLoginMobile()).eq(MiddleLoginPermission::getPermissionId, finalPermission.getPermissionId()).one();
 
         if (BeanUtil.isEmpty(one)) {
             one = new MiddleLoginPermission();
             one.setLoginId(login.getLoginId());
             one.setPermissionId(finalPermission.getPermissionId());
-            iMiddleLoginPermissionService.save(one);
+            iMiddleLoginPermissionRepository.save(one);
         }
     }
 

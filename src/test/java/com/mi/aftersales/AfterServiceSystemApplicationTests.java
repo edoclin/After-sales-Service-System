@@ -4,7 +4,7 @@ package com.mi.aftersales;
 import com.mi.aftersales.entity.Login;
 import com.mi.aftersales.entity.enums.LoginOAuthSourceEnum;
 import com.mi.aftersales.entity.enums.LoginTypeEnum;
-import com.mi.aftersales.service.iservice.ILoginService;
+import com.mi.aftersales.repository.ILoginRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
@@ -14,7 +14,7 @@ import javax.annotation.Resource;
 class AfterServiceSystemApplicationTests {
 
     @Resource
-    private ILoginService iLoginService;
+    private ILoginRepository iLoginRepository;
     @Test
     void test() {
 
@@ -22,7 +22,7 @@ class AfterServiceSystemApplicationTests {
                 .setMobile("123")
                 .setSource(LoginOAuthSourceEnum.MI)
                 .setLoginType(LoginTypeEnum.CLIENT);
-        iLoginService.save(login);
+        iLoginRepository.save(login);
     }
 
 }

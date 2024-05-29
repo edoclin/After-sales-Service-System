@@ -7,7 +7,7 @@ import com.feiniaojin.gracefulresponse.GracefulResponseException;
 import com.mi.aftersales.entity.Material;
 import com.mi.aftersales.exception.graceful.ServerErrorException;
 import com.mi.aftersales.service.MaterialService;
-import com.mi.aftersales.service.iservice.IMaterialService;
+import com.mi.aftersales.repository.IMaterialRepository;
 import com.mi.aftersales.vo.form.ManngerUpdateMaterialForm;
 import com.mi.aftersales.vo.form.MaterialForm;
 import lombok.SneakyThrows;
@@ -30,7 +30,7 @@ import java.util.concurrent.TimeUnit;
 @Service
 public class MaterialServiceImpl  implements MaterialService {
     @Resource
-    private IMaterialService iMaterialService;
+    private IMaterialRepository iMaterialRepository;
 
     @Override
     public void addMaterial(MaterialForm form) {
@@ -45,7 +45,7 @@ public class MaterialServiceImpl  implements MaterialService {
         Material material = new Material();
         try {
             BeanUtil.copyProperties(form, material);
-            if (Boolean.FALSE.equals(iMaterialService.save(material))) {
+            if (Boolean.FALSE.equals(iMaterialRepository.save(material))) {
                 throw new ServerErrorException();
             }
         } catch (ConvertException e) {
@@ -60,7 +60,7 @@ public class MaterialServiceImpl  implements MaterialService {
     @SneakyThrows
     @Override
     public void updateMaterial(ManngerUpdateMaterialForm form, RedissonClient redissonClient) {
-        Material material = iMaterialService.getById(form.getMaterialId());
+        Material material = iMaterialRepository.getById(form.getMaterialId());
 
         if (BeanUtil.isEmpty(material)) {
             throw new GracefulResponseException("非法的物料Id");
@@ -78,7 +78,7 @@ public class MaterialServiceImpl  implements MaterialService {
                 if (material.getCost().compareTo(material.getPrice()) > 0) {
                     throw new GracefulResponseException("物料成本不能大于销售价格!");
                 }
-                if (Boolean.FALSE.equals(iMaterialService.updateById(material))) {
+                if (Boolean.FALSE.equals(iMaterialRepository.updateById(material))) {
                     throw new ServerErrorException();
                 }
             }

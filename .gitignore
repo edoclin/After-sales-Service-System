@@ -42,3 +42,4 @@ out/
 /src/main/resources/rebel.xml
 /src/main/java/com/mi/aftersales/util/CodeGenerator.java
 /generate/
+/data/

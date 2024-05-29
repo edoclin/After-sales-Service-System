@@ -6,7 +6,7 @@ import com.feiniaojin.gracefulresponse.GracefulResponseException;
 import com.mi.aftersales.entity.ClientServiceCenter;
 import com.mi.aftersales.exception.graceful.ServerErrorException;
 import com.mi.aftersales.service.ClientServiceCenterService;
-import com.mi.aftersales.service.iservice.IClientServiceCenterService;
+import com.mi.aftersales.repository.IClientServiceCenterRepository;
 import com.mi.aftersales.vo.form.ClientServiceCenterForm;
 import com.mi.aftersales.vo.form.UpdateClientServiceCenterForm;
 import org.springframework.stereotype.Service;
@@ -24,14 +24,14 @@ import javax.annotation.Resource;
 @Service
 public class ClientServiceCenterServiceImpl implements ClientServiceCenterService {
     @Resource
-    private IClientServiceCenterService iClientServiceCenterService;
+    private IClientServiceCenterRepository iClientServiceCenterRepository;
 
     @Override
     public void addClientServiceCenter(ClientServiceCenterForm form) {
         ClientServiceCenter clientServiceCenter = new ClientServiceCenter();
         BeanUtil.copyProperties(form, clientServiceCenter);
         try {
-            iClientServiceCenterService.save(clientServiceCenter);
+            iClientServiceCenterRepository.save(clientServiceCenter);
         } catch (Exception e) {
             throw new ServerErrorException(e.getMessage());
         }
@@ -39,12 +39,12 @@ public class ClientServiceCenterServiceImpl implements ClientServiceCenterServic
 
     @Override
     public void updateClientServiceCenter(UpdateClientServiceCenterForm form) {
-        ClientServiceCenter byId = iClientServiceCenterService.getById(form.getCenterId());
+        ClientServiceCenter byId = iClientServiceCenterRepository.getById(form.getCenterId());
 
         if (BeanUtil.isNotEmpty(byId)) {
             BeanUtil.copyProperties(form, byId);
             try {
-                iClientServiceCenterService.updateById(byId);
+                iClientServiceCenterRepository.updateById(byId);
             } catch (Exception e) {
                 throw new ServerErrorException(e.getMessage());
             }

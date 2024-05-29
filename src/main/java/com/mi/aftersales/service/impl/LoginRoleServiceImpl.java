@@ -8,8 +8,8 @@ import com.mi.aftersales.entity.enums.EmployeeRoleEnum;
 import com.mi.aftersales.exception.graceful.IllegalLoginIdException;
 import com.mi.aftersales.exception.graceful.ServerErrorException;
 import com.mi.aftersales.service.LoginRoleService;
-import com.mi.aftersales.service.iservice.ILoginRoleService;
-import com.mi.aftersales.service.iservice.ILoginService;
+import com.mi.aftersales.repository.ILoginRoleRepository;
+import com.mi.aftersales.repository.ILoginRepository;
 import com.mi.aftersales.vo.form.LoginRoleForm;
 import org.springframework.stereotype.Service;
 
@@ -25,25 +25,25 @@ import javax.annotation.Resource;
 @Service
 public class LoginRoleServiceImpl implements LoginRoleService {
     @Resource
-    private ILoginService iLoginService;
+    private ILoginRepository iLoginRepository;
 
     @Resource
-    private ILoginRoleService iLoginRoleService;
+    private ILoginRoleRepository iLoginRoleRepository;
 
     @Override
     public void addOrUpdateLoginRole(LoginRoleForm form) {
-        Login login = iLoginService.getById(form.getLoginId());
+        Login login = iLoginRepository.getById(form.getLoginId());
 
         if (BeanUtil.isEmpty(login)) {
             throw new IllegalLoginIdException();
         }
-        iLoginRoleService.remove(Wrappers.lambdaQuery(LoginRole.class).eq(LoginRole::getLoginId, form.getLoginId()));
+        iLoginRoleRepository.remove(Wrappers.lambdaQuery(LoginRole.class).eq(LoginRole::getLoginId, form.getLoginId()));
         for (EmployeeRoleEnum role : form.getRoles()) {
             LoginRole one = new LoginRole();
             one.setLoginId(login.getLoginId());
             one.setEmployeeRole(role);
             try {
-                iLoginRoleService.save(one);
+                iLoginRoleRepository.save(one);
             } catch (Exception e) {
                 throw new ServerErrorException();
             }

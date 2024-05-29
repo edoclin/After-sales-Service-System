@@ -4,8 +4,8 @@ package com.mi.aftersales.config.rocketmq;
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.text.CharSequenceUtil;
 import com.mi.aftersales.entity.OrderUpload;
-import com.mi.aftersales.service.iservice.IFileService;
-import com.mi.aftersales.service.iservice.IOrderUploadService;
+import com.mi.aftersales.repository.IFileRepository;
+import com.mi.aftersales.repository.IOrderUploadRepository;
 import com.mi.aftersales.vo.message.OrderUploadMessage;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.rocketmq.spring.annotation.RocketMQMessageListener;
@@ -30,10 +30,10 @@ import static com.mi.aftersales.util.RocketMqTopic.ROCKETMQ_TOPIC_4_ORDER_UPLOAD
 public class OrderUploadConsumer implements RocketMQListener<OrderUploadMessage> {
 
     @Resource
-    private IOrderUploadService iOrderUploadService;
+    private IOrderUploadRepository iOrderUploadRepository;
 
     @Resource
-    private IFileService iFileService;
+    private IFileRepository iFileRepository;
 
 
     @Override
@@ -41,7 +41,7 @@ public class OrderUploadConsumer implements RocketMQListener<OrderUploadMessage>
         if (BeanUtil.isNotEmpty(orderUploadMessage)) {
             ArrayList<OrderUpload> batch = new ArrayList<>();
             for (String fileId : orderUploadMessage.getFileIds()) {
-                if (BeanUtil.isNotEmpty(iFileService.getById(fileId))) {
+                if (BeanUtil.isNotEmpty(iFileRepository.getById(fileId))) {
                     OrderUpload orderUpload = new OrderUpload();
                     orderUpload.setOrderId(orderUploadMessage.getOrderId());
                     orderUpload.setFileId(fileId);
@@ -50,7 +50,7 @@ public class OrderUploadConsumer implements RocketMQListener<OrderUploadMessage>
                 }
             }
             try {
-                iOrderUploadService.saveBatch(batch);
+                iOrderUploadRepository.saveBatch(batch);
                 log.info(CharSequenceUtil.format("工单文件上传消费成功！（{}）", orderUploadMessage.getOrderId()));
             } catch (Exception e) {
                 log.error(e.getMessage(), e);

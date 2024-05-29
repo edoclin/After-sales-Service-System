@@ -16,8 +16,8 @@ import com.mi.aftersales.entity.enums.OrderStatusEnum;
 import com.mi.aftersales.entity.enums.OrderTypeEnum;
 import com.mi.aftersales.entity.enums.OrderUploaderTypeEnum;
 import com.mi.aftersales.exception.graceful.*;
+import com.mi.aftersales.repository.*;
 import com.mi.aftersales.service.OrderService;
-import com.mi.aftersales.service.iservice.*;
 import com.mi.aftersales.util.COSUtil;
 import com.mi.aftersales.util.DateUtil;
 import com.mi.aftersales.util.query.ConditionQuery;
@@ -39,6 +39,7 @@ import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.statemachine.ObjectStateMachine;
 import org.springframework.statemachine.persist.StateMachinePersister;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import java.math.BigDecimal;
@@ -66,7 +67,7 @@ public class OrderServiceImpl implements OrderService {
     private OrderConfig orderConfig;
 
     @Resource
-    private IMaterialService iMaterialService;
+    private IMaterialRepository iMaterialRepository;
 
     @Resource(name = "orderRedisPersister")
     private StateMachinePersister<OrderStatusEnum, OrderStatusChangeEventEnum, String> orderRedisPersister;
@@ -75,25 +76,25 @@ public class OrderServiceImpl implements OrderService {
     private OrderStateMachineBuilder orderStateMachineBuilder;
 
     @Resource
-    private IFapiaoService iFapiaoService;
+    private IFapiaoRepository iFapiaoRepository;
 
     @Resource
-    private IOrderStatusLogService iOrderStatusLogService;
+    private IOrderStatusLogRepository iOrderStatusLogRepository;
 
     @Resource
-    private IOrderService iOrderService;
+    private IOrderRepository iOrderRepository;
 
     @Resource
-    private ISkuService iSkuService;
+    private ISkuRepository iSkuRepository;
 
     @Resource
-    private ISpuService iSpuService;
+    private ISpuRepository iSpuRepository;
 
     @Resource
-    private ISpuCategoryService iSpuCategoryService;
+    private ISpuCategoryRepository iSpuCategoryRepository;
 
     @Resource
-    private IClientServiceCenterService iClientServiceCenterService;
+    private IClientServiceCenterRepository iClientServiceCenterRepository;
 
     @Resource
     private RocketMQTemplate rocketmqTemplate;
@@ -102,20 +103,20 @@ public class OrderServiceImpl implements OrderService {
     private RedisTemplate<String, String> redisTemplate;
 
     @Resource
-    private IFileService iFileService;
+    private IFileRepository iFileRepository;
 
     @Resource
     private RedissonClient redissonClient;
 
     @Resource
-    private IOrderUploadService iOrderUploadService;
+    private IOrderUploadRepository iOrderUploadRepository;
 
     @Override
     public List<ClientOrderSimpleVo> listClientOrders(ConditionQuery query, String loginId) {
         QueryWrapper<Order> wrapper = QueryUtil.buildWrapper(query, Order.class);
         wrapper.eq("client_login_id", loginId);
         List<ClientOrderSimpleVo> result = new ArrayList<>();
-        iOrderService.list(wrapper).forEach(order -> {
+        iOrderRepository.list(wrapper).forEach(order -> {
             ClientOrderSimpleVo item = new ClientOrderSimpleVo();
             BeanUtil.copyProperties(order, item, DateUtil.copyDate2yyyyMMddHHmm());
             item.setOrderStatus(order.getOrderStatus().getDesc());
@@ -127,7 +128,7 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public ClientOrderDetailVo getClientOrderDetail(String orderId, String loginId) {
-        Order order = iOrderService.getById(orderId);
+        Order order = iOrderRepository.getById(orderId);
 
         if (BeanUtil.isEmpty(order)) {
             throw new IllegalOrderIdException();
@@ -143,7 +144,7 @@ public class OrderServiceImpl implements OrderService {
         clientOrderDetailVo.setOrderStatusValue(order.getOrderStatus().getValue());
 
         // 状态日志
-        iOrderStatusLogService.lambdaQuery().eq(OrderStatusLog::getOrderId, order.getOrderId())
+        iOrderStatusLogRepository.lambdaQuery().eq(OrderStatusLog::getOrderId, order.getOrderId())
                 .orderByAsc(OrderStatusLog::getOrderStatus).list().forEach(log -> {
                     ClientOrderStatusLogVo logVo = new ClientOrderStatusLogVo();
                     BeanUtil.copyProperties(log, logVo, DateUtil.copyDate2yyyyMMddHHmm());
@@ -153,9 +154,9 @@ public class OrderServiceImpl implements OrderService {
                 });
 
         // 客户上传文件
-        iOrderUploadService.lambdaQuery().eq(OrderUpload::getOrderId, order.getOrderId())
+        iOrderUploadRepository.lambdaQuery().eq(OrderUpload::getOrderId, order.getOrderId())
                 .eq(OrderUpload::getUploaderType, OrderUploaderTypeEnum.CLIENT).list().forEach(file -> {
-                    File byId = iFileService.getById(file.getFileId());
+                    File byId = iFileRepository.getById(file.getFileId());
                     if (BeanUtil.isNotEmpty(byId)) {
                         clientOrderDetailVo.getClientFileUrl()
                                 .add(new FileVo().setUrl(COSUtil.generateAccessUrl(byId.getAccessKey())).setType("image").setFileId(file.getFileId()));
@@ -163,9 +164,9 @@ public class OrderServiceImpl implements OrderService {
                 });
 
         // 工程师上传文件
-        iOrderUploadService.lambdaQuery().eq(OrderUpload::getOrderId, order.getOrderId())
+        iOrderUploadRepository.lambdaQuery().eq(OrderUpload::getOrderId, order.getOrderId())
                 .eq(OrderUpload::getUploaderType, OrderUploaderTypeEnum.ENGINEER).list().forEach(file -> {
-                    File byId = iFileService.getById(file.getFileId());
+                    File byId = iFileRepository.getById(file.getFileId());
                     if (BeanUtil.isNotEmpty(byId)) {
                         clientOrderDetailVo.getEngineerFileUrl()
                                 .add(new FileVo().setUrl(COSUtil.generateAccessUrl(byId.getAccessKey())).setType("video").setFileId(file.getFileId()));
@@ -176,14 +177,15 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
+    @Transactional
     public void createOrder(ClientOrderForm form, String loginId) {
-        Fapiao fapiao = iFapiaoService.getById(form.getFapiaoId());
+        Fapiao fapiao = iFapiaoRepository.getById(form.getFapiaoId());
 
         if (BeanUtil.isEmpty(fapiao) || !CharSequenceUtil.equals(fapiao.getCreatedId(), loginId)) {
             throw new GracefulResponseException("非法的发票Id！");
         }
 
-        Sku sku = iSkuService.getById(form.getSkuId());
+        Sku sku = iSkuRepository.getById(form.getSkuId());
 
         if (BeanUtil.isEmpty(sku) || Boolean.FALSE.equals(sku.getVisible())) {
             throw new GracefulResponseException("非法的商品Sku！");
@@ -201,7 +203,7 @@ public class OrderServiceImpl implements OrderService {
             throw new GracefulResponseException("订单类型不合法！");
         }
 
-        if (order.getOrderType() == OrderTypeEnum.TO_SHOP && BeanUtil.isEmpty(iClientServiceCenterService.getById(order.getCenterId()))) {
+        if (order.getOrderType() == OrderTypeEnum.TO_SHOP && BeanUtil.isEmpty(iClientServiceCenterRepository.getById(order.getCenterId()))) {
             throw new GracefulResponseException("客户服务中心不存在");
         }
 
@@ -215,7 +217,7 @@ public class OrderServiceImpl implements OrderService {
 
         order.setClientLoginId(loginId);
         try {
-            iOrderService.save(order);
+            iOrderRepository.save(order);
             if (!sendEvent(statusFlow(OrderStatusChangeEventEnum.CLIENT_COMPLETED_ORDER_CREATED, order.getOrderId()))) {
                 log.error(CharSequenceUtil.format("工单（{}）状态转换失败", order.getOrderId()));
                 throw new ServerErrorException();
@@ -239,7 +241,7 @@ public class OrderServiceImpl implements OrderService {
         Set<String> pendingOrders = redisTemplate.opsForZSet().range(NAMESPACE_4_PENDING_ORDER, 0, orderConfig.getTopN() - 1);
         if (ObjectUtil.isNotNull(pendingOrders)) {
             pendingOrders.forEach(orderId -> {
-                Order order = iOrderService.getById(orderId);
+                Order order = iOrderRepository.getById(orderId);
                 if (BeanUtil.isNotEmpty(order)) {
                     orders.add(order);
                 }
@@ -247,11 +249,11 @@ public class OrderServiceImpl implements OrderService {
             orders.forEach(order -> {
                 EngineerSimpleOrderVo item = new EngineerSimpleOrderVo();
                 BeanUtil.copyProperties(order, item, DateUtil.copyDate2yyyyMMddHHmm());
-                Sku sku = iSkuService.getById(order.getSkuId());
+                Sku sku = iSkuRepository.getById(order.getSkuId());
                 item.setSkuDisplayName(sku.getSkuDisplayName());
-                Spu spu = iSpuService.getById(sku.getSpuId());
+                Spu spu = iSpuRepository.getById(sku.getSpuId());
                 item.setSpuName(spu.getSpuName());
-                item.setCategories(iSpuCategoryService.listAllSpuCategoryName(spu.getCategoryId()));
+                item.setCategories(iSpuCategoryRepository.listAllSpuCategoryName(spu.getCategoryId()));
                 item.setOrderType(order.getOrderType().getDesc());
                 result.add(item);
             });
@@ -260,6 +262,7 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
+    @Transactional
     public void acceptOrder(String orderId, String loginId) {
         Set<String> orderRange = redisTemplate.opsForZSet().range(NAMESPACE_4_PENDING_ORDER, 0, orderConfig.getTopN());
         if (orderRange == null || !orderRange.contains(orderId)) {
@@ -285,8 +288,9 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
+    @Transactional
     public void startChecking(String orderId, String loginId) {
-        Order order = iOrderService.getById(orderId);
+        Order order = iOrderRepository.getById(orderId);
 
         if (BeanUtil.isEmpty(order)) {
             throw new IllegalOrderIdException();
@@ -302,8 +306,9 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
+    @Transactional
     public void uploadFaultDescription(FaultDescriptionForm form, String loginId) {
-        Order order = iOrderService.getById(form.getOrderId());
+        Order order = iOrderRepository.getById(form.getOrderId());
         if (BeanUtil.isEmpty(order)) {
             throw new IllegalOrderIdException();
         }
@@ -315,7 +320,7 @@ public class OrderServiceImpl implements OrderService {
         order.setEngineerFaultDesc(form.getEngineerFaultDesc());
         order.setEngineerNotice(form.getEngineerNotice());
         try {
-            iOrderService.updateById(order);
+            iOrderRepository.updateById(order);
         } catch (Exception e) {
             log.error(e.getMessage());
             throw new ServerErrorException();
@@ -332,8 +337,9 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
+    @Transactional
     public void confirmFee(OrderFeeConfirmForm form, String loginId) {
-        Order order = iOrderService.getById(form.getOrderId());
+        Order order = iOrderRepository.getById(form.getOrderId());
         if (BeanUtil.isEmpty(order)) {
             throw new IllegalOrderIdException();
         }
@@ -347,7 +353,7 @@ public class OrderServiceImpl implements OrderService {
         List<MiddleOrderMaterial> batch = new ArrayList<>();
         order.setMaterialFee(new BigDecimal("0"));
         form.getMaterials().forEach(materialNum -> {
-            Material material = iMaterialService.getById(materialNum.getMaterialId());
+            Material material = iMaterialRepository.getById(materialNum.getMaterialId());
             if (BeanUtil.isNotEmpty(material)) {
                 order.setMaterialFee(order.getMaterialFee().add(material.getPrice().multiply(materialNum.getNum())));
                 batch.add(new MiddleOrderMaterial().setOrderId(form.getOrderId()).setMaterialId(material.getMaterialId()).setMaterialAmount(materialNum.getNum()));
@@ -355,7 +361,7 @@ public class OrderServiceImpl implements OrderService {
         });
 
         try {
-            iOrderService.updateById(order);
+            iOrderRepository.updateById(order);
             if (!sendEvent(statusFlow(OrderStatusChangeEventEnum.ENGINEER_COMPLETED_FEE_CONFIRM, order.getOrderId()))) {
                 throw new IllegalOrderStatusFlowException();
             }
@@ -370,8 +376,9 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
+    @Transactional
     public void clientConfirmFee(String orderId, String loginId) {
-        Order order = iOrderService.getById(orderId);
+        Order order = iOrderRepository.getById(orderId);
         if (BeanUtil.isEmpty(order)) {
             throw new IllegalOrderIdException();
         }
@@ -388,8 +395,9 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
+    @Transactional
     public void clientRejectRepair(String orderId, String loginId) {
-        Order order = iOrderService.getById(orderId);
+        Order order = iOrderRepository.getById(orderId);
         if (BeanUtil.isEmpty(order)) {
             throw new IllegalOrderIdException();
         }
@@ -407,8 +415,9 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
+    @Transactional
     public void applyMaterial(String orderId, String loginId) {
-        Order order = iOrderService.getById(orderId);
+        Order order = iOrderRepository.getById(orderId);
         if (BeanUtil.isEmpty(order)) {
             throw new IllegalOrderIdException();
         }
@@ -427,9 +436,10 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
+    @Transactional
     public void distributeMaterial(MaterialDistributeForm form, String loginId) {
         // 当工单状态 == MATERIAL_APPLY时，库管开始处理申请
-        Order order = iOrderService.getById(form.getOrderId());
+        Order order = iOrderRepository.getById(form.getOrderId());
         if (BeanUtil.isEmpty(order)) {
             throw new IllegalOrderIdException();
         }
@@ -440,7 +450,7 @@ public class OrderServiceImpl implements OrderService {
             if (fairLock.tryLock(30, TimeUnit.DAYS)) {
                 // 修改库存
                 form.getMaterials().forEach(materialNum -> {
-                    Material material = iMaterialService.getById(materialNum.getMaterialId());
+                    Material material = iMaterialRepository.getById(materialNum.getMaterialId());
                     if (BeanUtil.isEmpty(material)) {
                         throw new IllegalMaterialIdException();
                     }
@@ -480,8 +490,9 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
+    @Transactional
     public void startRepair(String orderId, Boolean material, String loginId) {
-        Order order = iOrderService.getById(orderId);
+        Order order = iOrderRepository.getById(orderId);
         if (BeanUtil.isEmpty(order)) {
             throw new IllegalOrderIdException();
         }
@@ -505,8 +516,9 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
+    @Transactional
     public void startRechecking(String orderId, String loginId) {
-        Order order = iOrderService.getById(orderId);
+        Order order = iOrderRepository.getById(orderId);
         if (BeanUtil.isEmpty(order)) {
             throw new IllegalOrderIdException();
         }
@@ -521,8 +533,9 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
+    @Transactional
     public void finishRepair(String orderId, String loginId) {
-        Order order = iOrderService.getById(orderId);
+        Order order = iOrderRepository.getById(orderId);
         if (BeanUtil.isEmpty(order)) {
             throw new IllegalOrderIdException();
         }
@@ -537,8 +550,9 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
+    @Transactional
     public void returnItem(String orderId, String loginId) {
-        Order order = iOrderService.getById(orderId);
+        Order order = iOrderRepository.getById(orderId);
         if (BeanUtil.isEmpty(order)) {
             throw new IllegalOrderIdException();
         }
@@ -553,8 +567,9 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
+    @Transactional
     public void closeOrder(String orderId, String loginId) {
-        Order order = iOrderService.getById(orderId);
+        Order order = iOrderRepository.getById(orderId);
         if (BeanUtil.isEmpty(order)) {
             throw new IllegalOrderIdException();
         }

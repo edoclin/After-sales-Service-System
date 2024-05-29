@@ -5,7 +5,7 @@ import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.text.CharSequenceUtil;
 import cn.hutool.json.JSONUtil;
 import com.mi.aftersales.entity.OrderStatusLog;
-import com.mi.aftersales.service.iservice.IOrderStatusLogService;
+import com.mi.aftersales.repository.IOrderStatusLogRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.rocketmq.spring.annotation.RocketMQMessageListener;
 import org.apache.rocketmq.spring.core.RocketMQListener;
@@ -28,12 +28,12 @@ import static com.mi.aftersales.util.RocketMqTopic.ROCKETMQ_TOPIC_4_ORDER_LOG;
 public class OrderLogConsumer implements RocketMQListener<OrderStatusLog> {
 
     @Resource
-    private IOrderStatusLogService iOrderStatusLogService;
+    private IOrderStatusLogRepository iOrderStatusLogRepository;
 
     @Override
     public void onMessage(OrderStatusLog orderStatusLog) {
         if (BeanUtil.isNotEmpty(orderStatusLog)) {
-            iOrderStatusLogService.save(orderStatusLog);
+            iOrderStatusLogRepository.save(orderStatusLog);
             log.info(CharSequenceUtil.format("工单状态日志消费成功！（{}）", JSONUtil.toJsonStr(orderStatusLog)));
         }
     }

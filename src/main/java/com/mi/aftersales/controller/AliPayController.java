@@ -24,8 +24,8 @@ import com.mi.aftersales.exception.graceful.IllegalOrderIdException;
 import com.mi.aftersales.exception.graceful.IllegalOrderLoginIdException;
 import com.mi.aftersales.exception.graceful.IllegalOrderStatusFlowException;
 import com.mi.aftersales.service.OrderService;
-import com.mi.aftersales.service.iservice.IOrderService;
-import com.mi.aftersales.service.iservice.IPayOrderService;
+import com.mi.aftersales.repository.IOrderRepository;
+import com.mi.aftersales.repository.IPayOrderRepository;
 import com.mi.aftersales.vo.PayDetailVo;
 import com.mi.aftersales.vo.result.AlipayResult;
 import io.swagger.v3.oas.annotations.Operation;
@@ -55,7 +55,7 @@ class AliPayController {
     private AliPayConfig aliPayConfig;
 
     @Resource
-    private IOrderService iOrderService;
+    private IOrderRepository iOrderRepository;
     @Resource
     private OrderService orderService;
 
@@ -63,7 +63,7 @@ class AliPayController {
     private RocketMQTemplate rocketmqTemplate;
 
     @Resource
-    private IPayOrderService iPayOrderService;
+    private IPayOrderRepository iPayOrderRepository;
 
 
     /**
@@ -76,7 +76,7 @@ class AliPayController {
     @CheckLogin
     @Operation(summary = "支付宝支付订单生成", description = "支付宝支付订单生成")
     public AlipayResult alipay(@PathVariable String orderId) throws AlipayApiException {
-        Order order = iOrderService.getById(orderId);
+        Order order = iOrderRepository.getById(orderId);
 
         if (BeanUtil.isEmpty(order)) {
             throw new IllegalOrderIdException();
@@ -134,7 +134,7 @@ class AliPayController {
     public void returnCallback( String out_trade_no) {
         // 同步回调 模拟支付成功
         // outTradeNo 对应payOrderId
-        PayOrder payOrder = iPayOrderService.getById(out_trade_no);
+        PayOrder payOrder = iPayOrderRepository.getById(out_trade_no);
 
         if (BeanUtil.isEmpty(payOrder)) {
             throw new GracefulResponseException("支付订单Id非法！");

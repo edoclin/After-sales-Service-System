@@ -1,7 +1,6 @@
 package com.mi.aftersales.controller;
 
 import com.mi.aftersales.service.MaterialService;
-import com.mi.aftersales.service.iservice.IMaterialService;
 import com.mi.aftersales.vo.form.MaterialForm;
 import com.mi.aftersales.vo.form.ManngerUpdateMaterialForm;
 import io.swagger.v3.oas.annotations.Operation;

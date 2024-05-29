@@ -7,8 +7,8 @@ import com.feiniaojin.gracefulresponse.GracefulResponseException;
 import com.mi.aftersales.entity.SkuAttr;
 import com.mi.aftersales.exception.graceful.ServerErrorException;
 import com.mi.aftersales.service.SkuAttrService;
-import com.mi.aftersales.service.iservice.ISkuAttrService;
-import com.mi.aftersales.service.iservice.ISkuService;
+import com.mi.aftersales.repository.ISkuAttrRepository;
+import com.mi.aftersales.repository.ISkuRepository;
 import com.mi.aftersales.util.DateUtil;
 import com.mi.aftersales.util.query.ConditionQuery;
 import com.mi.aftersales.util.query.QueryUtil;
@@ -33,21 +33,21 @@ import java.util.List;
 @Service
 public class SkuAttrServiceImpl implements SkuAttrService {
     @Resource
-    private ISkuAttrService iSkuAttrService;
+    private ISkuAttrRepository iSkuAttrRepository;
 
     @Resource
-    private ISkuService iSkuService;
+    private ISkuRepository iSkuRepository;
 
     @Override
     public void addSkuAttr(SkuAttrForm form) {
-        if (BeanUtil.isEmpty(iSkuService.getById(form.getSkuId()))) {
+        if (BeanUtil.isEmpty(iSkuRepository.getById(form.getSkuId()))) {
             throw new GracefulResponseException("商品SKU不存在！");
         }
 
         SkuAttr skuAttr = new SkuAttr();
         BeanUtil.copyProperties(form, skuAttr);
         try {
-            iSkuAttrService.save(skuAttr);
+            iSkuAttrRepository.save(skuAttr);
         } catch (DuplicateKeyException e) {
             throw new GracefulResponseException("商品SKU属性名称重复！");
         }
@@ -55,28 +55,28 @@ public class SkuAttrServiceImpl implements SkuAttrService {
 
     @Override
     public void updateSkuAttrVisibility(SkuAttrVisibleSetForm form) {
-        SkuAttr skuAttr = iSkuAttrService.getById(form.getAttrId());
+        SkuAttr skuAttr = iSkuAttrRepository.getById(form.getAttrId());
         if (BeanUtil.isEmpty(skuAttr)) {
             throw new GracefulResponseException("商品SKU属性不存在！");
         }
 
         skuAttr.setVisible(form.getVisible());
-        if (!iSkuAttrService.updateById(skuAttr)) {
+        if (!iSkuAttrRepository.updateById(skuAttr)) {
             throw new ServerErrorException();
         }
     }
 
     @Override
     public PageResult<ClientSkuAttrVo> listClientSkuAttrs(ConditionQuery query, String skuId) {
-        if (BeanUtil.isEmpty(iSkuService.getById(skuId))) {
+        if (BeanUtil.isEmpty(iSkuRepository.getById(skuId))) {
             throw new GracefulResponseException("商品Sku不存在！");
         }
 
         PageResult<ClientSkuAttrVo> result = new PageResult<>();
-        result.setTotal(iSkuAttrService.count(new QueryWrapper<SkuAttr>()
+        result.setTotal(iSkuAttrRepository.count(new QueryWrapper<SkuAttr>()
                 .eq("sku_id", skuId)
                 .eq("visible", true)));
-        List<SkuAttr> skuAttrList =iSkuAttrService.page(new Page<>(query.getCurrent(), query.getLimit()),
+        List<SkuAttr> skuAttrList = iSkuAttrRepository.page(new Page<>(query.getCurrent(), query.getLimit()),
                 new QueryWrapper<SkuAttr>()
                         .eq("sku_id", skuId)
                         .eq("visible", true)).getRecords();
@@ -92,16 +92,16 @@ public class SkuAttrServiceImpl implements SkuAttrService {
 
     @Override
     public PageResult<SkuAttrVo> listSkuAttrs(ConditionQuery query, String skuId) {
-        if (BeanUtil.isEmpty(iSkuService.getById(skuId))) {
+        if (BeanUtil.isEmpty(iSkuRepository.getById(skuId))) {
             throw new GracefulResponseException("商品Sku不存在！");
         }
 
         QueryWrapper<SkuAttr> wrapper = QueryUtil.buildWrapper(query, SkuAttr.class).eq("sku_id", skuId);
 
         PageResult<SkuAttrVo> result = new PageResult<>();
-        result.setTotal(iSkuAttrService.count(wrapper));
+        result.setTotal(iSkuAttrRepository.count(wrapper));
 
-        List<SkuAttr> skuAttrList = iSkuAttrService.page(new Page<>(query.getCurrent(), query.getLimit()), wrapper).getRecords();
+        List<SkuAttr> skuAttrList = iSkuAttrRepository.page(new Page<>(query.getCurrent(), query.getLimit()), wrapper).getRecords();
 
         skuAttrList.forEach(skuAttr -> {
             SkuAttrVo skuAttrVo = new SkuAttrVo();

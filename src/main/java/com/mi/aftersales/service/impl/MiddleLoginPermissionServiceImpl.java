@@ -7,9 +7,9 @@ import com.mi.aftersales.entity.MiddleLoginPermission;
 import com.mi.aftersales.entity.Permission;
 import com.mi.aftersales.exception.graceful.ServerErrorException;
 import com.mi.aftersales.service.MiddleLoginPermissionService;
-import com.mi.aftersales.service.iservice.ILoginService;
-import com.mi.aftersales.service.iservice.IMiddleLoginPermissionService;
-import com.mi.aftersales.service.iservice.IPermissionService;
+import com.mi.aftersales.repository.ILoginRepository;
+import com.mi.aftersales.repository.IMiddleLoginPermissionRepository;
+import com.mi.aftersales.repository.IPermissionRepository;
 import com.mi.aftersales.vo.form.LoginPermissionForm;
 import org.springframework.stereotype.Service;
 
@@ -26,23 +26,23 @@ import javax.annotation.Resource;
 @Service
 public class MiddleLoginPermissionServiceImpl implements MiddleLoginPermissionService {
     @Resource
-    private ILoginService iLoginService;
+    private ILoginRepository iLoginRepository;
 
     @Resource
-    private IPermissionService iPermissionService;
+    private IPermissionRepository iPermissionRepository;
 
     @Resource
-    private IMiddleLoginPermissionService iMiddleLoginPermissionService;
+    private IMiddleLoginPermissionRepository iMiddleLoginPermissionRepository;
 
     @Override
     public void addLoginPermission(LoginPermissionForm form) {
         try {
-            Login login = iLoginService.getById(form.getLoginId());
+            Login login = iLoginRepository.getById(form.getLoginId());
             if (BeanUtil.isEmpty(login)) {
                 throw new GracefulResponseException("用户不存在");
             }
 
-            Permission permission = iPermissionService.getById(form.getPermissionId());
+            Permission permission = iPermissionRepository.getById(form.getPermissionId());
             if (BeanUtil.isEmpty(permission)) {
                 throw new GracefulResponseException("权限不存在");
             }
@@ -50,7 +50,7 @@ public class MiddleLoginPermissionServiceImpl implements MiddleLoginPermissionSe
             MiddleLoginPermission save = new MiddleLoginPermission();
             save.setLoginId(login.getLoginId());
             save.setPermissionId(permission.getPermissionId());
-            iMiddleLoginPermissionService.save(save);
+            iMiddleLoginPermissionRepository.save(save);
         } catch (Exception e) {
             throw new ServerErrorException();
         }

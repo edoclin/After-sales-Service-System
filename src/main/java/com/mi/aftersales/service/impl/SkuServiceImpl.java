@@ -8,9 +8,9 @@ import com.mi.aftersales.entity.File;
 import com.mi.aftersales.entity.Sku;
 import com.mi.aftersales.exception.graceful.ServerErrorException;
 import com.mi.aftersales.service.SkuService;
-import com.mi.aftersales.service.iservice.IFileService;
-import com.mi.aftersales.service.iservice.ISkuService;
-import com.mi.aftersales.service.iservice.ISpuService;
+import com.mi.aftersales.repository.IFileRepository;
+import com.mi.aftersales.repository.ISkuRepository;
+import com.mi.aftersales.repository.ISpuRepository;
 import com.mi.aftersales.util.COSUtil;
 import com.mi.aftersales.util.DateUtil;
 import com.mi.aftersales.util.query.ConditionQuery;
@@ -36,28 +36,28 @@ import javax.annotation.Resource;
 @Service
 public class SkuServiceImpl implements SkuService {
     @Resource
-    private ISkuService iSkuService;
+    private ISkuRepository iSkuRepository;
 
     @Resource
-    private ISpuService iSpuService;
+    private ISpuRepository iSpuRepository;
 
     @Resource
-    private IFileService iFileService;
+    private IFileRepository iFileRepository;
 
     @Override
     public void addSku(SkuForm form) {
-        if (BeanUtil.isEmpty(iSpuService.getById(form.getSpuId()))) {
+        if (BeanUtil.isEmpty(iSpuRepository.getById(form.getSpuId()))) {
             throw new GracefulResponseException("商品SPU不存在！");
         }
 
-        if (BeanUtil.isEmpty(iFileService.getById(form.getSkuCoverFileId()))) {
+        if (BeanUtil.isEmpty(iFileRepository.getById(form.getSkuCoverFileId()))) {
             throw new GracefulResponseException("商品SKU封面图片不存在！");
         }
 
         Sku sku = new Sku();
         BeanUtil.copyProperties(form, sku);
         try {
-            iSkuService.save(sku);
+            iSkuRepository.save(sku);
         } catch (DuplicateKeyException e) {
             throw new GracefulResponseException("商品SKU名称重复！");
         }
@@ -65,35 +65,35 @@ public class SkuServiceImpl implements SkuService {
 
     @Override
     public void updateSkuVisibility(UpdateSkuVisibleForm form) {
-        Sku sku = iSkuService.getById(form.getSkuId());
+        Sku sku = iSkuRepository.getById(form.getSkuId());
         if (BeanUtil.isEmpty(sku)) {
             throw new GracefulResponseException("商品SKU不存在！");
         }
 
         sku.setVisible(form.getVisible());
-        if (!iSkuService.updateById(sku)) {
+        if (!iSkuRepository.updateById(sku)) {
             throw new ServerErrorException();
         }
     }
 
     @Override
     public PageResult<ClientSkuVo> listClientSku(ConditionQuery query, String spuId) {
-        if (BeanUtil.isEmpty(iSpuService.getById(spuId))) {
+        if (BeanUtil.isEmpty(iSpuRepository.getById(spuId))) {
             throw new GracefulResponseException("商品Spu不存在！");
         }
 
         PageResult<ClientSkuVo> result = new PageResult<>();
-        result.setTotal(iSkuService.count(new QueryWrapper<Sku>()
+        result.setTotal(iSkuRepository.count(new QueryWrapper<Sku>()
                 .eq("spu_id", spuId)
                 .eq("visible", true)));
 
-        iSkuService.page(new Page<>(query.getCurrent(), query.getLimit()), new QueryWrapper<Sku>()
+        iSkuRepository.page(new Page<>(query.getCurrent(), query.getLimit()), new QueryWrapper<Sku>()
                 .eq("spu_id", spuId)
                 .eq("visible", true)).getRecords().forEach(sku -> {
             ClientSkuVo clientSkuVo = new ClientSkuVo();
             BeanUtil.copyProperties(sku, clientSkuVo, DateUtil.copyDate2yyyyMMddHHmm());
 
-            File file = iFileService.getById(sku.getSkuCoverFileId());
+            File file = iFileRepository.getById(sku.getSkuCoverFileId());
             if (BeanUtil.isNotEmpty(file)) {
                 clientSkuVo.setSkuCoverUrl(COSUtil.generateAccessUrl(file.getAccessKey()));
             }
@@ -105,20 +105,20 @@ public class SkuServiceImpl implements SkuService {
 
     @Override
     public PageResult<SkuVo> listSku(ConditionQuery query, String spuId) {
-        if (BeanUtil.isEmpty(iSpuService.getById(spuId))) {
+        if (BeanUtil.isEmpty(iSpuRepository.getById(spuId))) {
             throw new GracefulResponseException("商品所属Spu不存在！");
         }
 
         QueryWrapper<Sku> wrapper = QueryUtil.buildWrapper(query, Sku.class).eq("spu_id", spuId);
 
         PageResult<SkuVo> result = new PageResult<>();
-        result.setTotal(iSkuService.count(wrapper));
+        result.setTotal(iSkuRepository.count(wrapper));
 
-        iSkuService.page(new Page<>(query.getCurrent(), query.getLimit()), wrapper).getRecords().forEach(sku -> {
+        iSkuRepository.page(new Page<>(query.getCurrent(), query.getLimit()), wrapper).getRecords().forEach(sku -> {
             SkuVo skuVo = new SkuVo();
             BeanUtil.copyProperties(sku, skuVo, DateUtil.copyDate2yyyyMMddHHmm());
 
-            File file = iFileService.getById(sku.getSkuCoverFileId());
+            File file = iFileRepository.getById(sku.getSkuCoverFileId());
             if (BeanUtil.isNotEmpty(file)) {
                 skuVo.setSkuCoverUrl(COSUtil.generateAccessUrl(file.getAccessKey()));
             }
@@ -130,13 +130,13 @@ public class SkuServiceImpl implements SkuService {
 
     @Override
     public void setSkuVisibility(SkuVisibleSetForm form) {
-        Sku sku = iSkuService.getById(form.getSkuId());
+        Sku sku = iSkuRepository.getById(form.getSkuId());
         if (BeanUtil.isEmpty(sku)) {
             throw new GracefulResponseException("商品Sku不存在！");
         }
 
         sku.setVisible(form.getVisible());
-        if (!iSkuService.updateById(sku)) {
+        if (!iSkuRepository.updateById(sku)) {
             throw new ServerErrorException();
         }
     }

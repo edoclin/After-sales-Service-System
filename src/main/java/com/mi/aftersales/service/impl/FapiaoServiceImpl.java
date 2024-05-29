@@ -7,7 +7,7 @@ import com.feiniaojin.gracefulresponse.GracefulResponseException;
 import com.mi.aftersales.entity.Fapiao;
 import com.mi.aftersales.exception.graceful.ServerErrorException;
 import com.mi.aftersales.service.FapiaoService;
-import com.mi.aftersales.service.iservice.IFapiaoService;
+import com.mi.aftersales.repository.IFapiaoRepository;
 import com.mi.aftersales.util.DateUtil;
 import com.mi.aftersales.vo.form.FapiaoForm;
 import com.mi.aftersales.vo.form.UpdateFapiaoForm;
@@ -30,14 +30,14 @@ import java.util.List;
 @Service
 public class FapiaoServiceImpl implements FapiaoService {
     @Resource
-    private IFapiaoService iFapiaoService;
+    private IFapiaoRepository iFapiaoRepository;
 
     @Override
     public void addFapiao(FapiaoForm form) {
         Fapiao fapiao = new Fapiao();
         BeanUtil.copyProperties(form, fapiao);
         try {
-            iFapiaoService.save(fapiao);
+            iFapiaoRepository.save(fapiao);
         } catch (DuplicateKeyException e) {
             throw new GracefulResponseException("发票号码已存在！");
         } catch (Exception e) {
@@ -48,7 +48,7 @@ public class FapiaoServiceImpl implements FapiaoService {
     @Override
     public List<ClientFapiaoVo> listFapiaoByClient(String loginId) {
         ArrayList<ClientFapiaoVo> result = new ArrayList<>();
-        iFapiaoService.lambdaQuery().eq(Fapiao::getCreatedId, loginId).list().forEach(fapiao -> {
+        iFapiaoRepository.lambdaQuery().eq(Fapiao::getCreatedId, loginId).list().forEach(fapiao -> {
             ClientFapiaoVo item = new ClientFapiaoVo();
             BeanUtil.copyProperties(fapiao, item, DateUtil.copyDate2yyyyMMddHHmm());
             result.add(item);
@@ -58,7 +58,7 @@ public class FapiaoServiceImpl implements FapiaoService {
 
     @Override
     public void deleteFapiaoByClient(String fapiaoId, String loginId) {
-        Fapiao byId = iFapiaoService.getById(fapiaoId);
+        Fapiao byId = iFapiaoRepository.getById(fapiaoId);
         if (BeanUtil.isEmpty(byId)) {
             throw new GracefulResponseException("发票ID不存在！");
         }
@@ -66,7 +66,7 @@ public class FapiaoServiceImpl implements FapiaoService {
             throw new GracefulResponseException("该发票不属于当前用户！");
         }
         try {
-            iFapiaoService.removeById(fapiaoId);
+            iFapiaoRepository.removeById(fapiaoId);
         } catch (Exception e) {
             throw new ServerErrorException(e.getMessage());
         }
@@ -74,7 +74,7 @@ public class FapiaoServiceImpl implements FapiaoService {
 
     @Override
     public void updateFapiaoByClient(UpdateFapiaoForm form, String loginId) {
-        Fapiao byId = iFapiaoService.getById(form.getFapiaoId());
+        Fapiao byId = iFapiaoRepository.getById(form.getFapiaoId());
         if (BeanUtil.isEmpty(byId)) {
             throw new GracefulResponseException("发票ID不存在！");
         }
@@ -83,7 +83,7 @@ public class FapiaoServiceImpl implements FapiaoService {
         }
         BeanUtil.copyProperties(form, byId, CopyOptions.create().ignoreNullValue());
         try {
-            iFapiaoService.updateById(byId);
+            iFapiaoRepository.updateById(byId);
         } catch (Exception e) {
             throw new ServerErrorException(e.getMessage());
         }
