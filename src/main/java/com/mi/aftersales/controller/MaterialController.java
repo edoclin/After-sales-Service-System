@@ -4,11 +4,10 @@ package com.mi.aftersales.controller;
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.bean.copier.CopyOptions;
 import cn.hutool.core.convert.ConvertException;
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.feiniaojin.gracefulresponse.GracefulResponseException;
 import com.mi.aftersales.entity.Material;
 import com.mi.aftersales.exception.graceful.ServerErrorException;
-import com.mi.aftersales.service.IMaterialService;
+import com.mi.aftersales.service.iservice.IMaterialService;
 import com.mi.aftersales.vo.form.MaterialForm;
 import com.mi.aftersales.vo.form.ManngerUpdateMaterialForm;
 import io.swagger.v3.oas.annotations.Operation;
@@ -21,10 +20,9 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import javax.validation.Valid;
-import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import static com.mi.aftersales.service.IMaterialService.NAMESPACE_4_MATERIAL_LOCK;
+import static com.mi.aftersales.service.iservice.IMaterialService.NAMESPACE_4_MATERIAL_LOCK;
 
 /**
  * <p>

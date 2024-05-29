@@ -8,7 +8,7 @@ import com.feiniaojin.gracefulresponse.GracefulResponseException;
 import com.mi.aftersales.aspect.anno.CheckLogin;
 import com.mi.aftersales.entity.Address;
 import com.mi.aftersales.exception.graceful.ServerErrorException;
-import com.mi.aftersales.service.IAddressService;
+import com.mi.aftersales.service.iservice.IAddressService;
 import com.mi.aftersales.vo.form.ClientAddressForm;
 import com.mi.aftersales.vo.result.ClientAddressVo;
 import io.swagger.v3.oas.annotations.Operation;

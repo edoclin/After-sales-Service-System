@@ -16,12 +16,11 @@ import com.mi.aftersales.config.yaml.bean.OrderConfig;
 import com.mi.aftersales.entity.*;
 import com.mi.aftersales.entity.enums.*;
 import com.mi.aftersales.exception.graceful.*;
-import com.mi.aftersales.service.*;
+import com.mi.aftersales.service.iservice.*;
 import com.mi.aftersales.util.COSUtil;
 import com.mi.aftersales.util.DateUtil;
 import com.mi.aftersales.util.query.ConditionQuery;
 import com.mi.aftersales.util.query.QueryUtil;
-import com.mi.aftersales.vo.OrderStatusLogResult;
 import com.mi.aftersales.vo.form.ClientOrderForm;
 import com.mi.aftersales.vo.form.FaultDescriptionForm;
 import com.mi.aftersales.vo.form.MaterialDistributeForm;
@@ -51,7 +50,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
-import static com.mi.aftersales.service.IMaterialService.NAMESPACE_4_MATERIAL_LOCK;
+import static com.mi.aftersales.service.iservice.IMaterialService.NAMESPACE_4_MATERIAL_LOCK;
 import static com.mi.aftersales.util.RocketMqTopic.*;
 
 /**
@@ -403,11 +402,14 @@ public class OrderController {
             }
 
             // 异步更新工单物料
-            Message<List<MiddleOrderMaterial>> msg = MessageBuilder.withPayload(batch).build();
-            rocketmqTemplate.send(ROCKETMQ_TOPIC_4_ORDER_MATERIAL, msg);
-        } catch (RuntimeException e) {
+            if (CollUtil.isNotEmpty(batch)) {
+                Message<List<MiddleOrderMaterial>> msg = MessageBuilder.withPayload(batch).build();
+                rocketmqTemplate.send(ROCKETMQ_TOPIC_4_ORDER_MATERIAL, msg);
+            }
+
+        } catch (Exception e) {
             log.error(e.getMessage());
-            throw e;
+            throw new ServerErrorException();
         }
     }
 

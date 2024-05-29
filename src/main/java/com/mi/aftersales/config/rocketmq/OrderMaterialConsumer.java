@@ -1,14 +1,10 @@
 package com.mi.aftersales.config.rocketmq;
 
 
-import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.text.CharSequenceUtil;
-import cn.hutool.json.JSONUtil;
 import com.mi.aftersales.entity.MiddleOrderMaterial;
-import com.mi.aftersales.entity.OrderStatusLog;
-import com.mi.aftersales.service.IMiddleOrderMaterialService;
-import com.mi.aftersales.service.IOrderStatusLogService;
+import com.mi.aftersales.service.iservice.IMiddleOrderMaterialService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.rocketmq.spring.annotation.RocketMQMessageListener;
 import org.apache.rocketmq.spring.core.RocketMQListener;
@@ -28,7 +24,7 @@ import static com.mi.aftersales.util.RocketMqTopic.ROCKETMQ_TOPIC_4_ORDER_MATERI
  **/
 @Component
 @Slf4j
-@RocketMQMessageListener(topic = ROCKETMQ_TOPIC_4_ORDER_MATERIAL, consumerGroup = "aftersales_consumer_group")
+@RocketMQMessageListener(topic = ROCKETMQ_TOPIC_4_ORDER_MATERIAL, consumerGroup = ROCKETMQ_TOPIC_4_ORDER_MATERIAL)
 public class OrderMaterialConsumer implements RocketMQListener<List<MiddleOrderMaterial>> {
 
     @Resource

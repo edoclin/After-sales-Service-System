@@ -9,8 +9,8 @@ import com.mi.aftersales.entity.Order;
 import com.mi.aftersales.entity.OrderStatusLog;
 import com.mi.aftersales.entity.enums.OrderStatusEnum;
 import com.mi.aftersales.exception.graceful.ServerErrorException;
-import com.mi.aftersales.service.ILoginService;
-import com.mi.aftersales.service.IOrderService;
+import com.mi.aftersales.service.iservice.ILoginService;
+import com.mi.aftersales.service.iservice.IOrderService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.rocketmq.spring.core.RocketMQTemplate;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -50,7 +50,7 @@ public class OrderEventConfig {
 
     public void sendSms(String orderId) {
         Message<String> msg = MessageBuilder.withPayload(orderId).build();
-        rocketmqTemplate.send(ROCKETMQ_TOPIC_4_SMS, msg);
+        rocketmqTemplate.syncSend(ROCKETMQ_TOPIC_4_SMS, msg);
     }
 
 
@@ -78,7 +78,7 @@ public class OrderEventConfig {
         }
 
         Message<OrderStatusLog> msg = MessageBuilder.withPayload(orderStatusLog).build();
-        rocketmqTemplate.send(ROCKETMQ_TOPIC_4_ORDER_LOG, msg);
+        rocketmqTemplate.syncSend(ROCKETMQ_TOPIC_4_ORDER_LOG, msg);
         sendSms(order.getOrderId());
 
         // 加入待办工单，设置时间戳
@@ -113,7 +113,7 @@ public class OrderEventConfig {
         }
 
         Message<OrderStatusLog> msg = MessageBuilder.withPayload(orderStatusLog).build();
-        rocketmqTemplate.send(ROCKETMQ_TOPIC_4_ORDER_LOG, msg);
+        rocketmqTemplate.syncSend(ROCKETMQ_TOPIC_4_ORDER_LOG, msg);
         // 移除待办工单
         redisTemplate.opsForZSet().remove(IOrderService.NAMESPACE_4_PENDING_ORDER, order.getOrderId());
 
@@ -148,7 +148,7 @@ public class OrderEventConfig {
         }
 
         Message<OrderStatusLog> msg = MessageBuilder.withPayload(orderStatusLog).build();
-        rocketmqTemplate.send(ROCKETMQ_TOPIC_4_ORDER_LOG, msg);
+        rocketmqTemplate.syncSend(ROCKETMQ_TOPIC_4_ORDER_LOG, msg);
 
         return true;
     }
@@ -308,7 +308,7 @@ public class OrderEventConfig {
         orderStatusLog.setStatusDetail(detail);
 
         Message<OrderStatusLog> msg = MessageBuilder.withPayload(orderStatusLog).build();
-        rocketmqTemplate.send(ROCKETMQ_TOPIC_4_ORDER_LOG, msg);
+        rocketmqTemplate.syncSend(ROCKETMQ_TOPIC_4_ORDER_LOG, msg);
 
         sendSms(order.getOrderId());
         return true;

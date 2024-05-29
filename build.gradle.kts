@@ -21,7 +21,7 @@ val freemarkerVersion = "2.3.31"
 val redissonVersion = "3.18.0"
 val springDocVersion = "1.8.0"
 val sms4jVersion = "3.2.1"
-val rocketmqVersion = "2.3.0"
+val rocketmqVersion = "2.2.2"
 
 java {
     sourceCompatibility = JavaVersion.VERSION_17

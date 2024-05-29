@@ -8,7 +8,7 @@ import com.mi.aftersales.config.yaml.bean.InitConfig;
 import com.mi.aftersales.controller.PlaceholderController;
 import com.mi.aftersales.entity.*;
 import com.mi.aftersales.entity.enums.LoginTypeEnum;
-import com.mi.aftersales.service.*;
+import com.mi.aftersales.service.iservice.*;
 import com.mi.aftersales.util.ApiUtil;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;

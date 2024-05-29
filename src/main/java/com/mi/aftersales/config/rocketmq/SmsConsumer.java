@@ -3,17 +3,13 @@ package com.mi.aftersales.config.rocketmq;
 
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.text.CharSequenceUtil;
-import cn.hutool.core.util.StrUtil;
-import cn.hutool.json.JSONUtil;
 import com.feiniaojin.gracefulresponse.GracefulResponseException;
 import com.mi.aftersales.config.yaml.bean.CustomSmsConfig;
 import com.mi.aftersales.controller.enums.SmsCodeType;
 import com.mi.aftersales.entity.Login;
 import com.mi.aftersales.entity.Order;
-import com.mi.aftersales.entity.OrderStatusLog;
-import com.mi.aftersales.service.ILoginService;
-import com.mi.aftersales.service.IOrderService;
-import com.mi.aftersales.service.IOrderStatusLogService;
+import com.mi.aftersales.service.iservice.ILoginService;
+import com.mi.aftersales.service.iservice.IOrderService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.rocketmq.spring.annotation.RocketMQMessageListener;
 import org.apache.rocketmq.spring.core.RocketMQListener;
@@ -34,7 +30,7 @@ import static com.mi.aftersales.util.RocketMqTopic.ROCKETMQ_TOPIC_4_SMS;
  **/
 @Component
 @Slf4j
-@RocketMQMessageListener(topic = ROCKETMQ_TOPIC_4_SMS, consumerGroup = "aftersales_consumer_group")
+@RocketMQMessageListener(topic = ROCKETMQ_TOPIC_4_SMS, consumerGroup = ROCKETMQ_TOPIC_4_SMS)
 public class SmsConsumer implements RocketMQListener<String> {
 
     @Resource

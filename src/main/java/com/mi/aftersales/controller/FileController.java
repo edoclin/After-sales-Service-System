@@ -3,7 +3,7 @@ package com.mi.aftersales.controller;
 import cn.dev33.satoken.stp.StpUtil;
 import com.mi.aftersales.aspect.anno.CheckLogin;
 import com.mi.aftersales.entity.File;
-import com.mi.aftersales.service.IFileService;
+import com.mi.aftersales.service.iservice.IFileService;
 import com.mi.aftersales.vo.result.FileUploadVo;
 import com.mi.aftersales.vo.form.FileForm;
 import io.swagger.v3.oas.annotations.Operation;
