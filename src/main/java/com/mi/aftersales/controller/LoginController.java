@@ -10,6 +10,8 @@ import cn.hutool.core.text.CharSequenceUtil;
 import cn.hutool.core.util.IdUtil;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.feiniaojin.gracefulresponse.GracefulResponseException;
+import com.mi.aftersales.aspect.CheckLoginAspect;
+import com.mi.aftersales.aspect.anno.CheckLogin;
 import com.mi.aftersales.config.yaml.bean.OAuthConfig;
 import com.mi.aftersales.config.yaml.bean.OAuthList;
 import com.mi.aftersales.config.yaml.bean.CustomSmsConfig;
@@ -17,7 +19,7 @@ import com.mi.aftersales.entity.*;
 import com.mi.aftersales.entity.enums.LoginOAuthSourceEnum;
 import com.mi.aftersales.entity.enums.LoginTypeEnum;
 import com.mi.aftersales.controller.enums.SmsCodeType;
-import com.mi.aftersales.service.*;
+import com.mi.aftersales.repository.*;
 import com.mi.aftersales.vo.form.LoginBindForm;
 import com.mi.aftersales.vo.form.LoginBySmsForm;
 import com.mi.aftersales.vo.form.SendSmsCodeForm;
@@ -39,6 +41,7 @@ import org.dromara.sms4j.api.entity.SmsResponse;
 import org.dromara.sms4j.core.factory.SmsFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.web.bind.annotation.*;
 
@@ -63,16 +66,16 @@ public class LoginController {
 
 
     @Resource
-    private IApiService iApiService;
+    private IApiRepository iApiRepository;
 
     @Resource
-    private ILoginService iLoginService;
+    private ILoginRepository iLoginRepository;
 
     @Resource
-    private IMiddlePermissionApiService iMiddlePermissionApiService;
+    private IMiddlePermissionApiRepository iMiddlePermissionApiRepository;
 
     @Resource
-    private IMiddleLoginPermissionService iMiddleLoginPermissionService;
+    private IMiddleLoginPermissionRepository iMiddleLoginPermissionRepository;
 
     @Resource
     private StringRedisTemplate redisTemplate4Sms;
@@ -91,10 +94,24 @@ public class LoginController {
     private CustomSmsConfig customSmsConfig;
 
     @Resource
-    private IEmployeeInfoService iEmployeeInfoService;
+    private IEmployeeInfoRepository iEmployeeInfoRepository;
 
     @Resource
-    private ILoginRoleService iLoginRoleService;
+    private ILoginRoleRepository iLoginRoleRepository;
+
+    @GetMapping(path = "/check")
+    @Operation(summary = "检查是否登录", description = "检查是否登录")
+    @CheckLogin
+    public void checkLogin() {
+        // 根据返回值判断是否登录
+    }
+
+    @GetMapping(path = "/logout")
+    @Operation(summary = "退出登录", description = "退出登录")
+    @CheckLogin
+    public void logout() {
+        StpUtil.logout();
+    }
 
     @PostMapping(path = "/sms/send")
     @Operation(summary = "发送短信验证码", description = "发送短信验证码")
@@ -153,7 +170,7 @@ public class LoginController {
         if (authResponse.getCode() == OAUTH2_SUCCESS_CODE) {
             // 三方授权成功
             AuthUser data = (AuthUser) authResponse.getData();
-            Login login = iLoginService.getOne(Wrappers.lambdaQuery(Login.class).eq(Login::getSource, LoginOAuthSourceEnum.valueOf(client.toUpperCase())).eq(Login::getAppId, data.getUuid()));
+            Login login = iLoginRepository.getOne(Wrappers.lambdaQuery(Login.class).eq(Login::getSource, LoginOAuthSourceEnum.valueOf(client.toUpperCase())).eq(Login::getAppId, data.getUuid()));
             if (BeanUtil.isEmpty(login)) {
                 // 让用户绑定手机号
                 loginResultVo.setNeedMobile(Boolean.TRUE);
@@ -195,7 +212,7 @@ public class LoginController {
                     throw new GracefulResponseException("无效的临时令牌");
                 }
                 SaTempUtil.deleteToken(form.getTempToken());
-                Login login = iLoginService.lambdaQuery().eq(Login::getMobile, form.getMobile()).one();
+                Login login = iLoginRepository.lambdaQuery().eq(Login::getMobile, form.getMobile()).one();
 
                 if (BeanUtil.isEmpty(login)) {
                     // 未注册用户
@@ -211,7 +228,7 @@ public class LoginController {
                     login.setAppId(user[1]);
                 }
 
-                if (iLoginService.saveOrUpdate(login)) {
+                if (iLoginRepository.saveOrUpdate(login)) {
                     login(login);
                     loginResultVo.setTokenName(StpUtil.getTokenName()).setTokenValue(StpUtil.getTokenValue()).setLoginId(login.getLoginId());
                 }
@@ -241,7 +258,7 @@ public class LoginController {
             if (CharSequenceUtil.equals(form.getCode(), code)) {
                 redisTemplate4Sms.delete(key);
                 // 验证码正确
-                Login login = iLoginService.getOne(Wrappers.lambdaQuery(Login.class).eq(Login::getMobile, form.getMobile()));
+                Login login = iLoginRepository.getOne(Wrappers.lambdaQuery(Login.class).eq(Login::getMobile, form.getMobile()));
                 if (BeanUtil.isNotEmpty(login)) {
                     login(login);
                     loginResultVo.setTokenName(StpUtil.getTokenName()).setTokenValue(StpUtil.getTokenValue()).setLoginId(login.getLoginId());
@@ -252,7 +269,7 @@ public class LoginController {
                         login.setMobile(form.getMobile());
                         login.setLoginType(LoginTypeEnum.CLIENT);
                         login.setLoginId(IdUtil.getSnowflakeNextIdStr());
-                        if (iLoginService.save(login)) {
+                        if (iLoginRepository.save(login)) {
                             login(login);
                             loginResultVo.setTokenName(StpUtil.getTokenName()).setTokenValue(StpUtil.getTokenValue()).setLoginId(login.getLoginId());
                         }
@@ -300,8 +317,8 @@ public class LoginController {
     private void login(Login login) {
         StpUtil.login(login.getLoginId());
         List<String> permissions = new ArrayList<>();
-        iMiddleLoginPermissionService.lambdaQuery().eq(MiddleLoginPermission::getLoginId, login.getLoginId()).list().forEach(middleLoginPermission -> iMiddlePermissionApiService.lambdaQuery().eq(MiddlePermissionApi::getPermissionId, middleLoginPermission.getPermissionId()).list().forEach(middlePermissionApi -> {
-            Api api = iApiService.getById(middlePermissionApi.getApiId());
+        iMiddleLoginPermissionRepository.lambdaQuery().eq(MiddleLoginPermission::getLoginId, login.getLoginId()).list().forEach(middleLoginPermission -> iMiddlePermissionApiRepository.lambdaQuery().eq(MiddlePermissionApi::getPermissionId, middleLoginPermission.getPermissionId()).list().forEach(middlePermissionApi -> {
+            Api api = iApiRepository.getById(middlePermissionApi.getApiId());
 
             if (BeanUtil.isNotEmpty(api)) {
                 permissions.add(CharSequenceUtil.format("{}-{}", api.getMethod().name().toUpperCase(), api.getUri()));
@@ -313,7 +330,7 @@ public class LoginController {
 
         // 默认具有CLIENT角色
         roles.add(LoginTypeEnum.CLIENT.name());
-        iLoginRoleService.lambdaQuery().eq(LoginRole::getLoginId, login.getLoginId()).list().forEach(loginRole -> {
+        iLoginRoleRepository.lambdaQuery().eq(LoginRole::getLoginId, login.getLoginId()).list().forEach(loginRole -> {
             roles.add(loginRole.getEmployeeRole().name());
         });
 

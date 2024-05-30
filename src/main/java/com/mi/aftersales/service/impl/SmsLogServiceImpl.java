@@ -1,9 +1,6 @@
 package com.mi.aftersales.service.impl;
 
-import com.mi.aftersales.entity.SmsLog;
-import com.mi.aftersales.mapper.SmsLogMapper;
-import com.mi.aftersales.service.ISmsLogService;
-import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.mi.aftersales.service.SmsLogService;
 import org.springframework.stereotype.Service;
 
 /**
@@ -15,6 +12,6 @@ import org.springframework.stereotype.Service;
  * @since 2024-05-14
  */
 @Service
-public class SmsLogServiceImpl extends ServiceImpl<SmsLogMapper, SmsLog> implements ISmsLogService {
+public class SmsLogServiceImpl implements SmsLogService {
 
 }

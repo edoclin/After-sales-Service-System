@@ -1,9 +1,6 @@
 package com.mi.aftersales.service.impl;
 
-import com.mi.aftersales.entity.ClientInfo;
-import com.mi.aftersales.mapper.ClientInfoMapper;
-import com.mi.aftersales.service.IClientInfoService;
-import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.mi.aftersales.service.ClientInfoService;
 import org.springframework.stereotype.Service;
 
 /**
@@ -15,6 +12,6 @@ import org.springframework.stereotype.Service;
  * @since 2024-05-14
  */
 @Service
-public class ClientInfoServiceImpl extends ServiceImpl<ClientInfoMapper, ClientInfo> implements IClientInfoService {
+public class ClientInfoServiceImpl implements ClientInfoService {
 
 }

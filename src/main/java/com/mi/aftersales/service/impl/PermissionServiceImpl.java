@@ -1,9 +1,6 @@
 package com.mi.aftersales.service.impl;
 
-import com.mi.aftersales.entity.Permission;
-import com.mi.aftersales.mapper.PermissionMapper;
-import com.mi.aftersales.service.IPermissionService;
-import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.mi.aftersales.service.PermissionService;
 import org.springframework.stereotype.Service;
 
 /**
@@ -15,6 +12,6 @@ import org.springframework.stereotype.Service;
  * @since 2024-05-14
  */
 @Service
-public class PermissionServiceImpl extends ServiceImpl<PermissionMapper, Permission> implements IPermissionService {
+public class PermissionServiceImpl implements PermissionService {
 
 }

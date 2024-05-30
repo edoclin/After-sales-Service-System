@@ -1,9 +1,6 @@
 package com.mi.aftersales.service.impl;
 
-import com.mi.aftersales.entity.OrderUpload;
-import com.mi.aftersales.mapper.OrderUploadMapper;
-import com.mi.aftersales.service.IOrderUploadService;
-import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.mi.aftersales.service.OrderUploadService;
 import org.springframework.stereotype.Service;
 
 /**
@@ -15,6 +12,6 @@ import org.springframework.stereotype.Service;
  * @since 2024-05-14
  */
 @Service
-public class OrderUploadServiceImpl extends ServiceImpl<OrderUploadMapper, OrderUpload> implements IOrderUploadService {
+public class OrderUploadServiceImpl implements OrderUploadService {
 
 }

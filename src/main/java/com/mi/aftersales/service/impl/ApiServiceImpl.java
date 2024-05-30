@@ -1,9 +1,6 @@
 package com.mi.aftersales.service.impl;
 
-import com.mi.aftersales.entity.Api;
-import com.mi.aftersales.mapper.ApiMapper;
-import com.mi.aftersales.service.IApiService;
-import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.mi.aftersales.service.ApiService;
 import org.springframework.stereotype.Service;
 
 /**
@@ -15,6 +12,6 @@ import org.springframework.stereotype.Service;
  * @since 2024-05-14
  */
 @Service
-public class ApiServiceImpl extends ServiceImpl<ApiMapper, Api> implements IApiService {
+public class ApiServiceImpl implements ApiService {
 
 }

@@ -1,9 +1,6 @@
 package com.mi.aftersales.service.impl;
 
-import com.mi.aftersales.entity.File;
-import com.mi.aftersales.mapper.FileMapper;
-import com.mi.aftersales.service.IFileService;
-import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.mi.aftersales.service.FileService;
 import org.springframework.stereotype.Service;
 
 /**
@@ -15,6 +12,6 @@ import org.springframework.stereotype.Service;
  * @since 2024-05-14
  */
 @Service
-public class FileServiceImpl extends ServiceImpl<FileMapper, File> implements IFileService {
+public class FileServiceImpl implements FileService {
 
 }

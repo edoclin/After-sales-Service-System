@@ -1,10 +1,19 @@
 package com.mi.aftersales.service.impl;
 
+import cn.hutool.core.bean.BeanUtil;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.mi.aftersales.entity.OrderStatusLog;
-import com.mi.aftersales.mapper.OrderStatusLogMapper;
-import com.mi.aftersales.service.IOrderStatusLogService;
-import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.mi.aftersales.exception.graceful.IllegalOrderIdException;
+import com.mi.aftersales.service.OrderStatusLogService;
+import com.mi.aftersales.repository.IOrderRepository;
+import com.mi.aftersales.repository.IOrderStatusLogRepository;
+import com.mi.aftersales.util.DateUtil;
+import com.mi.aftersales.vo.OrderStatusLogResult;
 import org.springframework.stereotype.Service;
+
+import javax.annotation.Resource;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * <p>
@@ -15,6 +24,25 @@ import org.springframework.stereotype.Service;
  * @since 2024-05-14
  */
 @Service
-public class OrderStatusLogServiceImpl extends ServiceImpl<OrderStatusLogMapper, OrderStatusLog> implements IOrderStatusLogService {
+public class OrderStatusLogServiceImpl implements OrderStatusLogService {
+    @Resource
+    private IOrderStatusLogRepository iOrderStatusLogRepository;
 
+    @Resource
+    private IOrderRepository iOrderRepository;
+
+    @Override
+    public List<OrderStatusLogResult> listOrderStatusLogByOrderId(String orderId) {
+        if (BeanUtil.isEmpty(iOrderRepository.getById(orderId))) {
+            throw new IllegalOrderIdException();
+        }
+        List<OrderStatusLogResult> result = new ArrayList<>();
+        iOrderStatusLogRepository.list(new QueryWrapper<OrderStatusLog>().eq("order_id", orderId)).forEach(statusLog -> {
+            OrderStatusLogResult item = new OrderStatusLogResult();
+            BeanUtil.copyProperties(statusLog, item, DateUtil.copyDate2yyyyMMddHHmm());
+            item.setOrderStatus(statusLog.getOrderStatus().getDesc());
+            result.add(item);
+        });
+        return result;
+    }
 }

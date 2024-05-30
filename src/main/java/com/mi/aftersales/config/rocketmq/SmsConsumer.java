@@ -3,17 +3,13 @@ package com.mi.aftersales.config.rocketmq;
 
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.text.CharSequenceUtil;
-import cn.hutool.core.util.StrUtil;
-import cn.hutool.json.JSONUtil;
 import com.feiniaojin.gracefulresponse.GracefulResponseException;
 import com.mi.aftersales.config.yaml.bean.CustomSmsConfig;
 import com.mi.aftersales.controller.enums.SmsCodeType;
 import com.mi.aftersales.entity.Login;
 import com.mi.aftersales.entity.Order;
-import com.mi.aftersales.entity.OrderStatusLog;
-import com.mi.aftersales.service.ILoginService;
-import com.mi.aftersales.service.IOrderService;
-import com.mi.aftersales.service.IOrderStatusLogService;
+import com.mi.aftersales.repository.ILoginRepository;
+import com.mi.aftersales.repository.IOrderRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.rocketmq.spring.annotation.RocketMQMessageListener;
 import org.apache.rocketmq.spring.core.RocketMQListener;
@@ -34,15 +30,15 @@ import static com.mi.aftersales.util.RocketMqTopic.ROCKETMQ_TOPIC_4_SMS;
  **/
 @Component
 @Slf4j
-@RocketMQMessageListener(topic = ROCKETMQ_TOPIC_4_SMS, consumerGroup = "aftersales_consumer_group")
+@RocketMQMessageListener(topic = ROCKETMQ_TOPIC_4_SMS, consumerGroup = ROCKETMQ_TOPIC_4_SMS)
 public class SmsConsumer implements RocketMQListener<String> {
 
     @Resource
-    private ILoginService iLoginService;
+    private ILoginRepository iLoginRepository;
 
 
     @Resource
-    private IOrderService iOrderService;
+    private IOrderRepository iOrderRepository;
 
     @Resource
     private CustomSmsConfig customSmsConfig;
@@ -51,13 +47,13 @@ public class SmsConsumer implements RocketMQListener<String> {
     public void onMessage(String orderId) {
 
         if (Boolean.TRUE.equals(customSmsConfig.getEnable())) {
-            Order order = iOrderService.getById(orderId);
+            Order order = iOrderRepository.getById(orderId);
 
             if (BeanUtil.isEmpty(order)) {
                 throw new GracefulResponseException("非法工单！");
             }
 
-            Login login = iLoginService.getById(order.getClientLoginId());
+            Login login = iLoginRepository.getById(order.getClientLoginId());
             if (BeanUtil.isEmpty(login)) {
                 throw new GracefulResponseException("非法用户！");
             }

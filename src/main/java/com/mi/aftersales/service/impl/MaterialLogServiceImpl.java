@@ -1,9 +1,6 @@
 package com.mi.aftersales.service.impl;
 
-import com.mi.aftersales.entity.MaterialLog;
-import com.mi.aftersales.mapper.MaterialLogMapper;
-import com.mi.aftersales.service.IMaterialLogService;
-import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.mi.aftersales.service.MaterialLogService;
 import org.springframework.stereotype.Service;
 
 /**
@@ -15,6 +12,6 @@ import org.springframework.stereotype.Service;
  * @since 2024-05-14
  */
 @Service
-public class MaterialLogServiceImpl extends ServiceImpl<MaterialLogMapper, MaterialLog> implements IMaterialLogService {
+public class MaterialLogServiceImpl implements MaterialLogService {
 
 }

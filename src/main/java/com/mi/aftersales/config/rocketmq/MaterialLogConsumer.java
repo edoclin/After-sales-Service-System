@@ -4,9 +4,7 @@ package com.mi.aftersales.config.rocketmq;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.text.CharSequenceUtil;
 import com.mi.aftersales.entity.MaterialLog;
-import com.mi.aftersales.entity.MiddleOrderMaterial;
-import com.mi.aftersales.service.IMaterialLogService;
-import com.mi.aftersales.service.IMiddleOrderMaterialService;
+import com.mi.aftersales.repository.IMaterialLogRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.rocketmq.spring.annotation.RocketMQMessageListener;
 import org.apache.rocketmq.spring.core.RocketMQListener;
@@ -16,7 +14,6 @@ import javax.annotation.Resource;
 import java.util.List;
 
 import static com.mi.aftersales.util.RocketMqTopic.ROCKETMQ_TOPIC_4_MATERIAL_LOG;
-import static com.mi.aftersales.util.RocketMqTopic.ROCKETMQ_TOPIC_4_ORDER_MATERIAL;
 
 /**
  * @description:
@@ -26,16 +23,16 @@ import static com.mi.aftersales.util.RocketMqTopic.ROCKETMQ_TOPIC_4_ORDER_MATERI
  **/
 @Component
 @Slf4j
-@RocketMQMessageListener(topic = ROCKETMQ_TOPIC_4_MATERIAL_LOG, consumerGroup = "aftersales_consumer_group")
+@RocketMQMessageListener(topic = ROCKETMQ_TOPIC_4_MATERIAL_LOG, consumerGroup = ROCKETMQ_TOPIC_4_MATERIAL_LOG)
 public class MaterialLogConsumer implements RocketMQListener<List<MaterialLog>> {
 
     @Resource
-    private IMaterialLogService iMaterialLogService;
+    private IMaterialLogRepository iMaterialLogRepository;
 
     @Override
     public void onMessage(List<MaterialLog> batch) {
         if (CollUtil.isNotEmpty(batch)) {
-            iMaterialLogService.saveBatch(batch);
+            iMaterialLogRepository.saveBatch(batch);
             log.info(CharSequenceUtil.format("物料库存日志消息消费成功！"));
         }
     }

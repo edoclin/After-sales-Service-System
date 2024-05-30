@@ -1,10 +1,17 @@
 package com.mi.aftersales.service.impl;
 
+import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.text.CharSequenceUtil;
+import com.feiniaojin.gracefulresponse.GracefulResponseException;
 import com.mi.aftersales.entity.ClientServiceCenter;
-import com.mi.aftersales.mapper.ClientServiceCenterMapper;
-import com.mi.aftersales.service.IClientServiceCenterService;
-import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.mi.aftersales.exception.graceful.ServerErrorException;
+import com.mi.aftersales.service.ClientServiceCenterService;
+import com.mi.aftersales.repository.IClientServiceCenterRepository;
+import com.mi.aftersales.vo.form.ClientServiceCenterForm;
+import com.mi.aftersales.vo.form.UpdateClientServiceCenterForm;
 import org.springframework.stereotype.Service;
+
+import javax.annotation.Resource;
 
 /**
  * <p>
@@ -15,6 +22,34 @@ import org.springframework.stereotype.Service;
  * @since 2024-05-14
  */
 @Service
-public class ClientServiceCenterServiceImpl extends ServiceImpl<ClientServiceCenterMapper, ClientServiceCenter> implements IClientServiceCenterService {
+public class ClientServiceCenterServiceImpl implements ClientServiceCenterService {
+    @Resource
+    private IClientServiceCenterRepository iClientServiceCenterRepository;
 
+    @Override
+    public void addClientServiceCenter(ClientServiceCenterForm form) {
+        ClientServiceCenter clientServiceCenter = new ClientServiceCenter();
+        BeanUtil.copyProperties(form, clientServiceCenter);
+        try {
+            iClientServiceCenterRepository.save(clientServiceCenter);
+        } catch (Exception e) {
+            throw new ServerErrorException(e.getMessage());
+        }
+    }
+
+    @Override
+    public void updateClientServiceCenter(UpdateClientServiceCenterForm form) {
+        ClientServiceCenter byId = iClientServiceCenterRepository.getById(form.getCenterId());
+
+        if (BeanUtil.isNotEmpty(byId)) {
+            BeanUtil.copyProperties(form, byId);
+            try {
+                iClientServiceCenterRepository.updateById(byId);
+            } catch (Exception e) {
+                throw new ServerErrorException(e.getMessage());
+            }
+        } else {
+            throw new GracefulResponseException(CharSequenceUtil.format("指定服务中心（ID：{}）不存在", form.getCenterId()));
+        }
+    }
 }

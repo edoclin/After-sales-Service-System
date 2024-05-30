@@ -1,14 +1,10 @@
 package com.mi.aftersales.config.rocketmq;
 
 
-import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.text.CharSequenceUtil;
-import cn.hutool.json.JSONUtil;
 import com.mi.aftersales.entity.MiddleOrderMaterial;
-import com.mi.aftersales.entity.OrderStatusLog;
-import com.mi.aftersales.service.IMiddleOrderMaterialService;
-import com.mi.aftersales.service.IOrderStatusLogService;
+import com.mi.aftersales.repository.IMiddleOrderMaterialRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.rocketmq.spring.annotation.RocketMQMessageListener;
 import org.apache.rocketmq.spring.core.RocketMQListener;
@@ -28,16 +24,16 @@ import static com.mi.aftersales.util.RocketMqTopic.ROCKETMQ_TOPIC_4_ORDER_MATERI
  **/
 @Component
 @Slf4j
-@RocketMQMessageListener(topic = ROCKETMQ_TOPIC_4_ORDER_MATERIAL, consumerGroup = "aftersales_consumer_group")
+@RocketMQMessageListener(topic = ROCKETMQ_TOPIC_4_ORDER_MATERIAL, consumerGroup = ROCKETMQ_TOPIC_4_ORDER_MATERIAL)
 public class OrderMaterialConsumer implements RocketMQListener<List<MiddleOrderMaterial>> {
 
     @Resource
-    private IMiddleOrderMaterialService iMiddleOrderMaterialService;
+    private IMiddleOrderMaterialRepository iMiddleOrderMaterialRepository;
 
     @Override
     public void onMessage(List<MiddleOrderMaterial> batch) {
         if (CollUtil.isNotEmpty(batch)) {
-            iMiddleOrderMaterialService.saveBatch(batch);
+            iMiddleOrderMaterialRepository.saveBatch(batch);
             log.info(CharSequenceUtil.format("工单物料申请（待申请）消息消费成功！"));
         }
     }

@@ -1,9 +1,6 @@
 package com.mi.aftersales.service.impl;
 
-import com.mi.aftersales.entity.Rating;
-import com.mi.aftersales.mapper.RatingMapper;
-import com.mi.aftersales.service.IRatingService;
-import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.mi.aftersales.service.RatingService;
 import org.springframework.stereotype.Service;
 
 /**
@@ -15,6 +12,6 @@ import org.springframework.stereotype.Service;
  * @since 2024-05-14
  */
 @Service
-public class RatingServiceImpl extends ServiceImpl<RatingMapper, Rating> implements IRatingService {
+public class RatingServiceImpl implements RatingService {
 
 }

@@ -1,15 +1,11 @@
 package com.mi.aftersales.controller;
 
-import cn.hutool.core.bean.BeanUtil;
-import com.feiniaojin.gracefulresponse.GracefulResponseException;
 import com.mi.aftersales.aspect.anno.CheckPermission;
-import com.mi.aftersales.entity.SpuCategory;
-import com.mi.aftersales.service.ISpuCategoryService;
+import com.mi.aftersales.service.SpuCategoryService;
 import com.mi.aftersales.vo.result.SpuCategory4ClientVo;
 import com.mi.aftersales.vo.form.SpuCategoryForm;
 import com.mi.aftersales.vo.form.SpuCategoryVisibleSetForm;
 import io.swagger.v3.oas.annotations.Operation;
-import org.springframework.dao.DuplicateKeyException;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
@@ -27,45 +23,26 @@ import java.util.List;
 @RestController
 @RequestMapping("/aftersales/spuCategory")
 public class SpuCategoryController {
-
     @Resource
-    private ISpuCategoryService iSpuCategoryService;
+    private SpuCategoryService spuCategoryService;
 
     @PostMapping(path = "/")
     @CheckPermission
     @Operation(summary = "SPU分类添加", description = "SPU分类添加")
     public void postSpuCategory(@RequestBody @Valid SpuCategoryForm form) {
-        if (form.getParentCategoryId() != 0 && BeanUtil.isEmpty(iSpuCategoryService.getById(form.getParentCategoryId()))) {
-            throw new GracefulResponseException("指定父级分类不存在");
-        } else {
-            SpuCategory spuCategory = new SpuCategory();
-            BeanUtil.copyProperties(form, spuCategory);
-
-            try {
-                iSpuCategoryService.save(spuCategory);
-            } catch (DuplicateKeyException e) {
-                throw new GracefulResponseException("SPU分类名称已存在");
-            }
-        }
+        spuCategoryService.addSpuCategory(form);
     }
 
     @GetMapping(path = "/list/client")
     @Operation(summary = "SPU分类目录", description = "SPU分类目录")
     public List<SpuCategory4ClientVo> listSpuCategory4Client() {
-        return iSpuCategoryService.listSpuCategory4Client(0);
+        return spuCategoryService.listSpuCategory4Client(0);
     }
 
-    @GetMapping(path = "/visible")
+    @PutMapping(path = "/visible")
     @CheckPermission
     @Operation(summary = "SPU分类客户是否可见", description = "SPU分类客户是否可见")
     public void setVisible(@RequestBody @Valid SpuCategoryVisibleSetForm form) {
-        SpuCategory byId = iSpuCategoryService.getById(form.getCategoryId());
-
-        if (BeanUtil.isNotEmpty(byId)) {
-            byId.setVisible(form.getVisible());
-            iSpuCategoryService.updateById(byId);
-        } else {
-            throw new GracefulResponseException("分类ID不存在");
-        }
+        spuCategoryService.setSpuCategoryVisibility(form);
     }
 }
