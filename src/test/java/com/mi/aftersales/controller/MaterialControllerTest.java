@@ -2,14 +2,13 @@ package com.mi.aftersales.controller;
 
 import com.alibaba.fastjson.JSON;
 import com.mi.aftersales.entity.Material;
-import com.mi.aftersales.service.IMaterialService;
+
+
 import com.mi.aftersales.vo.form.ManngerUpdateMaterialForm;
 import com.mi.aftersales.vo.form.MaterialForm;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mockito;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 
@@ -29,7 +28,7 @@ import javax.annotation.Resource;
 
 import java.math.BigDecimal;
 
-import static org.mockito.Mockito.when;
+
 
 /**
  * @author QYenon
@@ -46,8 +45,7 @@ class MaterialControllerTest {
     @Resource
     private MaterialController materialController;
 
-    @Resource
-    private IMaterialService materialService;
+
 
     private MockMvc mockMvc;
 
@@ -108,10 +106,7 @@ class MaterialControllerTest {
         material.setMaterialId("1795750940717076480");
         material.setMaterialName("Test");
 
-        // 创建Mock对象
-        IMaterialService materialServiceMock = Mockito.mock(IMaterialService.class);
-        // 指定当调用getById方法时返回预先设置好的material对象
-        when(materialServiceMock.getById("1795750940717076480")).thenReturn(material);
+
 
         // 发送PUT请求，更新物料信息
         MvcResult mvcResult = mockMvc.perform(

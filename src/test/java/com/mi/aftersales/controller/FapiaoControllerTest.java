@@ -1,7 +1,7 @@
 package com.mi.aftersales.controller;
 
 import com.alibaba.fastjson.JSON;
-import com.mi.aftersales.service.IAddressService;
+
 
 import com.mi.aftersales.vo.form.FapiaoForm;
 import com.mi.aftersales.vo.form.UpdateFapiaoForm;
@@ -43,8 +43,6 @@ class FapiaoControllerTest {
     @Resource
     private FapiaoController fapiaoController;
 
-    @Mock
-    private IAddressService addressService;
 
 
     private MockMvc mockMvc;

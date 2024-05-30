@@ -1,7 +1,6 @@
 package com.mi.aftersales.controller;
 
 import com.mi.aftersales.config.yaml.bean.AliPayConfig;
-import com.mi.aftersales.service.IOrderService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

@@ -4,7 +4,6 @@ import cn.dev33.satoken.stp.StpUtil;
 import com.alibaba.fastjson.JSON;
 import com.mi.aftersales.aspect.CheckLoginAspect;
 import com.mi.aftersales.entity.Address;
-import com.mi.aftersales.service.IAddressService;
 import com.mi.aftersales.vo.form.ClientAddressForm;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -42,8 +41,7 @@ class AddressControllerTest {
     @Resource
     private AddressController addressController;
 
-    @Mock
-    private IAddressService addressService;
+
 
     private MockMvc mockMvc;
 
@@ -57,7 +55,7 @@ class AddressControllerTest {
 
         // 创建客户地址表单
         ClientAddressForm form = new ClientAddressForm();
-        form.setReceiver("postAddressTest111");
+        form.setReceiver("postAddressTest1234");
         form.setDefaulted(false);
         form.setMobile("18111111111");
         form.setRegion("test");
