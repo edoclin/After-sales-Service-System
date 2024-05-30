@@ -143,7 +143,7 @@ class AliPayController {
         payOrder.setPayStatus(PayStatusEnum.PAID);
         payOrder.setPayDetail(JSONUtil.toJsonStr(new PayDetailVo().setPaidTime(LocalDateTime.now())));
 
-        if (!orderService.sendEvent(orderService.statusFlow(OrderStatusChangeEventEnum.CLIENT_COMPLETED_PAY, payOrder.getOrderId()))) {
+        if (orderService.sendEvent(orderService.statusFlow(OrderStatusChangeEventEnum.CLIENT_COMPLETED_PAY, payOrder.getOrderId()))) {
             throw new IllegalOrderStatusFlowException();
         }
 

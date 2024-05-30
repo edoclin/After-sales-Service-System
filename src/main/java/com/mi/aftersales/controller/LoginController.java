@@ -10,6 +10,8 @@ import cn.hutool.core.text.CharSequenceUtil;
 import cn.hutool.core.util.IdUtil;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.feiniaojin.gracefulresponse.GracefulResponseException;
+import com.mi.aftersales.aspect.CheckLoginAspect;
+import com.mi.aftersales.aspect.anno.CheckLogin;
 import com.mi.aftersales.config.yaml.bean.OAuthConfig;
 import com.mi.aftersales.config.yaml.bean.OAuthList;
 import com.mi.aftersales.config.yaml.bean.CustomSmsConfig;
@@ -39,6 +41,7 @@ import org.dromara.sms4j.api.entity.SmsResponse;
 import org.dromara.sms4j.core.factory.SmsFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.web.bind.annotation.*;
 
@@ -95,6 +98,20 @@ public class LoginController {
 
     @Resource
     private ILoginRoleRepository iLoginRoleRepository;
+
+    @GetMapping(path = "/check")
+    @Operation(summary = "检查是否登录", description = "检查是否登录")
+    @CheckLogin
+    public void checkLogin() {
+        // 根据返回值判断是否登录
+    }
+
+    @GetMapping(path = "/logout")
+    @Operation(summary = "退出登录", description = "退出登录")
+    @CheckLogin
+    public void logout() {
+        StpUtil.logout();
+    }
 
     @PostMapping(path = "/sms/send")
     @Operation(summary = "发送短信验证码", description = "发送短信验证码")

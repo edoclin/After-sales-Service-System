@@ -2,10 +2,7 @@ package com.mi.aftersales.service;
 
 import com.mi.aftersales.config.enums.OrderStatusChangeEventEnum;
 import com.mi.aftersales.util.query.ConditionQuery;
-import com.mi.aftersales.vo.form.ClientOrderForm;
-import com.mi.aftersales.vo.form.FaultDescriptionForm;
-import com.mi.aftersales.vo.form.MaterialDistributeForm;
-import com.mi.aftersales.vo.form.OrderFeeConfirmForm;
+import com.mi.aftersales.vo.form.*;
 import com.mi.aftersales.vo.result.ClientOrderDetailVo;
 import com.mi.aftersales.vo.result.ClientOrderSimpleVo;
 import com.mi.aftersales.vo.result.EngineerSimpleOrderVo;
@@ -89,6 +86,8 @@ public interface OrderService {
      */
     void acceptOrder(String orderId, String loginId);
 
+    void engineerUploadImage(EngineerUploadForm form);
+
     /**
      * 开始检测。
      *
@@ -161,6 +160,8 @@ public interface OrderService {
      * @param loginId 登录ID
      */
     void startRechecking(String orderId, String loginId);
+
+    void engineerUploadVideo(EngineerUploadForm form);
 
     /**
      * 完成维修，发送账单，等待支付。

@@ -3,6 +3,7 @@ package com.mi.aftersales.config.rocketmq;
 
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.text.CharSequenceUtil;
+import cn.hutool.json.JSONUtil;
 import com.mi.aftersales.entity.OrderUpload;
 import com.mi.aftersales.repository.IFileRepository;
 import com.mi.aftersales.repository.IOrderUploadRepository;
@@ -15,6 +16,7 @@ import org.springframework.stereotype.Component;
 import javax.annotation.Resource;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import static com.mi.aftersales.util.RocketMqTopic.ROCKETMQ_TOPIC_4_ORDER_UPLOAD;
 
@@ -27,7 +29,7 @@ import static com.mi.aftersales.util.RocketMqTopic.ROCKETMQ_TOPIC_4_ORDER_UPLOAD
 @Component
 @Slf4j
 @RocketMQMessageListener(topic = ROCKETMQ_TOPIC_4_ORDER_UPLOAD, consumerGroup = ROCKETMQ_TOPIC_4_ORDER_UPLOAD)
-public class OrderUploadConsumer implements RocketMQListener<OrderUploadMessage> {
+public class OrderUploadConsumer implements RocketMQListener<List<OrderUpload>> {
 
     @Resource
     private IOrderUploadRepository iOrderUploadRepository;
@@ -37,24 +39,12 @@ public class OrderUploadConsumer implements RocketMQListener<OrderUploadMessage>
 
 
     @Override
-    public void onMessage(OrderUploadMessage orderUploadMessage) {
-        if (BeanUtil.isNotEmpty(orderUploadMessage)) {
-            ArrayList<OrderUpload> batch = new ArrayList<>();
-            for (String fileId : orderUploadMessage.getFileIds()) {
-                if (BeanUtil.isNotEmpty(iFileRepository.getById(fileId))) {
-                    OrderUpload orderUpload = new OrderUpload();
-                    orderUpload.setOrderId(orderUploadMessage.getOrderId());
-                    orderUpload.setFileId(fileId);
-                    orderUpload.setUploaderType(orderUploadMessage.getUploaderType());
-                    batch.add(orderUpload);
-                }
-            }
-            try {
-                iOrderUploadRepository.saveBatch(batch);
-                log.info(CharSequenceUtil.format("工单文件上传消费成功！（{}）", orderUploadMessage.getOrderId()));
-            } catch (Exception e) {
-                log.error(e.getMessage(), e);
-            }
+    public void onMessage(List<OrderUpload> batch) {
+        try {
+            iOrderUploadRepository.saveBatch(batch);
+            log.info(CharSequenceUtil.format("工单文件上传消费成功！（{}）", JSONUtil.toJsonStr(batch)));
+        } catch (Exception e) {
+            log.error(e.getMessage(), e);
         }
     }
 }

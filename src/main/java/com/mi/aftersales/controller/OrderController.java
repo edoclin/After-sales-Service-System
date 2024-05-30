@@ -5,10 +5,7 @@ import com.mi.aftersales.aspect.anno.CheckLogin;
 import com.mi.aftersales.entity.enums.*;
 import com.mi.aftersales.service.OrderService;
 import com.mi.aftersales.util.query.ConditionQuery;
-import com.mi.aftersales.vo.form.ClientOrderForm;
-import com.mi.aftersales.vo.form.FaultDescriptionForm;
-import com.mi.aftersales.vo.form.MaterialDistributeForm;
-import com.mi.aftersales.vo.form.OrderFeeConfirmForm;
+import com.mi.aftersales.vo.form.*;
 import com.mi.aftersales.vo.result.*;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -65,6 +62,14 @@ public class OrderController {
     public void engineerAcceptOrder(@PathVariable String orderId) {
         StpUtil.checkRole(EmployeeRoleEnum.ENGINEER.name());
         orderService.acceptOrder(orderId, StpUtil.getLoginIdAsString());
+    }
+
+    @PostMapping(path = "/engineer/upload/image")
+    @Operation(summary = "工程师上传检测前图片", description = "工程师上传检测前图片")
+    @CheckLogin
+    public void engineerAcceptOrder(@RequestBody @Valid EngineerUploadForm form) {
+        StpUtil.checkRole(EmployeeRoleEnum.ENGINEER.name());
+        orderService.engineerUploadImage(form);
     }
 
     @PutMapping(path = "/engineer/checking/{orderId}")
@@ -136,6 +141,15 @@ public class OrderController {
     public void engineerStartRechecking(@PathVariable String orderId) {
         StpUtil.checkRole(EmployeeRoleEnum.ENGINEER.name());
         orderService.startRechecking(orderId, StpUtil.getLoginIdAsString());
+    }
+
+
+    @PutMapping(path = "/engineer/recheck/upload")
+    @Operation(summary = "工程师上传维修结果（视频）", description = "工程师上传维修结果（视频）")
+    @CheckLogin
+    public void engineerUploadVideo(@RequestBody @Valid EngineerUploadForm form) {
+        StpUtil.checkRole(EmployeeRoleEnum.ENGINEER.name());
+        orderService.engineerUploadVideo(form);
     }
 
     @PutMapping(path = "/engineer/toBePaid/{orderId}")

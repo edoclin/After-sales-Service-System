@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.annotation.*;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
+import com.mi.aftersales.entity.enums.OrderUploadFileTypeEnum;
 import com.mi.aftersales.entity.enums.OrderUploaderTypeEnum;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
@@ -59,5 +60,5 @@ public class OrderUpload implements Serializable {
     private String orderId;
 
     @Schema(description = "文件类型;1:图片;2:视频")
-    private Byte fileType;
+    private OrderUploadFileTypeEnum fileType;
 }
