@@ -22,6 +22,10 @@ val redissonVersion = "3.18.0"
 val springDocVersion = "1.8.0"
 val sms4jVersion = "3.2.1"
 val rocketmqVersion = "2.3.0"
+val mockitoCoreVersion = "4.8.0"
+val mockitoInlineVersion = "4.8.0"
+val junitJupiterApiVersion = "5.7.2"
+val junitJupiterEngineVersion = "5.7.2"
 
 java {
     sourceCompatibility = JavaVersion.VERSION_17
@@ -69,6 +73,14 @@ dependencies {
     annotationProcessor("org.projectlombok:lombok")
     runtimeOnly("mysql:mysql-connector-java")
     testImplementation("org.springframework.boot:spring-boot-starter-test")
+    // Mockito核心库
+    testImplementation("org.mockito:mockito-core:$mockitoCoreVersion")
+    // 如果需要Mockito与Spring集成的扩展功能，可以使用mockito-spring库
+    testImplementation("org.mockito:mockito-inline:$mockitoInlineVersion")  // 支持内联Mock
+
+    // JUnit 5依赖
+    testImplementation("org.junit.jupiter:junit-jupiter-api:$junitJupiterApiVersion")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:$junitJupiterEngineVersion")
 }
 
 tasks.withType<Test> {
