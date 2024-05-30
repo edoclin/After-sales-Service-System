@@ -8,6 +8,6 @@ import com.feiniaojin.gracefulresponse.api.ExceptionMapper;
  * @author: edoclin
  * @created: 2024/5/12 12:33
  **/
-@ExceptionMapper(code = "-1", msg = "非法的登录账户Id！")
-public class IllegalLoginIdException extends BaseCustomException {
+@ExceptionMapper(code = "-1", msg = "非法的地址Id！")
+public class IllegalAddressIdException extends BaseCustomException {
 }

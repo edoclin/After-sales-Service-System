@@ -9,5 +9,5 @@ import com.feiniaojin.gracefulresponse.api.ExceptionMapper;
  * @created: 2024/5/12 12:33
  **/
 @ExceptionMapper(code = "-1", msg = "该工单不属于当前用户！")
-public class IllegalOrderLoginIdException extends RuntimeException {
+public class IllegalOrderLoginIdException extends BaseCustomException {
 }

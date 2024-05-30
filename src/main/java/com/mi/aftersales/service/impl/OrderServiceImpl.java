@@ -238,6 +238,8 @@ public class OrderServiceImpl implements OrderService {
             Message<List<OrderUpload>> msg = MessageBuilder.withPayload(batch).build();
             rocketmqTemplate.syncSend(ROCKETMQ_TOPIC_4_ORDER_UPLOAD, msg);
 
+        } catch (BaseCustomException e) {
+            throw e;
         } catch (Exception e) {
             log.error(e.getMessage());
             throw new ServerErrorException();
@@ -291,6 +293,9 @@ public class OrderServiceImpl implements OrderService {
         } catch (InterruptedException e) {
             log.error(e.getMessage());
             throw new GracefulResponseException("抢单失败！");
+        } catch (BaseCustomException e) {
+            log.error(e.getMessage());
+            throw e;
         } finally {
             if (fairLock.isLocked()) {
                 fairLock.unlock();

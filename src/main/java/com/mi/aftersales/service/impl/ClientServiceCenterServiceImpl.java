@@ -9,6 +9,8 @@ import com.mi.aftersales.service.ClientServiceCenterService;
 import com.mi.aftersales.repository.IClientServiceCenterRepository;
 import com.mi.aftersales.vo.form.ClientServiceCenterForm;
 import com.mi.aftersales.vo.form.UpdateClientServiceCenterForm;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -23,6 +25,8 @@ import javax.annotation.Resource;
  */
 @Service
 public class ClientServiceCenterServiceImpl implements ClientServiceCenterService {
+
+    private static final Logger log = LoggerFactory.getLogger(ClientServiceCenterServiceImpl.class);
     @Resource
     private IClientServiceCenterRepository iClientServiceCenterRepository;
 
@@ -33,7 +37,8 @@ public class ClientServiceCenterServiceImpl implements ClientServiceCenterServic
         try {
             iClientServiceCenterRepository.save(clientServiceCenter);
         } catch (Exception e) {
-            throw new ServerErrorException(e.getMessage());
+            log.error(e.getMessage());
+            throw new ServerErrorException();
         }
     }
 
@@ -46,7 +51,8 @@ public class ClientServiceCenterServiceImpl implements ClientServiceCenterServic
             try {
                 iClientServiceCenterRepository.updateById(byId);
             } catch (Exception e) {
-                throw new ServerErrorException(e.getMessage());
+                log.error(e.getMessage());
+                throw new ServerErrorException();
             }
         } else {
             throw new GracefulResponseException(CharSequenceUtil.format("指定服务中心（ID：{}）不存在", form.getCenterId()));

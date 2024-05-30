@@ -12,6 +12,8 @@ import com.mi.aftersales.util.DateUtil;
 import com.mi.aftersales.vo.form.FapiaoForm;
 import com.mi.aftersales.vo.form.UpdateFapiaoForm;
 import com.mi.aftersales.vo.result.ClientFapiaoVo;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 
@@ -29,6 +31,7 @@ import java.util.List;
  */
 @Service
 public class FapiaoServiceImpl implements FapiaoService {
+    private static final Logger log = LoggerFactory.getLogger(FapiaoServiceImpl.class);
     @Resource
     private IFapiaoRepository iFapiaoRepository;
 
@@ -41,7 +44,8 @@ public class FapiaoServiceImpl implements FapiaoService {
         } catch (DuplicateKeyException e) {
             throw new GracefulResponseException("发票号码已存在！");
         } catch (Exception e) {
-            throw new ServerErrorException(e.getMessage());
+            log.error(e.getMessage());
+            throw new ServerErrorException();
         }
     }
 
@@ -68,7 +72,8 @@ public class FapiaoServiceImpl implements FapiaoService {
         try {
             iFapiaoRepository.removeById(fapiaoId);
         } catch (Exception e) {
-            throw new ServerErrorException(e.getMessage());
+            log.error(e.getMessage());
+            throw new ServerErrorException();
         }
     }
 
@@ -85,7 +90,8 @@ public class FapiaoServiceImpl implements FapiaoService {
         try {
             iFapiaoRepository.updateById(byId);
         } catch (Exception e) {
-            throw new ServerErrorException(e.getMessage());
+            log.error(e.getMessage());
+            throw new ServerErrorException();
         }
     }
 }
