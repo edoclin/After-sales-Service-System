@@ -9,5 +9,5 @@ import com.feiniaojin.gracefulresponse.api.ExceptionMapper;
  * @created: 2024/5/12 12:33
  **/
 @ExceptionMapper(code = "-1", msg = "非法的物料Id！")
-public class IllegalMaterialIdException extends RuntimeException {
+public class IllegalMaterialIdException extends BaseCustomException {
 }

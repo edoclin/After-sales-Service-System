@@ -13,6 +13,8 @@ import com.mi.aftersales.vo.form.MaterialForm;
 import lombok.SneakyThrows;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 
@@ -29,6 +31,9 @@ import java.util.concurrent.TimeUnit;
  */
 @Service
 public class MaterialServiceImpl  implements MaterialService {
+
+    private static final Logger log = LoggerFactory.getLogger(MaterialServiceImpl.class);
+
     @Resource
     private IMaterialRepository iMaterialRepository;
 
@@ -53,7 +58,8 @@ public class MaterialServiceImpl  implements MaterialService {
         } catch (DuplicateKeyException e) {
             throw new GracefulResponseException("物料名称重复！");
         } catch (Exception e) {
-            throw new ServerErrorException(e.getMessage());
+            log.error(e.getMessage());
+            throw new ServerErrorException();
         }
     }
 

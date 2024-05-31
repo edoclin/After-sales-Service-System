@@ -26,4 +26,7 @@ public enum PayMethodEnum implements IEnum<Integer> {
     public Integer getValue() {
         return value;
     }
+    public String getDesc() {
+        return desc;
+    }
 }

@@ -12,6 +12,7 @@ public enum PayStatusEnum implements IEnum<Integer> {
     // 工单类型
     WAITING(1, "待支付"),
     PAID(2, "已支付"),
+    TIMEOUT(3, "已过期"),
 
     ;
     private int value;
@@ -25,5 +26,9 @@ public enum PayStatusEnum implements IEnum<Integer> {
     @Override
     public Integer getValue() {
         return value;
+    }
+
+    public String getDesc() {
+        return desc;
     }
 }

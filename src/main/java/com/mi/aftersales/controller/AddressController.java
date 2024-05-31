@@ -28,7 +28,6 @@ public class AddressController {
 
     private static final Logger log = LoggerFactory.getLogger(AddressController.class);
 
-
     @Resource
     private AddressService addressService;
 

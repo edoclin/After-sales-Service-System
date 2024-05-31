@@ -7,11 +7,15 @@ import cn.hutool.core.util.DesensitizedUtil;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.feiniaojin.gracefulresponse.GracefulResponseException;
 import com.mi.aftersales.entity.Address;
+import com.mi.aftersales.exception.graceful.IllegalAddressIdException;
+import com.mi.aftersales.exception.graceful.IllegalLoginIdException;
 import com.mi.aftersales.exception.graceful.ServerErrorException;
 import com.mi.aftersales.service.AddressService;
 import com.mi.aftersales.repository.IAddressRepository;
 import com.mi.aftersales.vo.form.ClientAddressForm;
 import com.mi.aftersales.vo.result.ClientAddressVo;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -29,6 +33,7 @@ import java.util.List;
 @Service
 public class AddressServiceImpl implements AddressService {
 
+    private static final Logger log = LoggerFactory.getLogger(AddressServiceImpl.class);
     @Resource
     private IAddressRepository iAddressRepository;
     @Override
@@ -44,7 +49,8 @@ public class AddressServiceImpl implements AddressService {
             address.setLoginId(loginId);
             iAddressRepository.save(address);
         } catch (Exception e) {
-            throw new ServerErrorException(e.getMessage());
+            log.error(e.getMessage());
+            throw new ServerErrorException();
         }
     }
 
@@ -72,7 +78,8 @@ public class AddressServiceImpl implements AddressService {
             updateWrapper2.eq(Address::getAddressId, addressId).eq(Address::getLoginId, loginId).set(Address::getDefaulted, Boolean.TRUE);
             iAddressRepository.update(null, updateWrapper2);
         } catch (Exception e) {
-            throw new ServerErrorException(e.getMessage());
+            log.error(e.getMessage());
+            throw new ServerErrorException();
         }
     }
 
@@ -81,14 +88,15 @@ public class AddressServiceImpl implements AddressService {
         try {
             Address address = iAddressRepository.getById(addressId);
             if (BeanUtil.isEmpty(address)) {
-                throw new GracefulResponseException("地址不存在！");
+                throw new IllegalAddressIdException();
             }
             if (!CharSequenceUtil.equals(address.getLoginId(), loginId)) {
-                throw new GracefulResponseException("非法操作！");
+                throw new IllegalLoginIdException();
             }
             iAddressRepository.removeById(addressId);
         } catch (Exception e) {
-            throw new ServerErrorException(e.getMessage());
+            log.error(e.getMessage());
+            throw new ServerErrorException();
         }
     }
 

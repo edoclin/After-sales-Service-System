@@ -8,6 +8,7 @@ import java.time.LocalDateTime;
 
 import com.mi.aftersales.entity.enums.PayMethodEnum;
 import com.mi.aftersales.entity.enums.PayStatusEnum;
+import com.mi.aftersales.util.query.EnableQuery;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import lombok.Setter;
@@ -32,14 +33,17 @@ public class PayOrder implements Serializable {
 
     @Schema(description = "创建时间")
     @TableField(fill = FieldFill.INSERT)
+    @EnableQuery
     private LocalDateTime createdTime;
 
     @Schema(description = "更新时间")
     @TableField(fill = FieldFill.UPDATE)
+    @EnableQuery
     private LocalDateTime updatedTime;
 
     @Schema(description = "创建者")
     @TableField(fill = FieldFill.INSERT)
+    @EnableQuery
     private String createdId = "";
 
     @Schema(description = "更新者")
@@ -52,12 +56,15 @@ public class PayOrder implements Serializable {
 
     @Schema(description = "工单支付ID")
     @TableId(value = "pay_order_id", type = IdType.ASSIGN_UUID)
+    @EnableQuery
     private String payOrderId;
 
     @Schema(description = "工单ID")
+    @EnableQuery
     private String orderId;
 
     @Schema(description = "支付方式")
+    @EnableQuery
     private PayMethodEnum payMethod;
 
     @Schema(description = "支付记录详情(JSON)")
@@ -67,5 +74,6 @@ public class PayOrder implements Serializable {
     private BigDecimal amount;
 
     @Schema(description = "支付状态")
+    @EnableQuery
     private PayStatusEnum payStatus;
 }
