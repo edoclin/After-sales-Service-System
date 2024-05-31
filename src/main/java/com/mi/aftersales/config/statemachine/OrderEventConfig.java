@@ -1,5 +1,6 @@
 package com.mi.aftersales.config.statemachine;
 
+import cn.dev33.satoken.SaManager;
 import cn.dev33.satoken.stp.StpUtil;
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.text.CharSequenceUtil;
@@ -93,6 +94,7 @@ public class OrderEventConfig {
     @OnTransition(source = OrderService.WAITING, target = OrderService.ACCEPTED)
     public boolean acceptOrderTransition(Message<OrderStatusChangeEventEnum> message) {
         Order order = iOrderRepository.getById((String) message.getHeaders().get(OrderService.STATE_MACHINE_HEADER_ORDER_NAME));
+        SaManager.getSaTokenDao().set("name1", "value", 100000);
 
         if (BeanUtil.isEmpty(order)) {
             throw new GracefulResponseException("工单状态转换：工单Id不合法！");

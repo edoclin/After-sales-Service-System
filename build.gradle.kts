@@ -8,7 +8,7 @@ group = "com.mi"
 version = "0.0.1-SNAPSHOT"
 
 val hutoolVersion = "5.8.27"
-val saTokenVersion = "1.37.0"
+val saTokenVersion = "1.38.0"
 val justAuthVersion = "1.16.6"
 val mybatisPlusVersion = "3.5.6"
 val gracefulResponseVersion = "3.5.2-boot2"
@@ -26,6 +26,7 @@ val mockitoCoreVersion = "4.8.0"
 val mockitoInlineVersion = "4.8.0"
 val junitJupiterApiVersion = "5.7.2"
 val junitJupiterEngineVersion = "5.7.2"
+val lettuceVersion = "6.3.2.RELEASE"
 
 java {
     sourceCompatibility = JavaVersion.VERSION_17
@@ -61,6 +62,7 @@ dependencies {
     implementation("cn.hutool:hutool-all:$hutoolVersion")
     implementation("cn.dev33:sa-token-spring-boot-starter:$saTokenVersion")
     implementation("cn.dev33:sa-token-redis-jackson:$saTokenVersion")
+    implementation("cn.dev33:sa-token-alone-redis:$saTokenVersion")
     implementation("com.baomidou:mybatis-plus-boot-starter:$mybatisPlusVersion")
     implementation("com.baomidou:mybatis-plus-generator:$mybatisPlusVersion")
     implementation("org.freemarker:freemarker:$freemarkerVersion")
@@ -72,6 +74,9 @@ dependencies {
     compileOnly("org.projectlombok:lombok")
     annotationProcessor("org.projectlombok:lombok")
     runtimeOnly("mysql:mysql-connector-java")
+
+    implementation("io.lettuce:lettuce-core:$lettuceVersion")
+
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     // Mockito核心库
     testImplementation("org.mockito:mockito-core:$mockitoCoreVersion")

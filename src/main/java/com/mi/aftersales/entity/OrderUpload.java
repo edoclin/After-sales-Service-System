@@ -50,7 +50,7 @@ public class OrderUpload implements Serializable {
     private Long deleted;
 
     @Schema(description = "对应文件ID")
-    @TableId(value = "file_id", type = IdType.ASSIGN_UUID)
+    @TableId(value = "file_id", type = IdType.INPUT)
     private String fileId;
 
     @Schema(description = "上传者类型;1:客户上传;2:工程师上传")

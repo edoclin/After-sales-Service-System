@@ -39,6 +39,7 @@ import org.dromara.sms4j.core.factory.SmsFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 
@@ -53,6 +54,7 @@ import java.util.concurrent.TimeUnit;
  * @author: edoclin
  * @created: 2024/5/29 12:23
  **/
+@Service
 public class LoginServiceImpl implements LoginService {
 
     private static final Logger log = LoggerFactory.getLogger(LoginServiceImpl.class);

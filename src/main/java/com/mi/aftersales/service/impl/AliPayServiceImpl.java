@@ -31,6 +31,7 @@ import com.mi.aftersales.vo.result.AlipayResult;
 import org.apache.rocketmq.spring.core.RocketMQTemplate;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.support.MessageBuilder;
+import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.PathVariable;
 
 import javax.annotation.Resource;
@@ -39,6 +40,7 @@ import java.time.LocalDateTime;
 
 import static com.mi.aftersales.util.RocketMqTopic.ROCKETMQ_TOPIC_4_ALIPAY_ORDER;
 
+@Service
 public class AliPayServiceImpl implements AliPayService {
 
     @Resource

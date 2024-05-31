@@ -6,10 +6,7 @@ import com.mi.aftersales.util.query.ConditionQuery;
 import com.mi.aftersales.vo.PageResult;
 import com.mi.aftersales.vo.result.PayOrderResult;
 import io.swagger.v3.oas.annotations.Operation;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import java.util.List;
@@ -29,7 +26,7 @@ public class PayOrderController {
     @Resource
     private PayOrderService payOrderService;
 
-    @PostMapping(path = "/client")
+    @GetMapping(path = "/client")
     @Operation(summary = "查询当前用户的支付账单", description = "查询当前用户的支付账单")
     @CheckLogin
     public List<PayOrderResult> listClientOrder() {

@@ -1,5 +1,6 @@
 package com.mi.aftersales.controller;
 
+import cn.dev33.satoken.SaManager;
 import cn.dev33.satoken.stp.StpUtil;
 import com.mi.aftersales.aspect.anno.CheckLogin;
 import com.mi.aftersales.entity.enums.*;
@@ -9,6 +10,7 @@ import com.mi.aftersales.vo.form.*;
 import com.mi.aftersales.vo.result.*;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
@@ -59,6 +61,7 @@ public class OrderController {
     @GetMapping(path = "/engineer/accept/{orderId}")
     @Operation(summary = "工程师接受工单", description = "工程师接受工单")
     @CheckLogin
+    @Transactional
     public void engineerAcceptOrder(@PathVariable String orderId) {
         StpUtil.checkRole(EmployeeRoleEnum.ENGINEER.name());
         orderService.acceptOrder(orderId, StpUtil.getLoginIdAsString());

@@ -21,8 +21,6 @@ import javax.annotation.Resource;
 @Configuration
 public class RedisConfig {
 
-    @Resource
-    private SaTokenDaoRedisJackson saTokenDaoRedisJackson;
     /**
      * @description: 序列化配置
      * @return:

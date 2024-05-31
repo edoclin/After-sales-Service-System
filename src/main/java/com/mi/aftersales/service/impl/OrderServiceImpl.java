@@ -1,5 +1,8 @@
 package com.mi.aftersales.service.impl;
 
+import cn.dev33.satoken.SaManager;
+import cn.dev33.satoken.dao.SaTokenDaoRedisJackson;
+import cn.dev33.satoken.session.SaSession;
 import cn.dev33.satoken.stp.StpUtil;
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.collection.CollUtil;
@@ -66,6 +69,9 @@ public class OrderServiceImpl implements OrderService {
 
     @Resource
     private IMaterialRepository iMaterialRepository;
+
+    @Resource
+    SaTokenDaoRedisJackson saTokenDaoRedisJackson;
 
     @Resource(name = "orderRedisPersister")
     private StateMachinePersister<OrderStatusEnum, OrderStatusChangeEventEnum, String> orderRedisPersister;
@@ -173,9 +179,6 @@ public class OrderServiceImpl implements OrderService {
     @Transactional
     public void createOrder(ClientOrderForm form, String loginId) {
         Fapiao fapiao = iFapiaoRepository.getById(form.getFapiaoId());
-        System.out.println();
-        System.out.println(StpUtil.getLoginIdAsString());
-        System.out.println(StpUtil.getLoginIdAsString());
         if (BeanUtil.isEmpty(fapiao) || !CharSequenceUtil.equals(fapiao.getCreatedId(), loginId)) {
             throw new GracefulResponseException("非法的发票Id！");
         }
@@ -213,11 +216,12 @@ public class OrderServiceImpl implements OrderService {
         order.setClientLoginId(loginId);
         try {
             iOrderRepository.save(order);
+            System.out.println(StpUtil.getLoginIdAsString());
             if (sendEvent(statusFlow(OrderStatusChangeEventEnum.CLIENT_COMPLETED_ORDER_CREATED, order.getOrderId()))) {
                 log.error(CharSequenceUtil.format("工单（{}）状态转换失败", order.getOrderId()));
                 throw new ServerErrorException();
             }
-
+            System.out.println(StpUtil.getLoginIdAsString());
             List<OrderUpload> batch = new ArrayList<>();
             for (String fileId : form.getFileIds()) {
                 File byId = iFileRepository.getById(fileId);
@@ -229,6 +233,7 @@ public class OrderServiceImpl implements OrderService {
                 orderUpload.setUploaderType(OrderUploaderTypeEnum.CLIENT);
                 orderUpload.setOrderId(order.getOrderId());
                 orderUpload.setFileType(OrderUploadFileTypeEnum.IMAGE);
+                orderUpload.setFileId(fileId);
                 orderUpload.setCreatedId(loginId);
                 // 出错，待排查
 //                orderUpload.setCreatedId(StpUtil.getLoginIdAsString());
@@ -275,8 +280,9 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    @Transactional
     public void acceptOrder(String orderId, String loginId) {
+
+//        SaManager.getSaTokenDao().set("name11", "value", 100000);
         Set<String> orderRange = redisTemplate.opsForZSet().range(NAMESPACE_4_PENDING_ORDER, 0, orderConfig.getTopN());
         if (orderRange == null || !orderRange.contains(orderId)) {
             throw new GracefulResponseException("该工单已被受理！");
