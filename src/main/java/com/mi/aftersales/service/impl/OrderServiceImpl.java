@@ -1,8 +1,5 @@
 package com.mi.aftersales.service.impl;
 
-import cn.dev33.satoken.SaManager;
-import cn.dev33.satoken.dao.SaTokenDaoRedisJackson;
-import cn.dev33.satoken.session.SaSession;
 import cn.dev33.satoken.stp.StpUtil;
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.collection.CollUtil;
@@ -13,7 +10,6 @@ import cn.hutool.core.util.ArrayUtil;
 import cn.hutool.core.util.ObjectUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.feiniaojin.gracefulresponse.GracefulResponseException;
-import com.mi.aftersales.aspect.anno.CheckLogin;
 import com.mi.aftersales.config.enums.OrderStatusChangeEventEnum;
 import com.mi.aftersales.config.statemachine.OrderStateMachineBuilder;
 import com.mi.aftersales.config.yaml.bean.OrderConfig;
@@ -27,7 +23,6 @@ import com.mi.aftersales.util.DateUtil;
 import com.mi.aftersales.util.query.ConditionQuery;
 import com.mi.aftersales.util.query.QueryUtil;
 import com.mi.aftersales.vo.form.*;
-import com.mi.aftersales.vo.message.OrderUploadMessage;
 import com.mi.aftersales.vo.result.*;
 import org.apache.rocketmq.spring.core.RocketMQTemplate;
 import org.redisson.api.RLock;
@@ -70,8 +65,6 @@ public class OrderServiceImpl implements OrderService {
     @Resource
     private IMaterialRepository iMaterialRepository;
 
-    @Resource
-    SaTokenDaoRedisJackson saTokenDaoRedisJackson;
 
     @Resource(name = "orderRedisPersister")
     private StateMachinePersister<OrderStatusEnum, OrderStatusChangeEventEnum, String> orderRedisPersister;
@@ -164,13 +157,35 @@ public class OrderServiceImpl implements OrderService {
             }
         });
 
-        // 工程师上传文件
-        iOrderUploadRepository.lambdaQuery().eq(OrderUpload::getOrderId, order.getOrderId()).eq(OrderUpload::getUploaderType, OrderUploaderTypeEnum.ENGINEER).list().forEach(file -> {
-            File byId = iFileRepository.getById(file.getFileId());
-            if (BeanUtil.isNotEmpty(byId)) {
-                clientOrderDetailVo.getEngineerFileUrl().add(new FileVo().setUrl(COSUtil.generateAccessUrl(byId.getAccessKey())).setType("video").setFileId(file.getFileId()));
-            }
-        });
+        // 工程师上传文件（图片）
+        iOrderUploadRepository.lambdaQuery()
+                .eq(OrderUpload::getOrderId, order.getOrderId())
+                .eq(OrderUpload::getUploaderType, OrderUploaderTypeEnum.ENGINEER)
+                .eq(OrderUpload::getFileType, OrderUploadFileTypeEnum.IMAGE)
+                .list().forEach(file -> {
+                    File byId = iFileRepository.getById(file.getFileId());
+                    if (BeanUtil.isNotEmpty(byId)) {
+                        clientOrderDetailVo.getEngineerImageUrl().add(new FileVo()
+                                .setUrl(COSUtil.generateAccessUrl(byId.getAccessKey()))
+                                .setType(OrderUploadFileTypeEnum.IMAGE.name())
+                                .setFileId(file.getFileId()));
+                    }
+                });
+
+        // 工程师上传文件（视频）
+        iOrderUploadRepository.lambdaQuery()
+                .eq(OrderUpload::getOrderId, order.getOrderId())
+                .eq(OrderUpload::getUploaderType, OrderUploaderTypeEnum.ENGINEER)
+                .eq(OrderUpload::getFileType, OrderUploadFileTypeEnum.VIDEO)
+                .list().forEach(file -> {
+                    File byId = iFileRepository.getById(file.getFileId());
+                    if (BeanUtil.isNotEmpty(byId)) {
+                        clientOrderDetailVo.getEngineerVideoUrl().add(new FileVo()
+                                .setUrl(COSUtil.generateAccessUrl(byId.getAccessKey()))
+                                .setType(OrderUploadFileTypeEnum.VIDEO.name())
+                                .setFileId(file.getFileId()));
+                    }
+                });
 
         return clientOrderDetailVo;
     }
@@ -216,12 +231,9 @@ public class OrderServiceImpl implements OrderService {
         order.setClientLoginId(loginId);
         try {
             iOrderRepository.save(order);
-            System.out.println(StpUtil.getLoginIdAsString());
-            if (sendEvent(statusFlow(OrderStatusChangeEventEnum.CLIENT_COMPLETED_ORDER_CREATED, order.getOrderId()))) {
-                log.error(CharSequenceUtil.format("工单（{}）状态转换失败", order.getOrderId()));
-                throw new ServerErrorException();
+            if (Boolean.FALSE.equals(sendEvent(statusFlow(OrderStatusChangeEventEnum.CLIENT_COMPLETED_ORDER_CREATED, order.getOrderId())))) {
+                throw new IllegalOrderStatusFlowException();
             }
-            System.out.println(StpUtil.getLoginIdAsString());
             List<OrderUpload> batch = new ArrayList<>();
             for (String fileId : form.getFileIds()) {
                 File byId = iFileRepository.getById(fileId);
@@ -234,9 +246,7 @@ public class OrderServiceImpl implements OrderService {
                 orderUpload.setOrderId(order.getOrderId());
                 orderUpload.setFileType(OrderUploadFileTypeEnum.IMAGE);
                 orderUpload.setFileId(fileId);
-                orderUpload.setCreatedId(loginId);
-                // 出错，待排查
-//                orderUpload.setCreatedId(StpUtil.getLoginIdAsString());
+                orderUpload.setCreatedId(StpUtil.getLoginIdAsString());
                 batch.add(orderUpload);
             }
 
@@ -282,7 +292,6 @@ public class OrderServiceImpl implements OrderService {
     @Override
     public void acceptOrder(String orderId, String loginId) {
 
-//        SaManager.getSaTokenDao().set("name11", "value", 100000);
         Set<String> orderRange = redisTemplate.opsForZSet().range(NAMESPACE_4_PENDING_ORDER, 0, orderConfig.getTopN());
         if (orderRange == null || !orderRange.contains(orderId)) {
             throw new GracefulResponseException("该工单已被受理！");
@@ -290,7 +299,7 @@ public class OrderServiceImpl implements OrderService {
         RLock fairLock = redissonClient.getFairLock(NAMESPACE_4_ORDER_LOCK + orderId);
         try {
             if (fairLock.tryLock(10, TimeUnit.SECONDS)) {
-                if (sendEvent(statusFlow(OrderStatusChangeEventEnum.ENGINEER_COMPLETED_ACCEPT, orderId))) {
+                if (Boolean.FALSE.equals(sendEvent(statusFlow(OrderStatusChangeEventEnum.ENGINEER_COMPLETED_ACCEPT, orderId)))) {
                     throw new IllegalOrderStatusFlowException();
                 }
             } else {
@@ -339,7 +348,7 @@ public class OrderServiceImpl implements OrderService {
             if (BeanUtil.isEmpty(byId)) {
                 throw new IllegalFileIdException();
             }
-            OrderUpload orderUpload = new OrderUpload().setUploaderType(OrderUploaderTypeEnum.ENGINEER).setOrderId(order.getOrderId()).setFileType(OrderUploadFileTypeEnum.IMAGE).setCreatedId(StpUtil.getLoginIdAsString());
+            OrderUpload orderUpload = new OrderUpload().setFileId(fileId).setUploaderType(OrderUploaderTypeEnum.ENGINEER).setOrderId(order.getOrderId()).setFileType(OrderUploadFileTypeEnum.IMAGE).setCreatedId(StpUtil.getLoginIdAsString());
             batch.add(orderUpload);
         }
 
@@ -361,12 +370,12 @@ public class OrderServiceImpl implements OrderService {
             throw new IllegalOrderLoginIdException();
         }
 
-        List<OrderUpload> orderUploads = iOrderUploadRepository.lambdaQuery().eq(OrderUpload::getOrderId, orderId).eq(OrderUpload::getFileId, OrderUploadFileTypeEnum.IMAGE).eq(OrderUpload::getUploaderType, OrderUploaderTypeEnum.ENGINEER).list();
+        List<OrderUpload> orderUploads = iOrderUploadRepository.lambdaQuery().eq(OrderUpload::getOrderId, orderId).eq(OrderUpload::getFileType, OrderUploadFileTypeEnum.IMAGE).eq(OrderUpload::getUploaderType, OrderUploaderTypeEnum.ENGINEER).list();
         if (CollUtil.isEmpty(orderUploads)) {
             throw new GracefulResponseException("工程师未按要求上传检测前图片！");
         }
 
-        if (sendEvent(statusFlow(OrderStatusChangeEventEnum.ENGINEER_START_CHECKING, orderId))) {
+        if (Boolean.FALSE.equals(sendEvent(statusFlow(OrderStatusChangeEventEnum.ENGINEER_START_CHECKING, orderId)))) {
             throw new IllegalOrderStatusFlowException();
         }
     }
@@ -392,14 +401,14 @@ public class OrderServiceImpl implements OrderService {
             throw new ServerErrorException();
         }
 
-        // 用消息队列写OrderStatus日志，更新Order表就对应一条记录
-        OrderStatusLog orderStatusLog = new OrderStatusLog();
-        orderStatusLog.setOrderId(order.getOrderId());
-        orderStatusLog.setOrderStatus(order.getOrderStatus());
-        orderStatusLog.setStatusDetail("工程师上传故障描述");
-
-        Message<OrderStatusLog> msg = MessageBuilder.withPayload(orderStatusLog).build();
-        rocketmqTemplate.send(ROCKETMQ_TOPIC_4_ORDER_LOG, msg);
+        // 用消息队列写OrderStatus日志，更新Order表就对应一条记录 todo 状态没有变换，考虑不写日志
+//        OrderStatusLog orderStatusLog = new OrderStatusLog();
+//        orderStatusLog.setOrderId(order.getOrderId());
+//        orderStatusLog.setOrderStatus(order.getOrderStatus());
+//        orderStatusLog.setStatusDetail("工程师上传故障描述");
+//
+//        Message<OrderStatusLog> msg = MessageBuilder.withPayload(orderStatusLog).build();
+//        rocketmqTemplate.send(ROCKETMQ_TOPIC_4_ORDER_LOG, msg);
     }
 
     @Override
@@ -414,10 +423,15 @@ public class OrderServiceImpl implements OrderService {
             throw new IllegalOrderLoginIdException();
         }
 
+        if (CharSequenceUtil.isEmpty(order.getEngineerFaultDesc())) {
+            throw new GracefulResponseException("尚未上传故障描述，无法确认费用！");
+        }
+
         order.setManualFee(form.getManualFee());
 
         List<MiddleOrderMaterial> batch = new ArrayList<>();
         order.setMaterialFee(new BigDecimal("0"));
+        // 这里只计算费用，不扣减库存
         form.getMaterials().forEach(materialNum -> {
             Material material = iMaterialRepository.getById(materialNum.getMaterialId());
             if (BeanUtil.isNotEmpty(material)) {
@@ -428,14 +442,14 @@ public class OrderServiceImpl implements OrderService {
 
         try {
             iOrderRepository.updateById(order);
-            if (sendEvent(statusFlow(OrderStatusChangeEventEnum.ENGINEER_COMPLETED_FEE_CONFIRM, order.getOrderId()))) {
+            if (Boolean.FALSE.equals(sendEvent(statusFlow(OrderStatusChangeEventEnum.ENGINEER_COMPLETED_FEE_CONFIRM, order.getOrderId())))) {
                 throw new IllegalOrderStatusFlowException();
             }
 
             // 异步更新工单物料
             Message<List<MiddleOrderMaterial>> msg = MessageBuilder.withPayload(batch).build();
             rocketmqTemplate.send(ROCKETMQ_TOPIC_4_ORDER_MATERIAL, msg);
-        } catch (RuntimeException e) {
+        } catch (BaseCustomException e) {
             log.error(e.getMessage());
             throw e;
         }
@@ -453,7 +467,7 @@ public class OrderServiceImpl implements OrderService {
         }
         Message<OrderStatusChangeEventEnum> build = MessageBuilder.withPayload(OrderStatusChangeEventEnum.CLIENT_CONFIRMING).setHeader(STATE_MACHINE_HEADER_ORDER_NAME, orderId).setHeader(CLIENT_CHOICE, OrderStatusChangeEventEnum.CLIENT_COMPLETED_FEE_CONFIRM).build();
 
-        if (sendEvent(build)) {
+        if (Boolean.FALSE.equals(sendEvent(build))) {
             throw new IllegalOrderStatusFlowException();
         }
     }
@@ -471,7 +485,7 @@ public class OrderServiceImpl implements OrderService {
 
         Message<OrderStatusChangeEventEnum> build = MessageBuilder.withPayload(OrderStatusChangeEventEnum.CLIENT_CONFIRMING).setHeader(STATE_MACHINE_HEADER_ORDER_NAME, orderId).setHeader(CLIENT_CHOICE, OrderStatusChangeEventEnum.CLIENT_REJECT_REPAIR).build();
 
-        if (sendEvent(build)) {
+        if (Boolean.FALSE.equals(sendEvent(build))) {
             throw new IllegalOrderStatusFlowException();
         }
     }
@@ -490,7 +504,7 @@ public class OrderServiceImpl implements OrderService {
 
         Message<OrderStatusChangeEventEnum> build = MessageBuilder.withPayload(OrderStatusChangeEventEnum.ENGINEER_MATERIAL_CONFIRMING).setHeader(STATE_MACHINE_HEADER_ORDER_NAME, orderId).setHeader(ENGINEER_CHOICE, OrderStatusChangeEventEnum.ENGINEER_APPLIED_MATERIAL).build();
 
-        if (sendEvent(build)) {
+        if (Boolean.FALSE.equals(sendEvent(build))) {
             throw new IllegalOrderStatusFlowException();
         }
     }
@@ -531,9 +545,8 @@ public class OrderServiceImpl implements OrderService {
                 Message<List<MaterialLog>> msg = MessageBuilder.withPayload(materialLogs).build();
                 rocketmqTemplate.send(ROCKETMQ_TOPIC_4_MATERIAL_LOG, msg);
             }
-        } catch (GracefulResponseException e) {
-            log.error(e.getMsg());
-            throw new GracefulResponseException(e.getMsg());
+        } catch (BaseCustomException e) {
+            throw e;
         } catch (Exception e) {
             log.error(e.getMessage());
             throw new ServerErrorException();
@@ -542,7 +555,7 @@ public class OrderServiceImpl implements OrderService {
                 fairLock.unlock();
             }
         }
-        if (sendEvent(statusFlow(OrderStatusChangeEventEnum.MANAGER_DISTRIBUTED_MATERIAL, order.getOrderId()))) {
+        if (Boolean.FALSE.equals(sendEvent(statusFlow(OrderStatusChangeEventEnum.MANAGER_DISTRIBUTED_MATERIAL, order.getOrderId())))) {
             throw new IllegalOrderStatusFlowException();
         }
     }
@@ -567,7 +580,7 @@ public class OrderServiceImpl implements OrderService {
             // 来自直接开始维修的状态转换
             build = MessageBuilder.withPayload(OrderStatusChangeEventEnum.ENGINEER_MATERIAL_CONFIRMING).setHeader(STATE_MACHINE_HEADER_ORDER_NAME, orderId).setHeader(ENGINEER_CHOICE, OrderStatusChangeEventEnum.ENGINEER_START_REPAIR).build();
         }
-        if (sendEvent(build)) {
+        if (Boolean.FALSE.equals(sendEvent(build))) {
             throw new IllegalOrderStatusFlowException();
         }
     }
@@ -584,7 +597,7 @@ public class OrderServiceImpl implements OrderService {
             throw new IllegalOrderLoginIdException();
         }
 
-        if (sendEvent(statusFlow(OrderStatusChangeEventEnum.ENGINEER_START_RECHECK, order.getOrderId()))) {
+        if (Boolean.FALSE.equals(sendEvent(statusFlow(OrderStatusChangeEventEnum.ENGINEER_START_RECHECK, order.getOrderId())))) {
             throw new IllegalOrderStatusFlowException();
         }
     }
@@ -652,7 +665,7 @@ public class OrderServiceImpl implements OrderService {
             throw new GracefulResponseException("工程师未上传或未按要求上传视频文件，请联系系统管理员！");
         }
 
-        if (sendEvent(statusFlow(OrderStatusChangeEventEnum.ENGINEER_COMPLETED_RECHECK, order.getOrderId()))) {
+        if (Boolean.FALSE.equals(sendEvent(statusFlow(OrderStatusChangeEventEnum.ENGINEER_COMPLETED_RECHECK, order.getOrderId())))) {
             throw new IllegalOrderStatusFlowException();
         }
     }
@@ -669,7 +682,7 @@ public class OrderServiceImpl implements OrderService {
             throw new IllegalOrderLoginIdException();
         }
 
-        if (sendEvent(statusFlow(OrderStatusChangeEventEnum.ENGINEER_COMPLETED_RETURN, order.getOrderId()))) {
+        if (Boolean.FALSE.equals(sendEvent(statusFlow(OrderStatusChangeEventEnum.ENGINEER_COMPLETED_RETURN, order.getOrderId())))) {
             throw new IllegalOrderStatusFlowException();
         }
     }
@@ -686,7 +699,7 @@ public class OrderServiceImpl implements OrderService {
             throw new IllegalOrderLoginIdException();
         }
 
-        if (sendEvent(statusFlow(OrderStatusChangeEventEnum.CLIENT_CLOSED, order.getOrderId()))) {
+        if (Boolean.FALSE.equals(sendEvent(statusFlow(OrderStatusChangeEventEnum.CLIENT_CLOSED, order.getOrderId())))) {
             throw new IllegalOrderStatusFlowException();
         }
     }
@@ -720,6 +733,6 @@ public class OrderServiceImpl implements OrderService {
                 stateMachine.stop();
             }
         }
-        return !result;
+        return result;
     }
 }

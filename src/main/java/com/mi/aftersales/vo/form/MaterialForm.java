@@ -35,6 +35,9 @@ public class MaterialForm {
     @Schema(description = "计量单位")
     private String unit;
 
+    @Schema(description = "物料所属Spu分类Id")
+    private Integer spuCategoryId;
+
     @Schema(description = "物料剩余库存")
     @Min(value = 0, message = "库存数量必须大于等于0")
     private BigDecimal stock;

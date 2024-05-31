@@ -67,7 +67,7 @@ public class OrderController {
         orderService.acceptOrder(orderId, StpUtil.getLoginIdAsString());
     }
 
-    @PostMapping(path = "/engineer/upload/image")
+    @PostMapping(path = "/engineer/upload/before")
     @Operation(summary = "工程师上传检测前图片", description = "工程师上传检测前图片")
     @CheckLogin
     public void engineerAcceptOrder(@RequestBody @Valid EngineerUploadForm form) {

@@ -49,8 +49,11 @@ public class ClientOrderDetailVo {
     @Schema(description = "客户上传文件")
     private List<FileVo> clientFileUrl = new ArrayList<>();
 
-    @Schema(description = "工程师上传文件")
-    private List<FileVo> engineerFileUrl = new ArrayList<>();
+    @Schema(description = "工程师上传图片文件")
+    private List<FileVo> engineerImageUrl = new ArrayList<>();
+
+    @Schema(description = "工程师上传视频文件")
+    private List<FileVo> engineerVideoUrl = new ArrayList<>();
 
     private List<ClientOrderStatusLogVo> statusLogs = new ArrayList<>();
 }

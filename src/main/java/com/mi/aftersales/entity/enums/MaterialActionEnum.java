@@ -1,5 +1,6 @@
 package com.mi.aftersales.entity.enums;
 
+import cn.hutool.crypto.symmetric.DES;
 import com.baomidou.mybatisplus.annotation.IEnum;
 
 /**
@@ -12,6 +13,9 @@ public enum MaterialActionEnum implements IEnum<Integer> {
     // 库存操作
     STOCK_IN(1, "入库"),
     STOCK_OUT(2, "出库"),
+    NEW(3, "新增"),
+    DELETE(4, "删除"),
+    UPDATE(5, "更新"),
 
     ;
     private int value;
@@ -25,5 +29,9 @@ public enum MaterialActionEnum implements IEnum<Integer> {
     @Override
     public Integer getValue() {
         return value;
+    }
+
+    public String getDesc() {
+        return desc;
     }
 }
