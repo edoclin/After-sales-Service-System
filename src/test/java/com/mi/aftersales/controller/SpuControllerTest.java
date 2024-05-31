@@ -1,6 +1,7 @@
 package com.mi.aftersales.controller;
 
 import com.alibaba.fastjson.JSON;
+import com.mi.aftersales.config.TestConfig;
 import com.mi.aftersales.util.query.ConditionQuery;
 import com.mi.aftersales.util.query.QueryParam;
 import com.mi.aftersales.vo.form.SpuForm;
@@ -11,14 +12,12 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.http.MediaType;
+
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.context.web.WebAppConfiguration;
-import org.springframework.test.web.servlet.MockMvc;
+
 import org.springframework.test.web.servlet.MvcResult;
-import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
-import org.springframework.test.web.servlet.result.MockMvcResultHandlers;
-import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
+
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import javax.annotation.Resource;
@@ -26,7 +25,6 @@ import javax.annotation.Resource;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * @author QYenon
@@ -40,13 +38,14 @@ class SpuControllerTest {
     private static final Logger logger = LoggerFactory.getLogger(SkuControllerTest.class);
 
     @Resource
-    private SpuController spuController;
+    private TestConfig testConfig;
 
-    private MockMvc mockMvc;
+    @Resource
+    private SpuController spuController;
 
     @BeforeEach
     void setUp() {
-        mockMvc = MockMvcBuilders.standaloneSetup(spuController).build();
+        testConfig.setMockMvc(MockMvcBuilders.standaloneSetup(spuController).build());
     }
 
     @Test
@@ -54,22 +53,14 @@ class SpuControllerTest {
         SpuForm form = new SpuForm();
         form.setCategoryId(11);
         form.setWeight(Short.valueOf("1"));
-        form.setSpuName("小米13");
+        form.setSpuName("小米12");
         form.setSpuCoverFileId("1796067337615691776");
-        form.setSpuDesc("小米13系列手机");
+        form.setSpuDesc("小米12系列手机");
         form.setVisible(false);
         String strJson = JSON.toJSONString(form);
 
-        MvcResult mvcResult = mockMvc.perform(
-                        MockMvcRequestBuilders.post("/aftersales/spu/")
-                                .header("aftersales-token", "Bearer 4V_3nTMacaHes5kbk_T6rKdccUrQb0c5zU__")
-                                .accept(MediaType.parseMediaType("application/json;charset=UTF-8"))
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content(strJson)
-                )
-                .andExpect(MockMvcResultMatchers.status().isOk())
-                .andDo(MockMvcResultHandlers.print())
-                .andReturn();
+        MvcResult mvcResult = testConfig.postMockMvcResult("/aftersales/spu/", strJson);
+
         logger.info("调用返回的结果：{}", mvcResult.getResponse().getContentAsString());
 
     }
@@ -81,16 +72,8 @@ class SpuControllerTest {
         form.setVisible(true);
         String strJson = JSON.toJSONString(form);
 
-        MvcResult mvcResult = mockMvc.perform(
-                        MockMvcRequestBuilders.put("/aftersales/spu/visible")
-                                .header("aftersales-token", "Bearer 4V_3nTMacaHes5kbk_T6rKdccUrQb0c5zU__")
-                                .accept(MediaType.parseMediaType("application/json;charset=UTF-8"))
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content(strJson)
-                )
-                .andExpect(MockMvcResultMatchers.status().isOk())
-                .andDo(MockMvcResultHandlers.print())
-                .andReturn();
+        MvcResult mvcResult = testConfig.putMockMvcResult("/aftersales/spu/visible", strJson);
+
         logger.info("调用返回的结果：{}", mvcResult.getResponse().getContentAsString());
 
     }
@@ -103,18 +86,9 @@ class SpuControllerTest {
         form.setLimit(10L);
         String strJson = JSON.toJSONString(form);
 
-        MvcResult mvcResult = mockMvc.perform(
-                        MockMvcRequestBuilders.post("/aftersales/spu/client/" + categoryId)
-                                .header("aftersales-token", "Bearer 4V_3nTMacaHes5kbk_T6rKdccUrQb0c5zU__")
-                                .accept(MediaType.parseMediaType("application/json;charset=UTF-8"))
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content(strJson)
-                )
-                .andExpect(MockMvcResultMatchers.status().isOk())
-                .andDo(MockMvcResultHandlers.print())
-                .andReturn();
-        logger.info("调用返回的结果：{}", mvcResult.getResponse().getContentAsString());
+        MvcResult mvcResult = testConfig.postMockMvcResult("/aftersales/spu/client/" + categoryId, strJson);
 
+        logger.info("调用返回的结果：{}", mvcResult.getResponse().getContentAsString());
 
     }
 
@@ -131,18 +105,9 @@ class SpuControllerTest {
 
         String strJson = JSON.toJSONString(form);
 
-        MvcResult mvcResult = mockMvc.perform(
-                        MockMvcRequestBuilders.post("/aftersales/spu/list/" + categoryId)
-                                .header("aftersales-token", "Bearer 4V_3nTMacaHes5kbk_T6rKdccUrQb0c5zU__")
-                                .accept(MediaType.parseMediaType("application/json;charset=UTF-8"))
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content(strJson)
-                )
-                .andExpect(MockMvcResultMatchers.status().isOk())
-                .andDo(MockMvcResultHandlers.print())
-                .andReturn();
-        logger.info("调用返回的结果：{}", mvcResult.getResponse().getContentAsString());
+        MvcResult mvcResult = testConfig.postMockMvcResult("/aftersales/spu/list/" + categoryId, strJson);
 
+        logger.info("调用返回的结果：{}", mvcResult.getResponse().getContentAsString());
 
     }
 }

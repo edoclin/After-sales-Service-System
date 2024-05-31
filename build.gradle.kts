@@ -2,6 +2,8 @@ plugins {
     java
     id("org.springframework.boot") version "2.7.6"
     id("io.spring.dependency-management") version "1.0.11.RELEASE"
+    id("jacoco")
+    id("org.sonarqube") version "4.0.0.2929"
 }
 
 group = "com.mi"
@@ -29,6 +31,10 @@ val junitJupiterEngineVersion = "5.7.2"
 
 java {
     sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(17))
+    }
 }
 configurations {
     compileOnly {
@@ -85,4 +91,32 @@ dependencies {
 
 tasks.withType<Test> {
     useJUnitPlatform()
+    finalizedBy(tasks.jacocoTestReport)//确保在测试运行后生成 Jacoco 报告
+}
+
+jacoco {
+    toolVersion = "0.8.7"
+}
+
+tasks.jacocoTestReport {
+    dependsOn(tasks.test)
+    reports {
+        xml.required.set(true)
+        html.required.set(true)
+    }
+}
+
+
+sonarqube {
+    properties {
+        property ("sonar.projectKey", "my-project")
+        property ("sonar.host.url", "http://localhost:9000")
+        property ("sonar.login", "your_sonar_token") // Replace with your actual token
+        property ("sonar.language", "java")
+        property ("sonar.sources", "src/main/java")
+        property ("sonar.tests", "src/test/java")
+        property ("sonar.java.binaries", "build/classes/java/main")
+        property ("sonar.junit.reportPaths", "build/test-results/test")
+        property ("sonar.jacoco.reportPaths", "build/jacoco/test.exec")
+    }
 }

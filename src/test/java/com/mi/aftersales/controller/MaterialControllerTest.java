@@ -1,8 +1,7 @@
 package com.mi.aftersales.controller;
 
 import com.alibaba.fastjson.JSON;
-import com.mi.aftersales.entity.Material;
-
+import com.mi.aftersales.config.TestConfig;
 
 import com.mi.aftersales.vo.form.ManngerUpdateMaterialForm;
 import com.mi.aftersales.vo.form.MaterialForm;
@@ -13,14 +12,9 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.http.MediaType;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.context.web.WebAppConfiguration;
-import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
-import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
-import org.springframework.test.web.servlet.result.MockMvcResultHandlers;
-import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 
@@ -43,22 +37,20 @@ class MaterialControllerTest {
     private static final Logger logger = LoggerFactory.getLogger(MaterialControllerTest.class);
 
     @Resource
+    private TestConfig testConfig;
+
+    @Resource
     private MaterialController materialController;
-
-
-
-    private MockMvc mockMvc;
-
 
     @BeforeEach
     void setUp() {
-        mockMvc = MockMvcBuilders.standaloneSetup(materialController).build();
+        testConfig.setMockMvc(MockMvcBuilders.standaloneSetup(materialController).build());
     }
 
     @Test
     public void addMaterial() throws Exception {
         MaterialForm form = new MaterialForm();
-        form.setMaterialName("Test2");
+        form.setMaterialName("Test11223");
         form.setMaterialDesc("TestAddMaterial");
         form.setUnit("test");
         form.setCost(BigDecimal.valueOf(5));
@@ -66,23 +58,11 @@ class MaterialControllerTest {
         form.setStock(BigDecimal.valueOf(20));
         form.setAlertNum(BigDecimal.valueOf(2));
 
-
-
         String strJson = JSON.toJSONString(form);
 
-//        materialController.addMaterial(form);
+        MvcResult mvcResult = testConfig.postMockMvcResult("/aftersales/material/", strJson);
 
-        MvcResult mvcResult = mockMvc.perform(
-                MockMvcRequestBuilders.post("/aftersales/material/")
-                        .accept(MediaType.parseMediaType("application/json;charset=UTF-8"))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(strJson)
-                )
-                .andExpect(MockMvcResultMatchers.status().isOk())
-                .andDo(MockMvcResultHandlers.print())
-                .andReturn();
         logger.info("调用返回的结果：{}", mvcResult.getResponse().getContentAsString());
-
     }
 
     @Test
@@ -90,7 +70,7 @@ class MaterialControllerTest {
 
         // 创建一个更新物料表单对象
         ManngerUpdateMaterialForm form = new ManngerUpdateMaterialForm();
-        form.setMaterialId("1795750940717076480");
+        form.setMaterialId("1795767106466471936");
         form.setMaterialName("UpdatedTest1");
         form.setMaterialDesc("UpdatedTestUpdateMaterial");
         form.setUnit("test");
@@ -101,25 +81,9 @@ class MaterialControllerTest {
 
         String strJson = JSON.toJSONString(form);
 
-        // 模拟Service层根据ID获取物料信息
-        Material material = new Material();
-        material.setMaterialId("1795750940717076480");
-        material.setMaterialName("Test");
-
-
-
         // 发送PUT请求，更新物料信息
-        MvcResult mvcResult = mockMvc.perform(
-                        MockMvcRequestBuilders.put("/aftersales/material/")
-                                .accept(MediaType.parseMediaType("application/json;charset=UTF-8"))
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content(strJson)
-                )
-                .andExpect(MockMvcResultMatchers.status().isOk())
-                .andDo(MockMvcResultHandlers.print())
-                .andReturn();
+        MvcResult mvcResult = testConfig.putMockMvcResult("/aftersales/material/", strJson);
+
         logger.info("调用返回的结果：{}", mvcResult.getResponse().getContentAsString());
     }
-
-
 }
