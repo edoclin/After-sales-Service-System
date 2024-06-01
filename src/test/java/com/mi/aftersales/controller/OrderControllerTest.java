@@ -82,7 +82,7 @@ class OrderControllerTest {
         ClientOrderForm form = new ClientOrderForm();
         form.setSkuId("1791492367829008384");
         form.setFapiaoId("1794933315766226944");
-        form.setSn("sn12345");
+        form.setSn("QY1234");
         form.setOrderType("SEND_FOR");
         form.setClientFaultDesc("test");
         form.setCenterId("String");
@@ -116,7 +116,7 @@ class OrderControllerTest {
     @Test
     void testEngineerAcceptOrder() throws Exception {
 
-        String[]  fileIds = {"1795362152723595264","1795362519859372032"};
+        String[] fileIds = {"1796427449530294272"};
         EngineerUploadForm form = new EngineerUploadForm();
         form.setOrderId("1796192674496368640");
         form.setFileIds(fileIds);
@@ -131,7 +131,7 @@ class OrderControllerTest {
     void startRepairMachine() throws Exception {
         String orderId = "1796192674496368640";
 
-        MvcResult mvcResult = testConfig.getMockMvcResult("/aftersales/order/engineer/checking/" + orderId);
+        MvcResult mvcResult = testConfig.putMockMvcResult("/aftersales/order/engineer/checking/" + orderId);
 
         logger.info("调用返回的结果：{}", mvcResult.getResponse().getContentAsString());
     }
@@ -207,9 +207,9 @@ class OrderControllerTest {
     @Test
     void engineerStartRepairing() throws Exception {
         String orderId = "1796192674496368640";
-        Boolean material = false;
+        Boolean material = true;
 
-        MvcResult mvcResult = testConfig.putMockMvcResult("/aftersales/order/engineer/repair/" + orderId + material);
+        MvcResult mvcResult = testConfig.putMockMvcResult("/aftersales/order/engineer/repair/" + orderId+ "/" + material);
 
         logger.info("调用返回的结果：{}", mvcResult.getResponse().getContentAsString());
     }

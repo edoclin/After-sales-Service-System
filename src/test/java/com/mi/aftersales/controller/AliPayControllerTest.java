@@ -42,7 +42,7 @@ class AliPayControllerTest {
     @Test
     public void alipay() throws Exception {
 
-        String orderId = "1795465445231661056";
+        String orderId = "1796192674496368640";
 
         MvcResult mvcResult = testConfig.getMockMvcResult("/aftersales/alipay/pay/" + orderId);
 
