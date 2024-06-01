@@ -673,6 +673,7 @@ create table t_material
     material_id            varchar(32)    default ''                not null comment '物料ID'
         primary key,
     material_name          varchar(256)   default ''                not null comment '物料名称',
+    spu_category_id        int            default 0                 not null comment '物料所属商品Spu',
     material_desc          text                                     null comment '物料富文本描述',
     material_cover_file_id varchar(32)    default ''                not null comment '物料封面描述图片',
     unit                   varchar(64)    default ''                not null comment '计量单位',
