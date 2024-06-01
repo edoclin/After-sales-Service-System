@@ -1,17 +1,34 @@
 package com.mi.aftersales.service.impl;
 
 import cn.dev33.satoken.stp.StpUtil;
+import cn.hutool.core.text.CharSequenceUtil;
+import cn.hutool.core.util.IdUtil;
+import com.mi.aftersales.config.yaml.bean.TencentCosConfig;
 import com.mi.aftersales.entity.File;
+import com.mi.aftersales.exception.graceful.ServerErrorException;
 import com.mi.aftersales.repository.IFileRepository;
 import com.mi.aftersales.service.FileService;
 import com.mi.aftersales.vo.form.FileForm;
 import com.mi.aftersales.vo.result.FileUploadVo;
+import com.qcloud.cos.COSClient;
+import com.qcloud.cos.ClientConfig;
+import com.qcloud.cos.auth.BasicCOSCredentials;
+import com.qcloud.cos.auth.COSCredentials;
+import com.qcloud.cos.model.PutObjectRequest;
+import com.qcloud.cos.model.UploadResult;
+import com.qcloud.cos.region.Region;
+import com.qcloud.cos.transfer.TransferManager;
+import net.coobird.thumbnailator.Thumbnails;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
 import javax.validation.Valid;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -25,12 +42,16 @@ import java.util.List;
  */
 @Service
 public class FileServiceImpl implements FileService {
+    private static final Logger log = LoggerFactory.getLogger(FileServiceImpl.class);
     @Resource
     private IFileRepository iFileRepository;
 
+    @Resource
+    private TencentCosConfig cosConfig;
+
     @Transactional
     @Override
-    public List<FileUploadVo> postFile(@RequestBody @Valid FileForm form) {
+    public List<FileUploadVo> postFile(FileForm form) {
         ArrayList<FileUploadVo> result = new ArrayList<>();
         ArrayList<File> files = new ArrayList<>();
 
@@ -43,5 +64,43 @@ public class FileServiceImpl implements FileService {
         }
 
         return result;
+    }
+
+    @Override
+    public List<FileUploadVo> uploadByServer(MultipartFile[] files) {
+        FileForm fileForm = new FileForm();
+
+        ClientConfig clientConfig = new ClientConfig(new Region(cosConfig.getRegion()));
+        COSCredentials cred = new BasicCOSCredentials(cosConfig.getSecretId(), cosConfig.getSecretKey());
+        COSClient cosClient = new COSClient(cred, clientConfig);
+        TransferManager transferManager = new TransferManager(cosClient);
+
+        try {
+
+            for (MultipartFile file : files) {
+
+                String key = CharSequenceUtil.format("{}_{}", Long.toHexString(IdUtil.getSnowflakeNextId()), file.getOriginalFilename());
+                java.io.File localFile = new java.io.File(cosConfig.getTempPath(), key);
+                file.transferTo(localFile);
+
+                java.io.File uploadFile = new java.io.File(cosConfig.getTempPath(), "zip_" + key);
+                Thumbnails.of(localFile).scale(.1f).outputQuality(.35f).toFile(uploadFile);
+                PutObjectRequest putObjectRequest = new PutObjectRequest(cosConfig.getBucketName(), cosConfig.getPrefix() + key, uploadFile);
+                UploadResult uploadResult = transferManager.upload(putObjectRequest).waitForUploadResult();
+                fileForm.getKeys().add(uploadResult.getKey());
+                if (Boolean.FALSE.equals(localFile.delete()) || Boolean.FALSE.equals(uploadFile.delete())) {
+                    log.warn("缓存文件删除失败：{}", key);
+                }
+            }
+        } catch (IOException e) {
+            log.error("文件转换失败！");
+            log.error(e.getMessage());
+            throw new ServerErrorException();
+        } catch (InterruptedException e) {
+            log.error("文件上传失败！");
+            log.error(e.getMessage());
+            throw new ServerErrorException();
+        }
+        return postFile(fileForm);
     }
 }
