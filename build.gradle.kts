@@ -16,7 +16,7 @@ val mybatisPlusVersion = "3.5.6"
 val gracefulResponseVersion = "3.5.2-boot2"
 val jedisVersion = "5.1.2"
 val alipaySdkVersion = "4.35.87.ALL"
-val cosApiSdkVersion = "5.6.211"
+val cosApiSdkVersion = "5.6.213"
 val statemachineVersion = "4.0.0"
 val springfoxVersion = "3.0.0"
 val freemarkerVersion = "2.3.31"
@@ -29,6 +29,7 @@ val mockitoInlineVersion = "4.8.0"
 val junitJupiterApiVersion = "5.7.2"
 val junitJupiterEngineVersion = "5.7.2"
 val lettuceVersion = "6.3.2.RELEASE"
+val thumbnailatorVersion = "0.4.20"
 
 java {
     sourceCompatibility = JavaVersion.VERSION_17
@@ -53,16 +54,18 @@ repositories {
 
 dependencies {
     implementation("com.alipay.sdk:alipay-sdk-java:$alipaySdkVersion")
+
     implementation("org.redisson:redisson-spring-boot-starter:$redissonVersion")
+
     implementation("org.springdoc:springdoc-openapi-ui:$springDocVersion")
+
     implementation("org.dromara.sms4j:sms4j-spring-boot-starter:$sms4jVersion")
     implementation("org.springframework.boot:spring-boot-starter-aop")
-    // https://mvnrepository.com/artifact/org.apache.rocketmq/rocketmq-spring-boot-starter
+
     implementation("org.apache.rocketmq:rocketmq-spring-boot-starter:$rocketmqVersion")
 
     // 状态机
     implementation("org.springframework.statemachine:spring-statemachine-core:$statemachineVersion")
-    // https://mvnrepository.com/artifact/org.springframework.data/spring-data-redis
     implementation("org.springframework.statemachine:spring-statemachine-data-redis:$statemachineVersion")
 
     implementation("cn.hutool:hutool-all:$hutoolVersion")
@@ -92,6 +95,9 @@ dependencies {
     // JUnit 5依赖
     testImplementation("org.junit.jupiter:junit-jupiter-api:$junitJupiterApiVersion")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:$junitJupiterEngineVersion")
+
+    implementation("net.coobird:thumbnailator:$thumbnailatorVersion")
+
 }
 
 tasks.withType<Test> {

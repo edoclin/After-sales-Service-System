@@ -37,6 +37,7 @@ public interface OrderService {
     String RETURNING = "RETURNING";
     String CLOSED = "CLOSED";
     String STATE_MACHINE_HEADER_ORDER_NAME = "order-id";
+    String STATE_MACHINE_HEADER_CATEGORY_ID = "category-id";
     String CLIENT_CHOICE = "client-choice";
     String ENGINEER_CHOICE = "engineer-choice";
 
@@ -76,7 +77,7 @@ public interface OrderService {
      *
      * @return 待办工单列表
      */
-    List<EngineerSimpleOrderVo> listPendingOrders();
+    List<EngineerSimpleOrderVo> listPendingOrders(Integer spuCategoryId);
 
     /**
      * 接受工单。

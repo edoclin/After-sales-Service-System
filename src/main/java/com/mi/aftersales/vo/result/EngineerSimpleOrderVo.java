@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Accessors;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -31,7 +32,7 @@ public class EngineerSimpleOrderVo {
     private String skuDisplayName;
 
     @Schema(description = "分类名称")
-    private List<String> categories;
+    private List<String> categories = new ArrayList<>();
 
     @Schema(description = "创建时间")
     private String createdTime;

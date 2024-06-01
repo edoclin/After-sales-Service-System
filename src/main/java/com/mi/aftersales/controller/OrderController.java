@@ -50,12 +50,12 @@ public class OrderController {
         orderService.createOrder(form, StpUtil.getLoginIdAsString());
     }
 
-    @GetMapping(path = "/engineer/pending")
+    @GetMapping(path = "/engineer/pending/{spuCategoryId}")
     @Operation(summary = "工程师查询待办工单", description = "工程师查询待办工单")
     @CheckLogin
-    public List<EngineerSimpleOrderVo> listPendingOrder() {
+    public List<EngineerSimpleOrderVo> listPendingOrder(@PathVariable Integer spuCategoryId) {
         StpUtil.checkRole(EmployeeRoleEnum.ENGINEER.name());
-        return orderService.listPendingOrders();
+        return orderService.listPendingOrders(spuCategoryId);
     }
 
     @GetMapping(path = "/engineer/accept/{orderId}")

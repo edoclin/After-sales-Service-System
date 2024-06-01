@@ -4,6 +4,7 @@ import com.mi.aftersales.vo.form.FileForm;
 import com.mi.aftersales.vo.result.FileUploadVo;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.validation.Valid;
 import java.util.List;
@@ -18,6 +19,8 @@ import java.util.List;
  */
 public interface FileService {
 
-    @Transactional
-    List<FileUploadVo> postFile(@RequestBody @Valid FileForm form);
+
+    List<FileUploadVo> postFile(FileForm form);
+
+    List<FileUploadVo>  uploadByServer(MultipartFile[] files);
 }

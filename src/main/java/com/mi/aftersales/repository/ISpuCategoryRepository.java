@@ -23,5 +23,5 @@ public interface ISpuCategoryRepository extends IService<SpuCategory> {
      */
     List<SpuCategory4ClientVo> listSpuCategory4Client(Integer parentId);
 
-    List<String> listAllSpuCategoryName(Integer categoryId);
+    List<SpuCategory> listAllSpuCategoryName(Integer categoryId);
 }

@@ -3,15 +3,21 @@ package com.mi.aftersales.config.statemachine;
 import cn.dev33.satoken.SaManager;
 import cn.dev33.satoken.stp.StpUtil;
 import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.text.CharSequenceUtil;
 import com.feiniaojin.gracefulresponse.GracefulResponseException;
 import com.mi.aftersales.config.enums.OrderStatusChangeEventEnum;
 import com.mi.aftersales.entity.Order;
 import com.mi.aftersales.entity.OrderStatusLog;
+import com.mi.aftersales.entity.Spu;
 import com.mi.aftersales.entity.enums.OrderStatusEnum;
+import com.mi.aftersales.exception.graceful.IllegalOrderIdException;
 import com.mi.aftersales.exception.graceful.ServerErrorException;
+import com.mi.aftersales.repository.ISpuCategoryRepository;
 import com.mi.aftersales.service.OrderService;
 import com.mi.aftersales.repository.IOrderRepository;
+import com.mi.aftersales.util.DateUtil;
+import com.mi.aftersales.vo.message.PendingOrder;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.rocketmq.spring.core.RocketMQTemplate;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -23,6 +29,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 
+import static com.mi.aftersales.service.OrderService.STATE_MACHINE_HEADER_CATEGORY_ID;
 import static com.mi.aftersales.util.RocketMqTopic.ROCKETMQ_TOPIC_4_ORDER_LOG;
 import static com.mi.aftersales.util.RocketMqTopic.ROCKETMQ_TOPIC_4_SMS;
 
@@ -41,7 +48,10 @@ public class OrderEventConfig {
     private IOrderRepository iOrderRepository;
 
     @Resource
-    private RedisTemplate<String, String> redisTemplate;
+    private ISpuCategoryRepository iSpuCategoryRepository;
+
+    @Resource
+    private RedisTemplate<String, Object> redisTemplate;
 
     @Resource
     private RocketMQTemplate rocketmqTemplate;
@@ -63,7 +73,7 @@ public class OrderEventConfig {
         Order order = iOrderRepository.getById((String) message.getHeaders().get(OrderService.STATE_MACHINE_HEADER_ORDER_NAME));
 
         if (BeanUtil.isEmpty(order)) {
-            throw new GracefulResponseException("工单状态转换：工单Id不合法！");
+            throw new IllegalOrderIdException();
         }
         order.setOrderStatus(OrderStatusEnum.WAITING);
         OrderStatusLog orderStatusLog = new OrderStatusLog();
@@ -79,8 +89,17 @@ public class OrderEventConfig {
         rocketmqTemplate.syncSend(ROCKETMQ_TOPIC_4_ORDER_LOG, msg);
         sendSms(order.getOrderId());
 
+
+        Integer spuCategoryId = (Integer) message.getHeaders().get(STATE_MACHINE_HEADER_CATEGORY_ID);
+
         // 加入待办工单，设置时间戳
-        redisTemplate.opsForZSet().add(OrderService.NAMESPACE_4_PENDING_ORDER, order.getOrderId(), System.currentTimeMillis());
+        PendingOrder pendingOrder = new PendingOrder();
+        pendingOrder
+                .setCreatedTime(DateUtil.yyyyMMddHHmm(order.getCreatedTime()))
+                .setOrderId(order.getOrderId())
+                .setCategories(iSpuCategoryRepository.listAllSpuCategoryName(spuCategoryId));
+
+        redisTemplate.opsForZSet().add(OrderService.NAMESPACE_4_PENDING_ORDER, pendingOrder, System.currentTimeMillis());
         return true;
     }
 
@@ -94,10 +113,9 @@ public class OrderEventConfig {
     @OnTransition(source = OrderService.WAITING, target = OrderService.ACCEPTED)
     public boolean acceptOrderTransition(Message<OrderStatusChangeEventEnum> message) {
         Order order = iOrderRepository.getById((String) message.getHeaders().get(OrderService.STATE_MACHINE_HEADER_ORDER_NAME));
-        SaManager.getSaTokenDao().set("name1", "value", 100000);
 
         if (BeanUtil.isEmpty(order)) {
-            throw new GracefulResponseException("工单状态转换：工单Id不合法！");
+            throw new IllegalOrderIdException();
         }
 
         order.setOrderStatus(OrderStatusEnum.ACCEPTED);

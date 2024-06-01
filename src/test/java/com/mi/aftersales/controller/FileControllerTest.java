@@ -1,5 +1,6 @@
 package com.mi.aftersales.controller;
 
+import cn.hutool.core.collection.CollUtil;
 import com.alibaba.fastjson.JSON;
 import com.mi.aftersales.config.TestConfig;
 import com.mi.aftersales.vo.form.FileForm;
@@ -49,7 +50,7 @@ class FileControllerTest {
                 "/avatar/test2.jpg",
                 "/avatar/test3.jpg"};
         FileForm form = new FileForm();
-        form.setKeys(keys);
+        form.setKeys(CollUtil.toList(keys));
         String strJson = JSON.toJSONString(form);
 
         MvcResult mvcResult = testConfig.postMockMvcResult("/aftersales/file/upload", strJson);

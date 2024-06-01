@@ -7,7 +7,6 @@ import cn.hutool.core.convert.ConvertException;
 import cn.hutool.core.date.LocalDateTimeUtil;
 import cn.hutool.core.text.CharSequenceUtil;
 import cn.hutool.core.util.ArrayUtil;
-import cn.hutool.core.util.ObjectUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.feiniaojin.gracefulresponse.GracefulResponseException;
 import com.mi.aftersales.config.enums.OrderStatusChangeEventEnum;
@@ -23,6 +22,7 @@ import com.mi.aftersales.util.DateUtil;
 import com.mi.aftersales.util.query.ConditionQuery;
 import com.mi.aftersales.util.query.QueryUtil;
 import com.mi.aftersales.vo.form.*;
+import com.mi.aftersales.vo.message.PendingOrder;
 import com.mi.aftersales.vo.result.*;
 import org.apache.rocketmq.spring.core.RocketMQTemplate;
 import org.redisson.api.RLock;
@@ -41,6 +41,7 @@ import javax.annotation.Resource;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
@@ -97,7 +98,7 @@ public class OrderServiceImpl implements OrderService {
     private RocketMQTemplate rocketmqTemplate;
 
     @Resource
-    private RedisTemplate<String, String> redisTemplate;
+    private RedisTemplate<String, Object> redisTemplate;
 
     @Resource
     private IFileRepository iFileRepository;
@@ -111,7 +112,7 @@ public class OrderServiceImpl implements OrderService {
     @Override
     public List<ClientOrderSimpleVo> listClientOrders(ConditionQuery query, String loginId) {
         QueryWrapper<Order> wrapper = QueryUtil.buildWrapper(query, Order.class);
-        wrapper.eq("client_login_id", loginId);
+        wrapper = wrapper.eq("client_login_id", loginId).orderByDesc("created_time");
         List<ClientOrderSimpleVo> result = new ArrayList<>();
         iOrderRepository.list(wrapper).forEach(order -> {
             ClientOrderSimpleVo item = new ClientOrderSimpleVo();
@@ -204,6 +205,8 @@ public class OrderServiceImpl implements OrderService {
             throw new GracefulResponseException("非法的商品Sku！");
         }
 
+        Spu spu = iSpuRepository.getById(sku.getSpuId());
+
         if (form.getFileIds().length > 3) {
             throw new GracefulResponseException("上传图片超出限制（3张）");
         }
@@ -228,10 +231,18 @@ public class OrderServiceImpl implements OrderService {
             throw new GracefulResponseException("预约时间不能早于当前时间！");
         }
 
+
         order.setClientLoginId(loginId);
         try {
             iOrderRepository.save(order);
-            if (Boolean.FALSE.equals(sendEvent(statusFlow(OrderStatusChangeEventEnum.CLIENT_COMPLETED_ORDER_CREATED, order.getOrderId())))) {
+
+            Message<OrderStatusChangeEventEnum> message = MessageBuilder
+                    .withPayload(OrderStatusChangeEventEnum.CLIENT_COMPLETED_ORDER_CREATED)
+                    .setHeader(STATE_MACHINE_HEADER_ORDER_NAME, order.getOrderId())
+                    .setHeader(STATE_MACHINE_HEADER_CATEGORY_ID, spu.getCategoryId())
+                    .build();
+
+            if (Boolean.FALSE.equals(sendEvent(message))) {
                 throw new IllegalOrderStatusFlowException();
             }
             List<OrderUpload> batch = new ArrayList<>();
@@ -262,38 +273,60 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    public List<EngineerSimpleOrderVo> listPendingOrders() {
+    public List<EngineerSimpleOrderVo> listPendingOrders(Integer spuCategoryId) {
         ArrayList<EngineerSimpleOrderVo> result = new ArrayList<>();
-        ArrayList<Order> orders = new ArrayList<>();
-        // 按工单提交先后顺序，一次只能查询topN个
-        Set<String> pendingOrders = redisTemplate.opsForZSet().range(NAMESPACE_4_PENDING_ORDER, 0, orderConfig.getTopN() - 1);
-        if (ObjectUtil.isNotNull(pendingOrders)) {
-            pendingOrders.forEach(orderId -> {
-                Order order = iOrderRepository.getById(orderId);
-                if (BeanUtil.isNotEmpty(order)) {
-                    orders.add(order);
+
+//         按工单提交先后顺序，一次只能查询topN个
+        Set<Object> pendingOrders;
+        for (int i = 0; ; i += orderConfig.getTopN()) {
+            pendingOrders = redisTemplate.opsForZSet().range(NAMESPACE_4_PENDING_ORDER, i, i + orderConfig.getTopN() - 1);
+            if (CollUtil.isEmpty(pendingOrders)) {
+                break;
+            }
+            for (Object pendingOrder : pendingOrders) {
+                if (pendingOrder instanceof PendingOrder) {
+                    if (!CollUtil.contains(((PendingOrder) pendingOrder).getCategories(), item -> Objects.equals(item.getCategoryId(), spuCategoryId))) {
+                        // 不属于查询分类
+                        continue;
+                    }
+                    Order order = iOrderRepository.getById(((PendingOrder) pendingOrder).getOrderId());
+                    if (BeanUtil.isNotEmpty(order)) {
+                        EngineerSimpleOrderVo item = new EngineerSimpleOrderVo();
+                        BeanUtil.copyProperties(order, item, DateUtil.copyDate2yyyyMMddHHmm());
+                        Sku sku = iSkuRepository.getById(order.getSkuId());
+                        item.setSkuDisplayName(sku.getSkuDisplayName());
+                        Spu spu = iSpuRepository.getById(sku.getSpuId());
+                        item.setSpuName(spu.getSpuName());
+                        ((PendingOrder) pendingOrder).getCategories().forEach(category -> item.getCategories().add(category.getCategoryName()));
+                        item.setOrderType(order.getOrderType().getDesc());
+                        result.add(item);
+                        if (result.size() >= orderConfig.getTopN()) {
+                            return result;
+                        }
+                    }
                 }
-            });
-            orders.forEach(order -> {
-                EngineerSimpleOrderVo item = new EngineerSimpleOrderVo();
-                BeanUtil.copyProperties(order, item, DateUtil.copyDate2yyyyMMddHHmm());
-                Sku sku = iSkuRepository.getById(order.getSkuId());
-                item.setSkuDisplayName(sku.getSkuDisplayName());
-                Spu spu = iSpuRepository.getById(sku.getSpuId());
-                item.setSpuName(spu.getSpuName());
-                item.setCategories(iSpuCategoryRepository.listAllSpuCategoryName(spu.getCategoryId()));
-                item.setOrderType(order.getOrderType().getDesc());
-                result.add(item);
-            });
+            }
         }
         return result;
     }
 
     @Override
     public void acceptOrder(String orderId, String loginId) {
+        // todo
+        Boolean isPending = Boolean.FALSE;
+        Set<Object> pendingOrders;
+        for (int i = 0; ; i += orderConfig.getTopN()) {
+            pendingOrders = redisTemplate.opsForZSet().range(NAMESPACE_4_PENDING_ORDER, i, i + orderConfig.getTopN() - 1);
+            if (CollUtil.isEmpty(pendingOrders)) {
+                break;
+            }
+            if (CollUtil.contains(pendingOrders, item -> CharSequenceUtil.equals(((PendingOrder) item).getOrderId(), orderId))) {
+                isPending = Boolean.TRUE;
+                break;
+            }
+        }
 
-        Set<String> orderRange = redisTemplate.opsForZSet().range(NAMESPACE_4_PENDING_ORDER, 0, orderConfig.getTopN());
-        if (orderRange == null || !orderRange.contains(orderId)) {
+        if (!isPending) {
             throw new GracefulResponseException("该工单已被受理！");
         }
         RLock fairLock = redissonClient.getFairLock(NAMESPACE_4_ORDER_LOCK + orderId);
@@ -307,7 +340,7 @@ public class OrderServiceImpl implements OrderService {
             }
         } catch (InterruptedException e) {
             log.error(e.getMessage());
-            throw new GracefulResponseException("抢单失败！");
+            throw new ServerErrorException();
         } catch (BaseCustomException e) {
             log.error(e.getMessage());
             throw e;
