@@ -1,9 +1,16 @@
 package com.mi.aftersales.controller;
 
+import cn.dev33.satoken.stp.StpUtil;
+import com.mi.aftersales.aspect.anno.CheckLogin;
+import com.mi.aftersales.entity.enums.EmployeeRoleEnum;
 import com.mi.aftersales.service.MaterialService;
+import com.mi.aftersales.util.query.ConditionQuery;
+import com.mi.aftersales.vo.PageResult;
 import com.mi.aftersales.vo.form.MaterialForm;
 import com.mi.aftersales.vo.form.ManngerUpdateMaterialForm;
+import com.mi.aftersales.vo.result.MaterialVo;
 import io.swagger.v3.oas.annotations.Operation;
+import org.checkerframework.checker.units.qual.C;
 import org.redisson.api.RedissonClient;
 import org.springframework.web.bind.annotation.*;
 
@@ -24,8 +31,6 @@ public class MaterialController {
     @Resource
     private MaterialService materialService;
 
-    @Resource
-    private RedissonClient redissonClient;
 
     /**
      * 库管添加物料。
@@ -34,7 +39,9 @@ public class MaterialController {
      */
     @PostMapping(path = "/")
     @Operation(summary = "库管添加物料", description = "库管添加物料")
+    @CheckLogin
     public void addMaterial(@RequestBody @Valid MaterialForm form) {
+        StpUtil.checkRole(EmployeeRoleEnum.MATERIAL_MANAGER.name());
         materialService.addMaterial(form);
     }
 
@@ -45,7 +52,23 @@ public class MaterialController {
      */
     @PutMapping(path = "/")
     @Operation(summary = "库管更新物料信息", description = "库管更新物料信息")
+    @CheckLogin
     public void updateMaterial(@RequestBody @Valid ManngerUpdateMaterialForm form) {
-        materialService.updateMaterial(form, redissonClient);
+        StpUtil.checkRole(EmployeeRoleEnum.MATERIAL_MANAGER.name());
+        materialService.updateMaterial(form);
+    }
+
+    @PostMapping(path = "/condition")
+    @Operation(summary = "查询物料", description = "查询物料")
+    public PageResult<MaterialVo> conditionQuery(@RequestBody @Valid ConditionQuery query) {
+        return materialService.conditionQuery(query);
+    }
+
+    @DeleteMapping(path = "/manager/{materialId}")
+    @Operation(summary = "删除物料", description = "删除物料")
+    @CheckLogin
+    public void deleteMaterialById(@PathVariable String materialId) {
+        StpUtil.checkRole(EmployeeRoleEnum.MATERIAL_MANAGER.name());
+        materialService.deleteMaterialById(materialId);
     }
 }

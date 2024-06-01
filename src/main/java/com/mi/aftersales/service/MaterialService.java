@@ -1,7 +1,10 @@
 package com.mi.aftersales.service;
 
+import com.mi.aftersales.util.query.ConditionQuery;
+import com.mi.aftersales.vo.PageResult;
 import com.mi.aftersales.vo.form.ManngerUpdateMaterialForm;
 import com.mi.aftersales.vo.form.MaterialForm;
+import com.mi.aftersales.vo.result.MaterialVo;
 import org.redisson.api.RedissonClient;
 
 /**
@@ -25,8 +28,10 @@ public interface MaterialService {
      * 更新物料信息。
      *
      * @param form 更新物料表单
-     * @param redissonClient Redisson 客户端
      */
-    void updateMaterial(ManngerUpdateMaterialForm form, RedissonClient redissonClient);
+    void updateMaterial(ManngerUpdateMaterialForm form);
 
+    PageResult<MaterialVo> conditionQuery(ConditionQuery query);
+
+    void deleteMaterialById(String materialId);
 }

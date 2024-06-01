@@ -35,6 +35,10 @@ public class ManngerUpdateMaterialForm {
     @Schema(description = "物料封面描述图片")
     private String materialCoverFileId;
 
+
+    @Schema(description = "物料所属Spu分类Id")
+    private Integer spuCategoryId;
+
     @Schema(description = "计量单位")
     private String unit;
 
