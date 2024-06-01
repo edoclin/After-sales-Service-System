@@ -112,7 +112,7 @@ public class OrderServiceImpl implements OrderService {
     @Override
     public List<ClientOrderSimpleVo> listClientOrders(ConditionQuery query, String loginId) {
         QueryWrapper<Order> wrapper = QueryUtil.buildWrapper(query, Order.class);
-        wrapper.eq("client_login_id", loginId);
+        wrapper = wrapper.eq("client_login_id", loginId).orderByDesc("created_time");
         List<ClientOrderSimpleVo> result = new ArrayList<>();
         iOrderRepository.list(wrapper).forEach(order -> {
             ClientOrderSimpleVo item = new ClientOrderSimpleVo();
@@ -320,7 +320,7 @@ public class OrderServiceImpl implements OrderService {
             if (CollUtil.isEmpty(pendingOrders)) {
                 break;
             }
-            if (CollUtil.contains(pendingOrders, item -> CharSequenceUtil.equals(((PendingOrder)item).getOrderId(), orderId))) {
+            if (CollUtil.contains(pendingOrders, item -> CharSequenceUtil.equals(((PendingOrder) item).getOrderId(), orderId))) {
                 isPending = Boolean.TRUE;
                 break;
             }
