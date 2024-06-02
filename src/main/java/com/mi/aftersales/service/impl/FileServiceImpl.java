@@ -6,10 +6,10 @@ import cn.hutool.core.util.IdUtil;
 import com.mi.aftersales.config.yaml.bean.TencentCosConfig;
 import com.mi.aftersales.entity.File;
 import com.mi.aftersales.exception.graceful.ServerErrorException;
+import com.mi.aftersales.pojo.vo.form.FileFormVo;
 import com.mi.aftersales.repository.IFileRepository;
 import com.mi.aftersales.service.FileService;
-import com.mi.aftersales.vo.form.FileForm;
-import com.mi.aftersales.vo.result.FileUploadVo;
+import com.mi.aftersales.pojo.vo.FileUploadVo;
 import com.qcloud.cos.COSClient;
 import com.qcloud.cos.ClientConfig;
 import com.qcloud.cos.auth.BasicCOSCredentials;
@@ -22,12 +22,9 @@ import net.coobird.thumbnailator.Thumbnails;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
-import javax.validation.Valid;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -49,9 +46,9 @@ public class FileServiceImpl implements FileService {
     @Resource
     private TencentCosConfig cosConfig;
 
-    @Transactional
+
     @Override
-    public List<FileUploadVo> postFile(FileForm form) {
+    public List<FileUploadVo> postFile(FileFormVo form) {
         ArrayList<FileUploadVo> result = new ArrayList<>();
         ArrayList<File> files = new ArrayList<>();
 
@@ -68,7 +65,7 @@ public class FileServiceImpl implements FileService {
 
     @Override
     public List<FileUploadVo> uploadByServer(MultipartFile[] files) {
-        FileForm fileForm = new FileForm();
+        FileFormVo fileFormVo = new FileFormVo();
 
         ClientConfig clientConfig = new ClientConfig(new Region(cosConfig.getRegion()));
         COSCredentials cred = new BasicCOSCredentials(cosConfig.getSecretId(), cosConfig.getSecretKey());
@@ -87,7 +84,7 @@ public class FileServiceImpl implements FileService {
                 Thumbnails.of(localFile).scale(.1f).outputQuality(.35f).toFile(uploadFile);
                 PutObjectRequest putObjectRequest = new PutObjectRequest(cosConfig.getBucketName(), cosConfig.getPrefix() + key, uploadFile);
                 UploadResult uploadResult = transferManager.upload(putObjectRequest).waitForUploadResult();
-                fileForm.getKeys().add(uploadResult.getKey());
+                fileFormVo.getKeys().add(uploadResult.getKey());
                 if (Boolean.FALSE.equals(localFile.delete()) || Boolean.FALSE.equals(uploadFile.delete())) {
                     log.warn("缓存文件删除失败：{}", key);
                 }
@@ -101,6 +98,6 @@ public class FileServiceImpl implements FileService {
             log.error(e.getMessage());
             throw new ServerErrorException();
         }
-        return postFile(fileForm);
+        return postFile(fileFormVo);
     }
 }

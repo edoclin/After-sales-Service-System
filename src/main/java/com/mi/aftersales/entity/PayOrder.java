@@ -6,8 +6,8 @@ import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
-import com.mi.aftersales.entity.enums.PayMethodEnum;
-import com.mi.aftersales.entity.enums.PayStatusEnum;
+import com.mi.aftersales.enums.entity.PayMethodEnum;
+import com.mi.aftersales.enums.entity.PayStatusEnum;
 import com.mi.aftersales.util.query.EnableQuery;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;

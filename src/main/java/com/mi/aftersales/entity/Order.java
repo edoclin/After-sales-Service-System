@@ -6,8 +6,8 @@ import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
-import com.mi.aftersales.entity.enums.OrderStatusEnum;
-import com.mi.aftersales.entity.enums.OrderTypeEnum;
+import com.mi.aftersales.enums.entity.OrderStatusEnum;
+import com.mi.aftersales.enums.entity.OrderTypeEnum;
 import com.mi.aftersales.util.query.EnableQuery;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;

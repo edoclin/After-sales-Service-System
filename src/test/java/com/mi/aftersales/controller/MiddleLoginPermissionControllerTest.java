@@ -1,7 +1,7 @@
 package com.mi.aftersales.controller;
 
 import com.alibaba.fastjson.JSON;
-import com.mi.aftersales.vo.form.LoginPermissionForm;
+import com.mi.aftersales.pojo.vo.form.LoginPermissionFormVo;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -19,8 +19,6 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import javax.annotation.Resource;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * @author QYenon
@@ -45,7 +43,7 @@ class MiddleLoginPermissionControllerTest {
 
     @Test
     void postMiddleLoginPermission() throws Exception {
-        LoginPermissionForm form = new LoginPermissionForm();
+        LoginPermissionFormVo form = new LoginPermissionFormVo();
         form.setLoginId("1794929431970746368");
         form.setPermissionId("1");
 

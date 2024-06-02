@@ -2,17 +2,14 @@ package com.mi.aftersales.controller;
 
 import com.alibaba.fastjson.JSON;
 
-import com.mi.aftersales.vo.form.ClientServiceCenterForm;
-import com.mi.aftersales.vo.form.UpdateClientServiceCenterForm;
+import com.mi.aftersales.pojo.vo.form.ClientServiceCenterFormVo;
+import com.mi.aftersales.pojo.vo.form.UpdateClientServiceCenterFormVo;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockReset;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.context.web.WebAppConfiguration;
@@ -24,8 +21,6 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import javax.annotation.Resource;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * @author QYenon
@@ -51,7 +46,7 @@ class ClientServiceCenterControllerTest {
 
     @Test
     public void postClientServiceCenter() throws Exception {
-        ClientServiceCenterForm form = new ClientServiceCenterForm();
+        ClientServiceCenterFormVo form = new ClientServiceCenterFormVo();
         form.setRegion("TestClientServiceCenter");
         form.setAddressDetail("Test");
         form.setMobile("13111111111");
@@ -72,7 +67,7 @@ class ClientServiceCenterControllerTest {
 
     @Test
     public void putClientServiceCenter() throws Exception {
-        UpdateClientServiceCenterForm form = new UpdateClientServiceCenterForm();
+        UpdateClientServiceCenterFormVo form = new UpdateClientServiceCenterFormVo();
         form.setCenterId("1796055029258641408");
         form.setRegion("TestClientServiceCenter.......");
         form.setAddressDetail("Test...");

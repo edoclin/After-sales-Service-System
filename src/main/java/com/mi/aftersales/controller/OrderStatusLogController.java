@@ -2,7 +2,7 @@ package com.mi.aftersales.controller;
 
 import com.mi.aftersales.aspect.anno.CheckLogin;
 import com.mi.aftersales.service.OrderStatusLogService;
-import com.mi.aftersales.vo.OrderStatusLogResult;
+import com.mi.aftersales.pojo.vo.OrderStatusLogVo;
 import io.swagger.v3.oas.annotations.Operation;
 
 import org.springframework.web.bind.annotation.*;
@@ -28,7 +28,7 @@ public class OrderStatusLogController {
     @GetMapping(path = "/{orderId}")
     @Operation(summary = "查询工单状态日志", description = "查询工单状态日志")
     @CheckLogin
-    public List<OrderStatusLogResult> listOrderStatusLogById(@PathVariable String orderId) {
+    public List<OrderStatusLogVo> listOrderStatusLogById(@PathVariable String orderId) {
         return orderStatusLogService.listOrderStatusLogByOrderId(orderId);
     }
 }

@@ -5,8 +5,8 @@ import com.baomidou.mybatisplus.annotation.*;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
-import com.mi.aftersales.entity.enums.OrderUploadFileTypeEnum;
-import com.mi.aftersales.entity.enums.OrderUploaderTypeEnum;
+import com.mi.aftersales.enums.entity.OrderUploadFileTypeEnum;
+import com.mi.aftersales.enums.entity.OrderUploaderTypeEnum;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import lombok.Setter;

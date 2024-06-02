@@ -1,8 +1,8 @@
 package com.mi.aftersales.controller;
 
 import com.alibaba.fastjson.JSON;
-import com.mi.aftersales.vo.form.SpuCategoryForm;
-import com.mi.aftersales.vo.form.SpuCategoryVisibleSetForm;
+import com.mi.aftersales.pojo.vo.form.SpuCategoryFormVo;
+import com.mi.aftersales.pojo.vo.form.SpuCategoryVisibleSetFormVo;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -44,7 +44,7 @@ class SpuCategoryControllerTest {
 
     @Test
     void postSpuCategory() throws Exception {
-        SpuCategoryForm form = new SpuCategoryForm();
+        SpuCategoryFormVo form = new SpuCategoryFormVo();
         form.setVisible(false);
         form.setWeight(15);
         form.setCategoryName("小米14ultra");
@@ -82,7 +82,7 @@ class SpuCategoryControllerTest {
 
     @Test
     void setVisible() throws Exception {
-        SpuCategoryVisibleSetForm form = new SpuCategoryVisibleSetForm();
+        SpuCategoryVisibleSetFormVo form = new SpuCategoryVisibleSetFormVo();
         form.setVisible(true);
         form.setCategoryId(8);
         String strJson = JSON.toJSONString(form);

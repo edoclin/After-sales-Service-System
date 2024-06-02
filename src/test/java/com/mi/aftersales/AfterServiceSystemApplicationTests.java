@@ -2,8 +2,8 @@ package com.mi.aftersales;
 
 
 import com.mi.aftersales.entity.Login;
-import com.mi.aftersales.entity.enums.LoginOAuthSourceEnum;
-import com.mi.aftersales.entity.enums.LoginTypeEnum;
+import com.mi.aftersales.enums.entity.LoginOAuthSourceEnum;
+import com.mi.aftersales.enums.entity.LoginTypeEnum;
 import com.mi.aftersales.repository.ILoginRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;

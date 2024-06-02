@@ -1,12 +1,9 @@
 package com.mi.aftersales.service;
 
-import com.mi.aftersales.vo.form.FileForm;
-import com.mi.aftersales.vo.result.FileUploadVo;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.bind.annotation.RequestBody;
+import com.mi.aftersales.pojo.vo.form.FileFormVo;
+import com.mi.aftersales.pojo.vo.FileUploadVo;
 import org.springframework.web.multipart.MultipartFile;
 
-import javax.validation.Valid;
 import java.util.List;
 
 /**
@@ -20,7 +17,7 @@ import java.util.List;
 public interface FileService {
 
 
-    List<FileUploadVo> postFile(FileForm form);
+    List<FileUploadVo> postFile(FileFormVo form);
 
     List<FileUploadVo>  uploadByServer(MultipartFile[] files);
 }

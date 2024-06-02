@@ -1,8 +1,8 @@
 package com.mi.aftersales.controller;
 
 import com.alibaba.fastjson.JSON;
-import com.mi.aftersales.entity.enums.EmployeeRoleEnum;
-import com.mi.aftersales.vo.form.LoginRoleForm;
+import com.mi.aftersales.enums.entity.EmployeeRoleEnum;
+import com.mi.aftersales.pojo.vo.form.LoginRoleFormVo;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -20,8 +20,6 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import javax.annotation.Resource;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * @author QYenon
@@ -53,7 +51,7 @@ class LoginRoleControllerTest {
                 EmployeeRoleEnum.SYSTEM_MANAGER
         };
 
-        LoginRoleForm form = new LoginRoleForm();
+        LoginRoleFormVo form = new LoginRoleFormVo();
         form.setLoginId("1794929431970746368");
         form.setRoles(roles);
 

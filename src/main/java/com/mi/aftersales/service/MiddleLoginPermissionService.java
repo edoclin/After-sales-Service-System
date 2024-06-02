@@ -1,6 +1,6 @@
 package com.mi.aftersales.service;
 
-import com.mi.aftersales.vo.form.LoginPermissionForm;
+import com.mi.aftersales.pojo.vo.form.LoginPermissionFormVo;
 
 /**
  * <p>
@@ -16,5 +16,5 @@ public interface MiddleLoginPermissionService {
      *
      * @param form 用户权限表单
      */
-    void addLoginPermission(LoginPermissionForm form);
+    void addLoginPermission(LoginPermissionFormVo form);
 }

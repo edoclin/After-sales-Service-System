@@ -1,8 +1,8 @@
 package com.mi.aftersales.controller;
 
 import com.alibaba.fastjson.JSON;
-import com.mi.aftersales.vo.form.LoginBySmsForm;
-import com.mi.aftersales.vo.form.SendSmsCodeForm;
+import com.mi.aftersales.pojo.vo.form.LoginBySmsFormVo;
+import com.mi.aftersales.pojo.vo.form.SendSmsCodeFormVo;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -20,8 +20,6 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import javax.annotation.Resource;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * @author QYenon
@@ -45,7 +43,7 @@ class LoginControllerTest {
 
     @Test
     void sendSmsCode() throws Exception {
-        SendSmsCodeForm form = new SendSmsCodeForm();
+        SendSmsCodeFormVo form = new SendSmsCodeFormVo();
         form.setMobile("18845105338");
         String strJson = JSON.toJSONString(form);
 
@@ -63,7 +61,7 @@ class LoginControllerTest {
 
     @Test
     void loginBySms()throws Exception {
-        LoginBySmsForm form = new LoginBySmsForm();
+        LoginBySmsFormVo form = new LoginBySmsFormVo();
         form.setMobile("18845105338");
         form.setCode("145167");
         form.setAutoRegister(true);

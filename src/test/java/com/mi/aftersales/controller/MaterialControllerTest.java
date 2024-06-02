@@ -4,8 +4,8 @@ import com.alibaba.fastjson.JSON;
 import com.mi.aftersales.entity.Material;
 
 
-import com.mi.aftersales.vo.form.ManngerUpdateMaterialForm;
-import com.mi.aftersales.vo.form.MaterialForm;
+import com.mi.aftersales.pojo.vo.form.ManngerUpdateMaterialFormVo;
+import com.mi.aftersales.pojo.vo.form.MaterialFormVo;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -57,7 +57,7 @@ class MaterialControllerTest {
 
     @Test
     public void addMaterial() throws Exception {
-        MaterialForm form = new MaterialForm();
+        MaterialFormVo form = new MaterialFormVo();
         form.setMaterialName("Test2");
         form.setMaterialDesc("TestAddMaterial");
         form.setUnit("test");
@@ -89,7 +89,7 @@ class MaterialControllerTest {
     public void updateMaterial() throws Exception {
 
         // 创建一个更新物料表单对象
-        ManngerUpdateMaterialForm form = new ManngerUpdateMaterialForm();
+        ManngerUpdateMaterialFormVo form = new ManngerUpdateMaterialFormVo();
         form.setMaterialId("1795750940717076480");
         form.setMaterialName("UpdatedTest1");
         form.setMaterialDesc("UpdatedTestUpdateMaterial");

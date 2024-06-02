@@ -1,6 +1,6 @@
 package com.mi.aftersales.service;
 
-import com.mi.aftersales.vo.form.LoginRoleForm;
+import com.mi.aftersales.pojo.vo.form.LoginRoleFormVo;
 
 /**
  * <p>
@@ -16,5 +16,5 @@ public interface LoginRoleService{
      *
      * @param form 用户角色表单
      */
-    void addOrUpdateLoginRole(LoginRoleForm form);
+    void addOrUpdateLoginRole(LoginRoleFormVo form);
 }

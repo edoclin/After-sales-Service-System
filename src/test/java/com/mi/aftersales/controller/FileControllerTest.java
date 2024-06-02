@@ -2,7 +2,7 @@ package com.mi.aftersales.controller;
 
 import cn.hutool.core.collection.CollUtil;
 import com.alibaba.fastjson.JSON;
-import com.mi.aftersales.vo.form.FileForm;
+import com.mi.aftersales.pojo.vo.form.FileFormVo;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -20,8 +20,6 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import javax.annotation.Resource;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * @author QYenon
@@ -49,7 +47,7 @@ class FileControllerTest {
         String[] keys = {"/avatar/test1.jpg",
                 "/avatar/test2.jpg",
                 "/avatar/test3.jpg"};
-        FileForm form = new FileForm();
+        FileFormVo form = new FileFormVo();
         form.setKeys(CollUtil.toList(keys));
         String strJson = JSON.toJSONString(form);
 

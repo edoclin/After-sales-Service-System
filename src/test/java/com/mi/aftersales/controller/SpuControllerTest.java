@@ -3,8 +3,8 @@ package com.mi.aftersales.controller;
 import com.alibaba.fastjson.JSON;
 import com.mi.aftersales.util.query.ConditionQuery;
 import com.mi.aftersales.util.query.QueryParam;
-import com.mi.aftersales.vo.form.SpuForm;
-import com.mi.aftersales.vo.form.UpdateSpuVisibleForm;
+import com.mi.aftersales.pojo.vo.form.SpuFormVo;
+import com.mi.aftersales.pojo.vo.form.UpdateSpuVisibleFormVo;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -25,8 +25,6 @@ import javax.annotation.Resource;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * @author QYenon
@@ -51,7 +49,7 @@ class SpuControllerTest {
 
     @Test
     void postSpu() throws Exception {
-        SpuForm form = new SpuForm();
+        SpuFormVo form = new SpuFormVo();
         form.setCategoryId(11);
         form.setWeight(Short.valueOf("1"));
         form.setSpuName("小米13");
@@ -76,7 +74,7 @@ class SpuControllerTest {
 
     @Test
     void putSpuVisible() throws Exception {
-        UpdateSpuVisibleForm form = new UpdateSpuVisibleForm();
+        UpdateSpuVisibleFormVo form = new UpdateSpuVisibleFormVo();
         form.setSpuId("1796096627564597248");
         form.setVisible(true);
         String strJson = JSON.toJSONString(form);

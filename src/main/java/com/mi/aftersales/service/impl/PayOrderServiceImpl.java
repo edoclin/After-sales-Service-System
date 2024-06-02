@@ -12,8 +12,8 @@ import com.mi.aftersales.service.PayOrderService;
 import com.mi.aftersales.util.DateUtil;
 import com.mi.aftersales.util.query.ConditionQuery;
 import com.mi.aftersales.util.query.QueryUtil;
-import com.mi.aftersales.vo.PageResult;
-import com.mi.aftersales.vo.result.PayOrderResult;
+import com.mi.aftersales.pojo.common.PageResult;
+import com.mi.aftersales.pojo.vo.PayOrderVo;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -38,17 +38,17 @@ public class PayOrderServiceImpl implements PayOrderService {
     private IPayOrderRepository iPayOrderRepository;
 
     @Override
-    public List<PayOrderResult> listClientPayOrders() {
-        ArrayList<PayOrderResult> result = new ArrayList<>();
+    public List<PayOrderVo> listClientPayOrders() {
+        ArrayList<PayOrderVo> result = new ArrayList<>();
 
         iOrderRepository.lambdaQuery().eq(Order::getCreatedId, StpUtil.getLoginIdAsString()).list().forEach(order -> {
             iPayOrderRepository.lambdaQuery().eq(PayOrder::getOrderId, order.getOrderId()).list().forEach(payOrder -> {
-                PayOrderResult payOrderResult = new PayOrderResult();
-                BeanUtil.copyProperties(payOrder, payOrderResult, DateUtil.copyDate2yyyyMMddHHmm());
-                payOrderResult.setPayStatus(payOrder.getPayStatus().getDesc());
-                payOrderResult.setPayMethod(payOrder.getPayMethod().getDesc());
+                PayOrderVo payOrderVo = new PayOrderVo();
+                BeanUtil.copyProperties(payOrder, payOrderVo, DateUtil.copyDate2yyyyMMddHHmm());
+                payOrderVo.setPayStatus(payOrder.getPayStatus().getDesc());
+                payOrderVo.setPayMethod(payOrder.getPayMethod().getDesc());
 
-                result.add(payOrderResult);
+                result.add(payOrderVo);
             });
         });
 
@@ -56,17 +56,17 @@ public class PayOrderServiceImpl implements PayOrderService {
     }
 
     @Override
-    public PageResult<PayOrderResult> listClientOrderByCondition(ConditionQuery query){
-        PageResult<PayOrderResult> result = new PageResult<>();
+    public PageResult<PayOrderVo> listClientOrderByCondition(ConditionQuery query){
+        PageResult<PayOrderVo> result = new PageResult<>();
         QueryWrapper<PayOrder> wrapper = QueryUtil.buildWrapper(query, PayOrder.class);
         result.setTotal(iPayOrderRepository.count(wrapper));
         iPayOrderRepository.page(new Page<>(query.getCurrent(), query.getLimit()), wrapper).getRecords().forEach(payOrder -> {
-            PayOrderResult payOrderResult = new PayOrderResult();
-            BeanUtil.copyProperties(payOrder, payOrderResult, DateUtil.copyDate2yyyyMMddHHmm());
-            payOrderResult.setPayStatus(payOrder.getPayStatus().getDesc());
-            payOrderResult.setPayMethod(payOrder.getPayMethod().getDesc());
+            PayOrderVo payOrderVo = new PayOrderVo();
+            BeanUtil.copyProperties(payOrder, payOrderVo, DateUtil.copyDate2yyyyMMddHHmm());
+            payOrderVo.setPayStatus(payOrder.getPayStatus().getDesc());
+            payOrderVo.setPayMethod(payOrder.getPayMethod().getDesc());
 
-            result.getData().add(payOrderResult);
+            result.getData().add(payOrderVo);
         });
         return result;
     }

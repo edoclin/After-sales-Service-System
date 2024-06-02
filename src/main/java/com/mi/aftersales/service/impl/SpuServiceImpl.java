@@ -15,11 +15,11 @@ import com.mi.aftersales.util.COSUtil;
 import com.mi.aftersales.util.DateUtil;
 import com.mi.aftersales.util.query.ConditionQuery;
 import com.mi.aftersales.util.query.QueryUtil;
-import com.mi.aftersales.vo.PageResult;
-import com.mi.aftersales.vo.form.SpuForm;
-import com.mi.aftersales.vo.form.UpdateSpuVisibleForm;
-import com.mi.aftersales.vo.result.ClientSpuVo;
-import com.mi.aftersales.vo.result.SpuVo;
+import com.mi.aftersales.pojo.common.PageResult;
+import com.mi.aftersales.pojo.vo.form.SpuFormVo;
+import com.mi.aftersales.pojo.vo.form.UpdateSpuVisibleFormVo;
+import com.mi.aftersales.pojo.vo.ClientSpuVo;
+import com.mi.aftersales.pojo.vo.SpuVo;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 
@@ -44,7 +44,7 @@ public class SpuServiceImpl implements SpuService {
     private IFileRepository iFileRepository;
 
     @Override
-    public void addSpu(SpuForm form) {
+    public void addSpu(SpuFormVo form) {
         if (BeanUtil.isEmpty(iSpuCategoryRepository.getById(form.getCategoryId()))) {
             throw new GracefulResponseException("商品所属分类不存在！");
         }
@@ -64,7 +64,7 @@ public class SpuServiceImpl implements SpuService {
     }
 
     @Override
-    public void updateSpuVisibility(UpdateSpuVisibleForm form) {
+    public void updateSpuVisibility(UpdateSpuVisibleFormVo form) {
         Spu spu = iSpuRepository.getById(form.getSpuId());
         if (BeanUtil.isEmpty(spu)) {
             throw new GracefulResponseException("商品SPU不存在！");

@@ -15,12 +15,12 @@ import com.mi.aftersales.util.COSUtil;
 import com.mi.aftersales.util.DateUtil;
 import com.mi.aftersales.util.query.ConditionQuery;
 import com.mi.aftersales.util.query.QueryUtil;
-import com.mi.aftersales.vo.PageResult;
-import com.mi.aftersales.vo.form.SkuForm;
-import com.mi.aftersales.vo.form.SkuVisibleSetForm;
-import com.mi.aftersales.vo.form.UpdateSkuVisibleForm;
-import com.mi.aftersales.vo.result.ClientSkuVo;
-import com.mi.aftersales.vo.result.SkuVo;
+import com.mi.aftersales.pojo.common.PageResult;
+import com.mi.aftersales.pojo.vo.form.SkuFormVo;
+import com.mi.aftersales.pojo.vo.form.SkuVisibleSetFormVo;
+import com.mi.aftersales.pojo.vo.form.UpdateSkuVisibleFormVo;
+import com.mi.aftersales.pojo.vo.ClientSkuVo;
+import com.mi.aftersales.pojo.vo.SkuVo;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 
@@ -45,7 +45,7 @@ public class SkuServiceImpl implements SkuService {
     private IFileRepository iFileRepository;
 
     @Override
-    public void addSku(SkuForm form) {
+    public void addSku(SkuFormVo form) {
         if (BeanUtil.isEmpty(iSpuRepository.getById(form.getSpuId()))) {
             throw new GracefulResponseException("商品SPU不存在！");
         }
@@ -64,7 +64,7 @@ public class SkuServiceImpl implements SkuService {
     }
 
     @Override
-    public void updateSkuVisibility(UpdateSkuVisibleForm form) {
+    public void updateSkuVisibility(UpdateSkuVisibleFormVo form) {
         Sku sku = iSkuRepository.getById(form.getSkuId());
         if (BeanUtil.isEmpty(sku)) {
             throw new GracefulResponseException("商品SKU不存在！");
@@ -129,7 +129,7 @@ public class SkuServiceImpl implements SkuService {
     }
 
     @Override
-    public void setSkuVisibility(SkuVisibleSetForm form) {
+    public void setSkuVisibility(SkuVisibleSetFormVo form) {
         Sku sku = iSkuRepository.getById(form.getSkuId());
         if (BeanUtil.isEmpty(sku)) {
             throw new GracefulResponseException("商品Sku不存在！");

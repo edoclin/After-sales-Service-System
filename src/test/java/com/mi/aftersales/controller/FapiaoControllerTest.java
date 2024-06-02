@@ -3,12 +3,11 @@ package com.mi.aftersales.controller;
 import com.alibaba.fastjson.JSON;
 
 
-import com.mi.aftersales.vo.form.FapiaoForm;
-import com.mi.aftersales.vo.form.UpdateFapiaoForm;
+import com.mi.aftersales.pojo.vo.form.FapiaoFormVo;
+import com.mi.aftersales.pojo.vo.form.UpdateFapiaoFormVo;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -24,10 +23,7 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import javax.annotation.Resource;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * @author QYenon
@@ -54,7 +50,7 @@ class FapiaoControllerTest {
 
     @Test
     void postFapiao() throws Exception {
-        FapiaoForm form = new FapiaoForm();
+        FapiaoFormVo form = new FapiaoFormVo();
         form.setFapiaoCode("Test1234");
         form.setFapiaoNo("Test11123");
         String strJson = JSON.toJSONString(form);
@@ -105,7 +101,7 @@ class FapiaoControllerTest {
 
     @Test
     void updateFapiao() throws Exception {
-        UpdateFapiaoForm form = new UpdateFapiaoForm();
+        UpdateFapiaoFormVo form = new UpdateFapiaoFormVo();
         form.setFapiaoId("1796051108574253056");
         form.setFapiaoInfo("111222");
         form.setFapiaoTime(LocalDateTime.of(2024, 5, 30, 13, 28));

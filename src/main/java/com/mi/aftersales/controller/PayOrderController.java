@@ -1,10 +1,13 @@
 package com.mi.aftersales.controller;
 
+import cn.dev33.satoken.stp.StpUtil;
 import com.mi.aftersales.aspect.anno.CheckLogin;
+import com.mi.aftersales.entity.EmployeeInfo;
+import com.mi.aftersales.enums.entity.EmployeeRoleEnum;
 import com.mi.aftersales.service.PayOrderService;
 import com.mi.aftersales.util.query.ConditionQuery;
-import com.mi.aftersales.vo.PageResult;
-import com.mi.aftersales.vo.result.PayOrderResult;
+import com.mi.aftersales.pojo.common.PageResult;
+import com.mi.aftersales.pojo.vo.PayOrderVo;
 import io.swagger.v3.oas.annotations.Operation;
 import org.springframework.web.bind.annotation.*;
 
@@ -29,13 +32,15 @@ public class PayOrderController {
     @GetMapping(path = "/client")
     @Operation(summary = "查询当前用户的支付账单", description = "查询当前用户的支付账单")
     @CheckLogin
-    public List<PayOrderResult> listClientOrder() {
+    public List<PayOrderVo> listClientOrder() {
         return payOrderService.listClientPayOrders();
     }
 
-    @PostMapping(path = "/client")
-    @Operation(summary = "客户查询工单", description = "客户查询工单")
-    public PageResult<PayOrderResult>  listClientOrderByCondition(@RequestBody ConditionQuery query) {
+    @PostMapping(path = "/")
+    @Operation(summary = "查询支付账单", description = "查询支付账单")
+    @CheckLogin
+    public PageResult<PayOrderVo> listClientOrderByCondition(@RequestBody ConditionQuery query) {
+        StpUtil.checkRole(EmployeeRoleEnum.SYSTEM_MANAGER.name());
         return payOrderService.listClientOrderByCondition(query);
     }
 }

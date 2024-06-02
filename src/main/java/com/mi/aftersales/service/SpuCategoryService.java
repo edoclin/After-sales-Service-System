@@ -1,8 +1,8 @@
 package com.mi.aftersales.service;
 
-import com.mi.aftersales.vo.form.SpuCategoryForm;
-import com.mi.aftersales.vo.form.SpuCategoryVisibleSetForm;
-import com.mi.aftersales.vo.result.SpuCategory4ClientVo;
+import com.mi.aftersales.pojo.vo.form.SpuCategoryFormVo;
+import com.mi.aftersales.pojo.vo.form.SpuCategoryVisibleSetFormVo;
+import com.mi.aftersales.pojo.vo.SpuCategory4ClientVo;
 
 import java.util.List;
 
@@ -20,14 +20,16 @@ public interface SpuCategoryService {
      *
      * @param form SPU分类表单对象
      */
-    void addSpuCategory(SpuCategoryForm form);
+    void addSpuCategory(SpuCategoryFormVo form);
+
+    List<Integer> childrenCategoryId(Integer parentCategoryId);
 
     /**
      * 设置SPU分类是否对客户可见。
      *
      * @param form SPU分类可见性设置表单对象
      */
-    void setSpuCategoryVisibility(SpuCategoryVisibleSetForm form);
+    void setSpuCategoryVisibility(SpuCategoryVisibleSetFormVo form);
     /**
      * 获取客户可见的SPU分类目录。
      *
