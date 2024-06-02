@@ -9,7 +9,6 @@ import com.feiniaojin.gracefulresponse.GracefulResponseException;
 import com.mi.aftersales.util.query.enums.Predicate;
 
 import java.lang.reflect.Field;
-import java.lang.reflect.ParameterizedType;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -56,6 +55,8 @@ public class QueryUtil {
                 case NUM_GE -> wrapper = wrapper.ge(underlineColumn, queryParam.getValue());
                 case NUM_LT -> wrapper = wrapper.lt(underlineColumn, queryParam.getValue());
                 case NUM_LE -> wrapper = wrapper.le(underlineColumn, queryParam.getValue());
+                case IN -> wrapper = wrapper.in(underlineColumn, queryParam.getValue().split(","));
+                case CUSTOM -> {}
             }
 
             switch (queryParam.getOrderBy()) {
