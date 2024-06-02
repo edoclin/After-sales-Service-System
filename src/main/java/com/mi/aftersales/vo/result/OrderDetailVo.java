@@ -16,9 +16,9 @@ import java.util.List;
 @Getter
 @Setter
 @Accessors(chain = true)
-@Schema(title = "客户工单信息（详情）", description = "客户工单信息（详情）")
+@Schema(title = "工单信息（详情）", description = "工单信息（详情）")
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
-public class ClientOrderDetailVo {
+public class OrderDetailVo {
     @Schema(description = "工单Id")
     private String orderId;
     @Schema(description = "产品序列号")

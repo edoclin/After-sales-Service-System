@@ -2,12 +2,13 @@ package com.mi.aftersales.repository.impl;
 
 import cn.hutool.core.bean.BeanUtil;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.feiniaojin.gracefulresponse.GracefulResponseException;
 import com.mi.aftersales.entity.SpuCategory;
 import com.mi.aftersales.exception.graceful.IllegalSpuCategoryIdException;
 import com.mi.aftersales.mapper.SpuCategoryMapper;
 import com.mi.aftersales.repository.ISpuCategoryRepository;
+import com.mi.aftersales.util.DateUtil;
 import com.mi.aftersales.vo.result.SpuCategory4ClientVo;
+import com.mi.aftersales.vo.result.SpuCategoryVo;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -34,9 +35,9 @@ public class ISpuCategoryRepositoryImpl extends ServiceImpl<SpuCategoryMapper, S
     }
 
     @Override
-    public List<SpuCategory> listAllSpuCategoryName(Integer categoryId) {
-        Stack<SpuCategory> stack = new Stack<>();
-        List<SpuCategory> result = new ArrayList<>();
+    public List<SpuCategoryVo> listAllSpuCategoryName(Integer categoryId) {
+        Stack<SpuCategoryVo> stack = new Stack<>();
+        List<SpuCategoryVo> result = new ArrayList<>();
         SpuCategory spuCategory;
         while (categoryId != null && categoryId != 0) {
             spuCategory = spuCategoryMapper.selectById(categoryId);
@@ -44,11 +45,9 @@ public class ISpuCategoryRepositoryImpl extends ServiceImpl<SpuCategoryMapper, S
             if (BeanUtil.isEmpty(spuCategory)) {
                 throw new IllegalSpuCategoryIdException();
             }
-            SpuCategory item = new SpuCategory();
-
-            item.setCategoryId(spuCategory.getCategoryId());
-            item.setCategoryName(spuCategory.getCategoryName());
-            stack.push(item);
+            SpuCategoryVo spuCategoryVo = new SpuCategoryVo();
+            BeanUtil.copyProperties(spuCategory, spuCategoryVo, DateUtil.copyDate2yyyyMMddHHmm());
+            stack.push(spuCategoryVo);
             categoryId = spuCategory.getParentCategoryId();
         }
 
