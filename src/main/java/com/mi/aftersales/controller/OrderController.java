@@ -1,6 +1,5 @@
 package com.mi.aftersales.controller;
 
-import cn.dev33.satoken.SaManager;
 import cn.dev33.satoken.stp.StpUtil;
 import com.mi.aftersales.aspect.anno.CheckLogin;
 import com.mi.aftersales.entity.enums.*;
@@ -37,10 +36,24 @@ public class OrderController {
         return orderService.listClientOrders(query, StpUtil.getLoginIdAsString());
     }
 
+    @PostMapping(path = "/engineer")
+    @Operation(summary = "工程师查询所属工单", description = "工程师查询所属工单")
+    public List<OrderSimpleVo4Engineer> listEngineerOrder(@RequestBody ConditionQuery query) {
+        StpUtil.checkRole(EmployeeRoleEnum.ENGINEER.name());
+        return orderService.listEngineerOrder(query);
+    }
+
     @GetMapping(path = "/client/{orderId}")
     @Operation(summary = "客户查询工单详情", description = "客户查询工单详情")
-    public ClientOrderDetailVo orderDetailById(@PathVariable String orderId) {
-        return orderService.getClientOrderDetail(orderId, StpUtil.getLoginIdAsString());
+    public OrderDetailVo orderDetailByClientId(@PathVariable String orderId) {
+        return orderService.getClientOrderDetail(orderId, StpUtil.getLoginIdAsString(), Boolean.TRUE);
+    }
+
+    @GetMapping(path = "/engineer/{orderId}")
+    @Operation(summary = "工程师查询工单详情", description = "工程师查询工单详情")
+    public OrderDetailVo orderDetailByEngineerId(@PathVariable String orderId) {
+        StpUtil.checkRole(EmployeeRoleEnum.ENGINEER.name());
+        return orderService.getClientOrderDetail(orderId, StpUtil.getLoginIdAsString(), Boolean.FALSE);
     }
 
     @PostMapping(path = "/client/create")
@@ -53,7 +66,7 @@ public class OrderController {
     @GetMapping(path = "/engineer/pending/{spuCategoryId}")
     @Operation(summary = "工程师查询待办工单", description = "工程师查询待办工单")
     @CheckLogin
-    public List<EngineerSimpleOrderVo> listPendingOrder(@PathVariable Integer spuCategoryId) {
+    public List<PendingOrderSimpleVo4Engineer> listPendingOrder(@PathVariable Integer spuCategoryId) {
         StpUtil.checkRole(EmployeeRoleEnum.ENGINEER.name());
         return orderService.listPendingOrders(spuCategoryId);
     }

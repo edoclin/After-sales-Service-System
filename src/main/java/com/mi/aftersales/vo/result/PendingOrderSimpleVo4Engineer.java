@@ -18,7 +18,7 @@ import java.util.List;
 @Accessors(chain = true)
 @Schema(title = "待处理工单列表（工程师）", description = "待处理工单列表（工程师）")
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
-public class EngineerSimpleOrderVo {
+public class PendingOrderSimpleVo4Engineer {
     @Schema(description = "工单Id")
     private String orderId;
 

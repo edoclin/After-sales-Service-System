@@ -3,9 +3,10 @@ package com.mi.aftersales.service;
 import com.mi.aftersales.config.enums.OrderStatusChangeEventEnum;
 import com.mi.aftersales.util.query.ConditionQuery;
 import com.mi.aftersales.vo.form.*;
-import com.mi.aftersales.vo.result.ClientOrderDetailVo;
+import com.mi.aftersales.vo.result.OrderDetailVo;
 import com.mi.aftersales.vo.result.ClientOrderSimpleVo;
-import com.mi.aftersales.vo.result.EngineerSimpleOrderVo;
+import com.mi.aftersales.vo.result.OrderSimpleVo4Engineer;
+import com.mi.aftersales.vo.result.PendingOrderSimpleVo4Engineer;
 import org.springframework.messaging.Message;
 
 import java.util.List;
@@ -49,25 +50,25 @@ public interface OrderService {
     /**
      * 查询客户工单列表。
      *
-     * @param query 查询条件
+     * @param query   查询条件
      * @param loginId 登录ID
      * @return 工单列表
      */
     List<ClientOrderSimpleVo> listClientOrders(ConditionQuery query, String loginId);
 
     /**
-     * 查询客户工单详情。
+     * 查询工单详情。
      *
      * @param orderId 工单ID
      * @param loginId 登录ID
      * @return 工单详情
      */
-    ClientOrderDetailVo getClientOrderDetail(String orderId, String loginId);
+    OrderDetailVo getClientOrderDetail(String orderId, String loginId, Boolean isClient);
 
     /**
      * 创建工单。
      *
-     * @param form 工单表单
+     * @param form    工单表单
      * @param loginId 登录ID
      */
     void createOrder(ClientOrderForm form, String loginId);
@@ -77,7 +78,7 @@ public interface OrderService {
      *
      * @return 待办工单列表
      */
-    List<EngineerSimpleOrderVo> listPendingOrders(Integer spuCategoryId);
+    List<PendingOrderSimpleVo4Engineer> listPendingOrders(Integer spuCategoryId);
 
     /**
      * 接受工单。
@@ -86,6 +87,8 @@ public interface OrderService {
      * @param loginId 登录ID
      */
     void acceptOrder(String orderId, String loginId);
+
+    List<OrderSimpleVo4Engineer> listEngineerOrder(ConditionQuery query);
 
     void engineerUploadImage(EngineerUploadForm form);
 
@@ -100,7 +103,7 @@ public interface OrderService {
     /**
      * 上传故障描述。
      *
-     * @param form 故障描述表单
+     * @param form    故障描述表单
      * @param loginId 登录ID
      */
     void uploadFaultDescription(FaultDescriptionForm form, String loginId);
@@ -108,7 +111,7 @@ public interface OrderService {
     /**
      * 确认计费。
      *
-     * @param form 计费确认表单
+     * @param form    计费确认表单
      * @param loginId 登录ID
      */
     void confirmFee(OrderFeeConfirmForm form, String loginId);
@@ -140,7 +143,7 @@ public interface OrderService {
     /**
      * 分发物料。
      *
-     * @param form 分发物料表单
+     * @param form    分发物料表单
      * @param loginId 登录ID
      */
     void distributeMaterial(MaterialDistributeForm form, String loginId);
@@ -148,9 +151,9 @@ public interface OrderService {
     /**
      * 开始维修。
      *
-     * @param orderId 工单ID
+     * @param orderId  工单ID
      * @param material 是否需要物料
-     * @param loginId 登录ID
+     * @param loginId  登录ID
      */
     void startRepair(String orderId, Boolean material, String loginId);
 
@@ -187,6 +190,7 @@ public interface OrderService {
      * @param loginId 登录ID
      */
     void closeOrder(String orderId, String loginId);
+
     /**
      * 构建状态转换消息。
      *

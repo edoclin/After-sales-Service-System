@@ -109,6 +109,12 @@ public class OrderServiceImpl implements OrderService {
     @Resource
     private IOrderUploadRepository iOrderUploadRepository;
 
+    /**
+     * @description: 客户查询工单列表
+     * @return:
+     * @author: edoclin
+     * @created: 2024/6/2 15:46
+     **/
     @Override
     public List<ClientOrderSimpleVo> listClientOrders(ConditionQuery query, String loginId) {
         QueryWrapper<Order> wrapper = QueryUtil.buildWrapper(query, Order.class);
@@ -124,22 +130,30 @@ public class OrderServiceImpl implements OrderService {
         return result;
     }
 
+    /**
+     * @description: 查询工单详情
+     * @return:
+     * @author: edoclin
+     * @created: 2024/6/2 15:46
+     **/
     @Override
-    public ClientOrderDetailVo getClientOrderDetail(String orderId, String loginId) {
+    public OrderDetailVo getClientOrderDetail(String orderId, String loginId, Boolean isClient) {
         Order order = iOrderRepository.getById(orderId);
 
         if (BeanUtil.isEmpty(order)) {
             throw new IllegalOrderIdException();
         }
 
-        if (!CharSequenceUtil.equals(order.getClientLoginId(), loginId)) {
+        if (isClient && !CharSequenceUtil.equals(order.getClientLoginId(), loginId)) {
+            throw new IllegalLoginIdException();
+        } else if (!CharSequenceUtil.equals(order.getEngineerLoginId(), loginId)) {
             throw new IllegalLoginIdException();
         }
 
-        ClientOrderDetailVo clientOrderDetailVo = new ClientOrderDetailVo();
-        BeanUtil.copyProperties(order, clientOrderDetailVo, DateUtil.copyDate2yyyyMMddHHmm());
-        clientOrderDetailVo.setOrderStatus(order.getOrderStatus().getDesc());
-        clientOrderDetailVo.setOrderStatusValue(order.getOrderStatus().getValue());
+        OrderDetailVo orderDetailVo = new OrderDetailVo();
+        BeanUtil.copyProperties(order, orderDetailVo, DateUtil.copyDate2yyyyMMddHHmm());
+        orderDetailVo.setOrderStatus(order.getOrderStatus().getDesc());
+        orderDetailVo.setOrderStatusValue(order.getOrderStatus().getValue());
 
         // 状态日志
         iOrderStatusLogRepository.lambdaQuery().eq(OrderStatusLog::getOrderId, order.getOrderId()).orderByAsc(OrderStatusLog::getOrderStatus).list().forEach(log -> {
@@ -147,14 +161,14 @@ public class OrderServiceImpl implements OrderService {
             BeanUtil.copyProperties(log, logVo, DateUtil.copyDate2yyyyMMddHHmm());
             logVo.setOrderStatus(log.getOrderStatus().getDesc());
             logVo.setOrderStatusValue(log.getOrderStatus().getValue());
-            clientOrderDetailVo.getStatusLogs().add(logVo);
+            orderDetailVo.getStatusLogs().add(logVo);
         });
 
         // 客户上传文件
         iOrderUploadRepository.lambdaQuery().eq(OrderUpload::getOrderId, order.getOrderId()).eq(OrderUpload::getUploaderType, OrderUploaderTypeEnum.CLIENT).list().forEach(file -> {
             File byId = iFileRepository.getById(file.getFileId());
             if (BeanUtil.isNotEmpty(byId)) {
-                clientOrderDetailVo.getClientFileUrl().add(new FileVo().setUrl(COSUtil.generateAccessUrl(byId.getAccessKey())).setType("image").setFileId(file.getFileId()));
+                orderDetailVo.getClientFileUrl().add(new FileVo().setUrl(COSUtil.generateAccessUrl(byId.getAccessKey())).setType("image").setFileId(file.getFileId()));
             }
         });
 
@@ -166,7 +180,7 @@ public class OrderServiceImpl implements OrderService {
                 .list().forEach(file -> {
                     File byId = iFileRepository.getById(file.getFileId());
                     if (BeanUtil.isNotEmpty(byId)) {
-                        clientOrderDetailVo.getEngineerImageUrl().add(new FileVo()
+                        orderDetailVo.getEngineerImageUrl().add(new FileVo()
                                 .setUrl(COSUtil.generateAccessUrl(byId.getAccessKey()))
                                 .setType(OrderUploadFileTypeEnum.IMAGE.name())
                                 .setFileId(file.getFileId()));
@@ -181,14 +195,14 @@ public class OrderServiceImpl implements OrderService {
                 .list().forEach(file -> {
                     File byId = iFileRepository.getById(file.getFileId());
                     if (BeanUtil.isNotEmpty(byId)) {
-                        clientOrderDetailVo.getEngineerVideoUrl().add(new FileVo()
+                        orderDetailVo.getEngineerVideoUrl().add(new FileVo()
                                 .setUrl(COSUtil.generateAccessUrl(byId.getAccessKey()))
                                 .setType(OrderUploadFileTypeEnum.VIDEO.name())
                                 .setFileId(file.getFileId()));
                     }
                 });
 
-        return clientOrderDetailVo;
+        return orderDetailVo;
     }
 
     @Override
@@ -272,9 +286,15 @@ public class OrderServiceImpl implements OrderService {
         }
     }
 
+    /**
+     * @description: 工程师查询待办工单
+     * @return:
+     * @author: edoclin
+     * @created: 2024/6/2 15:21
+     **/
     @Override
-    public List<EngineerSimpleOrderVo> listPendingOrders(Integer spuCategoryId) {
-        ArrayList<EngineerSimpleOrderVo> result = new ArrayList<>();
+    public List<PendingOrderSimpleVo4Engineer> listPendingOrders(Integer spuCategoryId) {
+        ArrayList<PendingOrderSimpleVo4Engineer> result = new ArrayList<>();
 
 //         按工单提交先后顺序，一次只能查询topN个
         Set<Object> pendingOrders;
@@ -291,7 +311,7 @@ public class OrderServiceImpl implements OrderService {
                     }
                     Order order = iOrderRepository.getById(((PendingOrder) pendingOrder).getOrderId());
                     if (BeanUtil.isNotEmpty(order)) {
-                        EngineerSimpleOrderVo item = new EngineerSimpleOrderVo();
+                        PendingOrderSimpleVo4Engineer item = new PendingOrderSimpleVo4Engineer();
                         BeanUtil.copyProperties(order, item, DateUtil.copyDate2yyyyMMddHHmm());
                         Sku sku = iSkuRepository.getById(order.getSkuId());
                         item.setSkuDisplayName(sku.getSkuDisplayName());
@@ -310,6 +330,12 @@ public class OrderServiceImpl implements OrderService {
         return result;
     }
 
+    /**
+     * @description: 工程师接受工单
+     * @return:
+     * @author: edoclin
+     * @created: 2024/6/2 15:21
+     **/
     @Override
     public void acceptOrder(String orderId, String loginId) {
         // finished
@@ -352,6 +378,34 @@ public class OrderServiceImpl implements OrderService {
     }
 
     /**
+     * @description: 工程师查询所属工单列表
+     * @return:
+     * @author: edoclin
+     * @created: 2024/6/2 15:21
+     **/
+    @Override
+    public List<OrderSimpleVo4Engineer> listEngineerOrder(ConditionQuery query) {
+        List<OrderSimpleVo4Engineer> result = new ArrayList<>();
+
+        QueryWrapper<Order> wrapper = QueryUtil.buildWrapper(query, Order.class);
+        wrapper = wrapper.eq("engineer_login_id", StpUtil.getLoginIdAsString()).orderByDesc("created_time");
+
+
+        iOrderRepository.list(wrapper).forEach(order -> {
+            OrderSimpleVo4Engineer item = new OrderSimpleVo4Engineer();
+            BeanUtil.copyProperties(order, item, DateUtil.copyDate2yyyyMMddHHmm());
+            item.setOrderStatus(order.getOrderStatus().getDesc());
+            Sku sku = iSkuRepository.getById(order.getSkuId());
+            Spu spu = iSpuRepository.getById(sku.getSpuId());
+            item.setCategories(iSpuCategoryRepository.listAllSpuCategoryName(spu.getCategoryId()));
+            item.setOrderStatusValue(order.getOrderStatus().getValue());
+            item.setOrderType(order.getOrderType().getDesc());
+            result.add(item);
+        });
+        return result;
+    }
+
+    /**
      * @description: 工程师上传检测前图片
      * @return:
      * @author: edoclin
@@ -390,6 +444,12 @@ public class OrderServiceImpl implements OrderService {
 
     }
 
+    /**
+     * @description: 工程师开始检测
+     * @return:
+     * @author: edoclin
+     * @created: 2024/6/2 15:21
+     **/
     @Override
     @Transactional
     public void startChecking(String orderId, String loginId) {
@@ -413,6 +473,12 @@ public class OrderServiceImpl implements OrderService {
         }
     }
 
+    /**
+     * @description: 工程师上传故障描述
+     * @return:
+     * @author: edoclin
+     * @created: 2024/6/2 15:21
+     **/
     @Override
     @Transactional
     public void uploadFaultDescription(FaultDescriptionForm form, String loginId) {
@@ -444,6 +510,12 @@ public class OrderServiceImpl implements OrderService {
 //        rocketmqTemplate.send(ROCKETMQ_TOPIC_4_ORDER_LOG, msg);
     }
 
+    /**
+     * @description: 工程师确认费用账单
+     * @return:
+     * @author: edoclin
+     * @created: 2024/6/2 15:22
+     **/
     @Override
     @Transactional
     public void confirmFee(OrderFeeConfirmForm form, String loginId) {
@@ -488,6 +560,12 @@ public class OrderServiceImpl implements OrderService {
         }
     }
 
+    /**
+     * @description: 客户确认费用
+     * @return:
+     * @author: edoclin
+     * @created: 2024/6/2 15:22
+     **/
     @Override
     @Transactional
     public void clientConfirmFee(String orderId, String loginId) {
@@ -505,6 +583,12 @@ public class OrderServiceImpl implements OrderService {
         }
     }
 
+    /**
+     * @description: 客户拒绝维修
+     * @return:
+     * @author: edoclin
+     * @created: 2024/6/2 15:22
+     **/
     @Override
     @Transactional
     public void clientRejectRepair(String orderId, String loginId) {
@@ -523,6 +607,12 @@ public class OrderServiceImpl implements OrderService {
         }
     }
 
+    /**
+     * @description: 工程师申请物料
+     * @return:
+     * @author: edoclin
+     * @created: 2024/6/2 15:22
+     **/
     @Override
     @Transactional
     public void applyMaterial(String orderId, String loginId) {
@@ -542,6 +632,12 @@ public class OrderServiceImpl implements OrderService {
         }
     }
 
+    /**
+     * @description: 库管分发物料
+     * @return:
+     * @author: edoclin
+     * @created: 2024/6/2 15:22
+     **/
     @Override
     @Transactional
     public void distributeMaterial(MaterialDistributeForm form, String loginId) {
@@ -593,6 +689,12 @@ public class OrderServiceImpl implements OrderService {
         }
     }
 
+    /**
+     * @description: 工程师开始维修
+     * @return:
+     * @author: edoclin
+     * @created: 2024/6/2 15:22
+     **/
     @Override
     @Transactional
     public void startRepair(String orderId, Boolean material, String loginId) {
@@ -618,6 +720,12 @@ public class OrderServiceImpl implements OrderService {
         }
     }
 
+    /**
+     * @description: 工程师开始复检
+     * @return:
+     * @author: edoclin
+     * @created: 2024/6/2 15:22
+     **/
     @Override
     @Transactional
     public void startRechecking(String orderId, String loginId) {
@@ -677,6 +785,12 @@ public class OrderServiceImpl implements OrderService {
         }
     }
 
+    /**
+     * @description: 工程师完成维修
+     * @return:
+     * @author: edoclin
+     * @created: 2024/6/2 15:23
+     **/
     @Override
     @Transactional
     public void finishRepair(String orderId, String loginId) {
@@ -703,6 +817,12 @@ public class OrderServiceImpl implements OrderService {
         }
     }
 
+    /**
+     * @description: 工程师返还物品
+     * @return:
+     * @author: edoclin
+     * @created: 2024/6/2 15:23
+     **/
     @Override
     @Transactional
     public void returnItem(String orderId, String loginId) {
@@ -720,6 +840,12 @@ public class OrderServiceImpl implements OrderService {
         }
     }
 
+    /**
+     * @description: 客户关闭工单
+     * @return:
+     * @author: edoclin
+     * @created: 2024/6/2 15:25
+     **/
     @Override
     @Transactional
     public void closeOrder(String orderId, String loginId) {

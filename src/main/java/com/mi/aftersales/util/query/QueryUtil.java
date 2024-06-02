@@ -55,7 +55,7 @@ public class QueryUtil {
                 case NUM_GE -> wrapper = wrapper.ge(underlineColumn, queryParam.getValue());
                 case NUM_LT -> wrapper = wrapper.lt(underlineColumn, queryParam.getValue());
                 case NUM_LE -> wrapper = wrapper.le(underlineColumn, queryParam.getValue());
-                case IN -> wrapper = wrapper.in(underlineColumn, queryParam.getValue().split(","));
+//                case IN -> wrapper = wrapper.in(underlineColumn, queryParam.getValue().split(","));
                 case CUSTOM -> {}
             }
 
