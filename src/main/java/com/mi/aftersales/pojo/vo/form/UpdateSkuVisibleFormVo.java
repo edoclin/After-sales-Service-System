@@ -14,10 +14,10 @@ import javax.validation.constraints.NotEmpty;
 @Getter
 @Setter
 @Accessors(chain = true)
-@Schema(title = "更新商品SKU是否可见", description = "更新商品SKU是否可见")
+@Schema(title = "更新商品Sku是否可见", description = "更新商品Sku是否可见")
 public class UpdateSkuVisibleFormVo {
-    @Schema(description = "商品SKU编号")
-    @NotEmpty(message = "商品SKU编号不能为空")
+    @Schema(description = "商品Sku编号")
+    @NotEmpty(message = "商品Sku编号不能为空")
     private String skuId;
 
     @Schema(description = "客户是否可见")
