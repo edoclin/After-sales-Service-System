@@ -13,7 +13,7 @@ import com.feiniaojin.gracefulresponse.GracefulResponseException;
 import com.mi.aftersales.config.yaml.bean.CustomSmsConfig;
 import com.mi.aftersales.config.yaml.bean.OAuthConfig;
 import com.mi.aftersales.config.yaml.bean.OAuthList;
-import com.mi.aftersales.enums.controller.SmsCodeType;
+import com.mi.aftersales.enums.controller.SmsType;
 import com.mi.aftersales.entity.*;
 import com.mi.aftersales.enums.entity.LoginOAuthSourceEnum;
 import com.mi.aftersales.enums.entity.LoginTypeEnum;
@@ -110,7 +110,7 @@ public class LoginServiceImpl implements LoginService {
         if (CharSequenceUtil.isBlank(smsCode)) {
             String code = randomGenerator.generate();
 
-            SmsBlend smsBlend = SmsFactory.getSmsBlend(SmsCodeType.LOGIN.getValue());
+            SmsBlend smsBlend = SmsFactory.getSmsBlend(SmsType.LOGIN.getValue());
             // todo 待处理
             SmsResponse smsResponse = smsBlend.sendMessage(form.getMobile(), code);
 
@@ -127,7 +127,7 @@ public class LoginServiceImpl implements LoginService {
                 smsResultVo.setInfo(CharSequenceUtil.format("请{}秒后再尝试!", customSmsConfig.getPeriod() - delta));
             } else {
                 String code = randomGenerator.generate();
-                SmsBlend smsBlend = SmsFactory.getSmsBlend(SmsCodeType.LOGIN.getValue());
+                SmsBlend smsBlend = SmsFactory.getSmsBlend(SmsType.LOGIN.getValue());
                 SmsResponse smsResponse = smsBlend.sendMessage(form.getMobile(), code);
 
                 code += "_" + DateUtil.currentSeconds();

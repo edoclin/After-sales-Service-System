@@ -3,11 +3,14 @@ package com.mi.aftersales.consumer;
 
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.text.CharSequenceUtil;
-import com.feiniaojin.gracefulresponse.GracefulResponseException;
+import cn.hutool.json.JSONUtil;
 import com.mi.aftersales.config.yaml.bean.CustomSmsConfig;
-import com.mi.aftersales.enums.controller.SmsCodeType;
+import com.mi.aftersales.entity.SmsLog;
+import com.mi.aftersales.enums.controller.SmsType;
 import com.mi.aftersales.entity.Login;
 import com.mi.aftersales.entity.Order;
+import com.mi.aftersales.enums.entity.SmsResultEnum;
+import com.mi.aftersales.enums.entity.SmsTypeEnum;
 import com.mi.aftersales.exception.graceful.IllegalLoginIdException;
 import com.mi.aftersales.exception.graceful.IllegalOrderIdException;
 import com.mi.aftersales.repository.ILoginRepository;
@@ -60,15 +63,25 @@ public class SmsConsumer implements RocketMQListener<String> {
             }
 
             Login login = iLoginRepository.getById(order.getClientLoginId());
+
             if (BeanUtil.isEmpty(login)) {
                 throw new IllegalLoginIdException();
             }
-            SmsBlend smsBlend = SmsFactory.getSmsBlend(SmsCodeType.ORDER_NOTIFY.getValue());
+            SmsBlend smsBlend = SmsFactory.getSmsBlend(SmsType.ORDER_NOTIFY.getValue());
             SmsResponse smsResponse = smsBlend.sendMessage(login.getMobile(), orderId.substring(orderId.length() - 6));
             log.info(CharSequenceUtil.format("工单状态提醒短信发送成功（{}）", login.getMobile()));
+
+            SmsLog smsLog = new SmsLog();
+
+            smsLog.setSmsType(SmsTypeEnum.ORDER)
+                    .setDetail(JSONUtil.toJsonStr(smsResponse))
+                    .setMobile(login.getMobile())
+                    .setResult(smsResponse.isSuccess() ? SmsResultEnum.SUCCESS : SmsResultEnum.FAIL)
+                    .setResponse(JSONUtil.toJsonStr(smsResponse));
+
+            iSmsLogRepository.save(smsLog);
         } else {
             log.warn(CharSequenceUtil.format("当前短信未激活状态（enable is false）"));
-
         }
 
     }

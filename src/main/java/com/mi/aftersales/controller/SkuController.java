@@ -1,8 +1,10 @@
 package com.mi.aftersales.controller;
 
+import cn.dev33.satoken.stp.StpUtil;
+import com.mi.aftersales.enums.entity.EmployeeRoleEnum;
+import com.mi.aftersales.pojo.vo.form.UpdateSkuFormVo;
 import com.mi.aftersales.service.SkuService;
 import com.mi.aftersales.util.query.ConditionQuery;
-import com.mi.aftersales.pojo.vo.form.SkuVisibleSetFormVo;
 import com.mi.aftersales.pojo.vo.ClientSkuVo;
 import com.mi.aftersales.pojo.common.PageResult;
 import com.mi.aftersales.pojo.vo.SkuVo;
@@ -30,9 +32,15 @@ public class SkuController {
     private SkuService skuService;
 
     @PostMapping(path = "/")
-    @Operation(summary = "管理员添加商品SKU", description = "管理员添加商品SKU")
+    @Operation(summary = "管理员添加商品Sku", description = "管理员添加商品Sku")
     public void postSpu(@RequestBody @Valid SkuFormVo form) {
         skuService.addSku(form);
+    }
+
+    @PutMapping(path = "/")
+    @Operation(summary = "管理员更新商品Sku", description = "管理员更新商品Sku")
+    public void postSpu(@RequestBody @Valid UpdateSkuFormVo form) {
+        skuService.updateSkuById(form);
     }
 
     @PutMapping(path = "/visible")
@@ -41,22 +49,23 @@ public class SkuController {
         skuService.updateSkuVisibility(form);
     }
 
-    @PostMapping(path = "/client/{spuId}")
+    @PostMapping(path = "/client")
     @Operation(summary = "客户查询商品Sku", description = "客户查询商品Sku")
-    @Parameter(name = "spuId", description = "商品所属SpuID", required = true)
-    public PageResult<ClientSkuVo> list4Client(@RequestBody @Valid ConditionQuery form, @PathVariable String spuId) {
-        return skuService.listClientSku(form, spuId);
+    public PageResult<ClientSkuVo> list4Client(@RequestBody @Valid ConditionQuery form) {
+        return skuService.listClientSku(form);
     }
 
-    @PostMapping(path = "/list/{spuId}")
+    @PostMapping(path = "/manager")
     @Operation(summary = "查询商品Sku（管理员）", description = "查询商品Sku（管理员）")
-    public PageResult<SkuVo> list(@RequestBody ConditionQuery query, @PathVariable String spuId) {
-        return skuService.listSku(query, spuId);
+    public PageResult<SkuVo> conditionList(@RequestBody ConditionQuery query) {
+        StpUtil.checkRole(EmployeeRoleEnum.SYSTEM_MANAGER.name());
+        return skuService.conditionList(query);
     }
 
-    @PostMapping(path = "/visible")
-    @Operation(summary = "设置商品Sku是否可见（管理员）", description = "设置商品Sku是否可见（管理员）")
-    public void list(@RequestBody @Valid SkuVisibleSetFormVo form) {
-        skuService.setSkuVisibility(form);
+    @DeleteMapping(path = "/manager/{skuId}")
+    @Operation(summary = "删除商品Sku（管理员）", description = "删除商品Sku（管理员）")
+    public void deleteSkuById(@PathVariable String skuId) {
+        StpUtil.checkRole(EmployeeRoleEnum.SYSTEM_MANAGER.name());
+        skuService.removeSkuById(skuId);
     }
 }
