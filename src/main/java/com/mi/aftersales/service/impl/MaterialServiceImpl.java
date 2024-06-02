@@ -10,6 +10,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.feiniaojin.gracefulresponse.GracefulResponseException;
 import com.mi.aftersales.entity.Material;
 import com.mi.aftersales.entity.MaterialLog;
+import com.mi.aftersales.entity.SpuCategory;
 import com.mi.aftersales.entity.enums.MaterialActionEnum;
 import com.mi.aftersales.exception.graceful.BaseCustomException;
 import com.mi.aftersales.exception.graceful.IllegalMaterialIdException;
@@ -22,10 +23,10 @@ import com.mi.aftersales.repository.IMaterialRepository;
 import com.mi.aftersales.util.DateUtil;
 import com.mi.aftersales.util.query.ConditionQuery;
 import com.mi.aftersales.util.query.QueryUtil;
+import com.mi.aftersales.util.query.enums.Operator;
 import com.mi.aftersales.vo.PageResult;
 import com.mi.aftersales.vo.form.ManngerUpdateMaterialForm;
 import com.mi.aftersales.vo.form.MaterialForm;
-import com.mi.aftersales.vo.result.MaterialLogVo;
 import com.mi.aftersales.vo.result.MaterialVo;
 import org.apache.rocketmq.spring.core.RocketMQTemplate;
 import org.redisson.api.RLock;
@@ -38,10 +39,11 @@ import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import static com.mi.aftersales.util.RocketMqTopic.ROCKETMQ_TOPIC_4_ORDER_UPLOAD;
+import static com.mi.aftersales.util.RocketMqTopic.ROCKETMQ_TOPIC_4_MATERIAL_LOG;
 
 /**
  * <p>
@@ -104,7 +106,7 @@ public class MaterialServiceImpl implements MaterialService {
                     .setLogDetail("添加新物料入库").setOperatorId(StpUtil.getLoginIdAsString()).setAction(MaterialActionEnum.NEW).setDelta(material.getStock()).setCreatedId(StpUtil.getLoginIdAsString());
 
             Message<List<MaterialLog>> msg = MessageBuilder.withPayload(CollUtil.list(Boolean.FALSE, materialLog)).build();
-            rocketmqTemplate.syncSend(ROCKETMQ_TOPIC_4_ORDER_UPLOAD, msg);
+            rocketmqTemplate.syncSend(ROCKETMQ_TOPIC_4_MATERIAL_LOG, msg);
 
         } catch (ConvertException e) {
             throw new GracefulResponseException("物料类型不合法!");
@@ -161,7 +163,7 @@ public class MaterialServiceImpl implements MaterialService {
                         .setCreatedId(StpUtil.getLoginIdAsString());
 
                 Message<List<MaterialLog>> msg = MessageBuilder.withPayload(CollUtil.list(Boolean.FALSE, materialLog)).build();
-                rocketmqTemplate.syncSend(ROCKETMQ_TOPIC_4_ORDER_UPLOAD, msg);
+                rocketmqTemplate.syncSend(ROCKETMQ_TOPIC_4_MATERIAL_LOG, msg);
 
             }
         } catch (ConvertException e) {
@@ -178,11 +180,32 @@ public class MaterialServiceImpl implements MaterialService {
         }
     }
 
+    private List<Integer> childrenCategoryId(Integer parentCategoryId) {
+        List<Integer> result = new ArrayList<>();
+        if (parentCategoryId != null) {
+            result.add(parentCategoryId);
+            iSpuCategoryRepository.lambdaQuery().eq(SpuCategory::getParentCategoryId, parentCategoryId).list().forEach(item -> {
+                result.addAll(childrenCategoryId(item.getCategoryId()));
+            });
+        }
+        return result;
+    }
+
     @Override
     public PageResult<MaterialVo> conditionQuery(ConditionQuery query) {
         QueryWrapper<Material> wrapper = QueryUtil.buildWrapper(query, Material.class);
         PageResult<MaterialVo> result = new PageResult<>();
 
+        List<Integer> in = new ArrayList<>();
+
+        query.getParams().forEach(param -> {
+            if (param.getOperator() == Operator.CUSTOM) {
+                in.addAll(childrenCategoryId(Integer.valueOf(param.getValue())));
+
+            }
+        });
+
+        wrapper = wrapper.in("spu_category_id", in);
         result.setTotal(iMaterialRepository.count(wrapper));
 
         iMaterialRepository.page(new Page<>(query.getCurrent(), query.getLimit()), wrapper).getRecords().forEach(material -> {
@@ -190,15 +213,16 @@ public class MaterialServiceImpl implements MaterialService {
             MaterialVo materialVo = new MaterialVo();
 
             BeanUtil.copyProperties(material, materialVo, DateUtil.copyDate2yyyyMMddHHmm());
-            iMaterialLogRepository.lambdaQuery().eq(MaterialLog::getMaterialId, material.getMaterialId()).list().forEach(log -> {
-                MaterialLogVo logVo = new MaterialLogVo();
-
-                BeanUtil.copyProperties(log, logVo, DateUtil.copyDate2yyyyMMddHHmm());
-                logVo.setAction(log.getAction().getDesc());
-                logVo.setDelta(log.getDelta().stripTrailingZeros().toEngineeringString());
-
-                materialVo.getLogs().add(logVo);
-            });
+            // todo 详情再查询日志
+//            iMaterialLogRepository.lambdaQuery().eq(MaterialLog::getMaterialId, material.getMaterialId()).list().forEach(log -> {
+//                MaterialLogVo logVo = new MaterialLogVo();
+//
+//                BeanUtil.copyProperties(log, logVo, DateUtil.copyDate2yyyyMMddHHmm());
+//                logVo.setAction(log.getAction().getDesc());
+//                logVo.setDelta(log.getDelta().stripTrailingZeros().toEngineeringString());
+//
+//                materialVo.getLogs().add(logVo);
+//            });
 
             result.getData().add(materialVo);
         });
@@ -227,7 +251,7 @@ public class MaterialServiceImpl implements MaterialService {
                     .setCreatedId(StpUtil.getLoginIdAsString());
 
             Message<List<MaterialLog>> msg = MessageBuilder.withPayload(CollUtil.list(Boolean.FALSE, materialLog)).build();
-            rocketmqTemplate.syncSend(ROCKETMQ_TOPIC_4_ORDER_UPLOAD, msg);
+            rocketmqTemplate.syncSend(ROCKETMQ_TOPIC_4_MATERIAL_LOG, msg);
         } catch (Exception e) {
             log.error(e.getMessage());
             throw new ServerErrorException();

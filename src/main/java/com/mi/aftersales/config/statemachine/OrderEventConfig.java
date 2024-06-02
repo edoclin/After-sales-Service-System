@@ -7,6 +7,7 @@ import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.text.CharSequenceUtil;
 import com.feiniaojin.gracefulresponse.GracefulResponseException;
 import com.mi.aftersales.config.enums.OrderStatusChangeEventEnum;
+import com.mi.aftersales.config.yaml.bean.OrderConfig;
 import com.mi.aftersales.entity.Order;
 import com.mi.aftersales.entity.OrderStatusLog;
 import com.mi.aftersales.entity.Spu;
@@ -29,6 +30,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 
+import java.util.Set;
+
+import static com.mi.aftersales.service.OrderService.NAMESPACE_4_PENDING_ORDER;
 import static com.mi.aftersales.service.OrderService.STATE_MACHINE_HEADER_CATEGORY_ID;
 import static com.mi.aftersales.util.RocketMqTopic.ROCKETMQ_TOPIC_4_ORDER_LOG;
 import static com.mi.aftersales.util.RocketMqTopic.ROCKETMQ_TOPIC_4_SMS;
@@ -55,6 +59,9 @@ public class OrderEventConfig {
 
     @Resource
     private RocketMQTemplate rocketmqTemplate;
+
+    @Resource
+    private OrderConfig orderConfig;
 
     public void sendSms(String orderId) {
         Message<String> msg = MessageBuilder.withPayload(orderId).build();
@@ -99,8 +106,8 @@ public class OrderEventConfig {
                 .setOrderId(order.getOrderId())
                 .setCategories(iSpuCategoryRepository.listAllSpuCategoryName(spuCategoryId));
 
-        redisTemplate.opsForZSet().add(OrderService.NAMESPACE_4_PENDING_ORDER, pendingOrder, System.currentTimeMillis());
-        return true;
+        redisTemplate.opsForZSet().add(NAMESPACE_4_PENDING_ORDER, pendingOrder, System.currentTimeMillis());
+        return Boolean.TRUE;
     }
 
     /**
@@ -132,10 +139,20 @@ public class OrderEventConfig {
         Message<OrderStatusLog> msg = MessageBuilder.withPayload(orderStatusLog).build();
         rocketmqTemplate.syncSend(ROCKETMQ_TOPIC_4_ORDER_LOG, msg);
         // 移除待办工单
-        redisTemplate.opsForZSet().remove(OrderService.NAMESPACE_4_PENDING_ORDER, order.getOrderId());
-
-        sendSms(order.getOrderId());
-        return true;
+        Set<Object> pendingOrders;
+        for (int i = 0; ; i += orderConfig.getTopN()) {
+            pendingOrders = redisTemplate.opsForZSet().range(NAMESPACE_4_PENDING_ORDER, i, i + orderConfig.getTopN() - 1);
+            if (CollUtil.isEmpty(pendingOrders)) {
+                break;
+            }
+            PendingOrder delete = (PendingOrder) CollUtil.findOne(pendingOrders, item -> CharSequenceUtil.equals(((PendingOrder) item).getOrderId(), order.getOrderId()));
+            if (BeanUtil.isNotEmpty(delete)) {
+                redisTemplate.opsForZSet().remove(NAMESPACE_4_PENDING_ORDER, delete);
+                sendSms(order.getOrderId());
+                return Boolean.TRUE;
+            }
+        }
+        return Boolean.FALSE;
     }
 
     /**
@@ -167,7 +184,7 @@ public class OrderEventConfig {
         Message<OrderStatusLog> msg = MessageBuilder.withPayload(orderStatusLog).build();
         rocketmqTemplate.syncSend(ROCKETMQ_TOPIC_4_ORDER_LOG, msg);
 
-        return true;
+        return Boolean.TRUE;
     }
 
     /**
@@ -321,6 +338,6 @@ public class OrderEventConfig {
         rocketmqTemplate.syncSend(ROCKETMQ_TOPIC_4_ORDER_LOG, msg);
 
         sendSms(order.getOrderId());
-        return true;
+        return Boolean.TRUE;
     }
 }

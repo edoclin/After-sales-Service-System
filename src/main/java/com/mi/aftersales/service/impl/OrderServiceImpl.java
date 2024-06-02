@@ -312,7 +312,7 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public void acceptOrder(String orderId, String loginId) {
-        // todo
+        // finished
         Boolean isPending = Boolean.FALSE;
         Set<Object> pendingOrders;
         for (int i = 0; ; i += orderConfig.getTopN()) {
