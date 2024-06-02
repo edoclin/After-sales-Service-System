@@ -1,7 +1,7 @@
 package com.mi.aftersales.config;
 
-import com.mi.aftersales.config.enums.OrderStatusChangeEventEnum;
-import com.mi.aftersales.entity.enums.OrderStatusEnum;
+import com.mi.aftersales.enums.config.OrderStatusChangeEventEnum;
+import com.mi.aftersales.enums.entity.OrderStatusEnum;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.connection.RedisConnectionFactory;

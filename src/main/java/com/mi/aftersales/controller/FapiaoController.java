@@ -3,9 +3,9 @@ package com.mi.aftersales.controller;
 import cn.dev33.satoken.stp.StpUtil;
 import com.mi.aftersales.aspect.anno.CheckLogin;
 import com.mi.aftersales.service.FapiaoService;
-import com.mi.aftersales.vo.result.ClientFapiaoVo;
-import com.mi.aftersales.vo.form.FapiaoForm;
-import com.mi.aftersales.vo.form.UpdateFapiaoForm;
+import com.mi.aftersales.pojo.vo.ClientFapiaoVo;
+import com.mi.aftersales.pojo.vo.form.FapiaoFormVo;
+import com.mi.aftersales.pojo.vo.form.UpdateFapiaoFormVo;
 import io.swagger.v3.oas.annotations.Operation;
 import org.springframework.web.bind.annotation.*;
 
@@ -31,7 +31,7 @@ public class FapiaoController {
     @PostMapping(path = "/")
     @CheckLogin
     @Operation(summary = "添加发票", description = "添加发票")
-    public void postFapiao(@RequestBody @Valid FapiaoForm form) {
+    public void postFapiao(@RequestBody @Valid FapiaoFormVo form) {
         fapiaoService.addFapiao(form);
     }
 
@@ -52,7 +52,7 @@ public class FapiaoController {
     @PutMapping(path = "/client")
     @CheckLogin
     @Operation(summary = "当前用户修改发票信息", description = "当前用户修改发票信息")
-    public void updateFapiao(@RequestBody @Valid UpdateFapiaoForm form) {
+    public void updateFapiao(@RequestBody @Valid UpdateFapiaoFormVo form) {
         fapiaoService.updateFapiaoByClient(form, StpUtil.getLoginIdAsString());
     }
 }

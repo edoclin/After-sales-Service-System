@@ -1,12 +1,12 @@
 package com.mi.aftersales.service;
 
 import com.mi.aftersales.util.query.ConditionQuery;
-import com.mi.aftersales.vo.PageResult;
-import com.mi.aftersales.vo.form.SkuForm;
-import com.mi.aftersales.vo.form.SkuVisibleSetForm;
-import com.mi.aftersales.vo.form.UpdateSkuVisibleForm;
-import com.mi.aftersales.vo.result.ClientSkuVo;
-import com.mi.aftersales.vo.result.SkuVo;
+import com.mi.aftersales.pojo.common.PageResult;
+import com.mi.aftersales.pojo.vo.form.SkuFormVo;
+import com.mi.aftersales.pojo.vo.form.SkuVisibleSetFormVo;
+import com.mi.aftersales.pojo.vo.form.UpdateSkuVisibleFormVo;
+import com.mi.aftersales.pojo.vo.ClientSkuVo;
+import com.mi.aftersales.pojo.vo.SkuVo;
 
 /**
  * <p>
@@ -22,14 +22,14 @@ public interface SkuService {
      *
      * @param form SKU表单对象，包含SKU的详细信息。
      */
-    void addSku(SkuForm form);
+    void addSku(SkuFormVo form);
 
     /**
      * 更新商品SKU的可见性。
      *
      * @param form 更新SKU可见性表单对象，包含SKU ID和可见性状态。
      */
-    void updateSkuVisibility(UpdateSkuVisibleForm form);
+    void updateSkuVisibility(UpdateSkuVisibleFormVo form);
 
     /**
      * 分页查询客户可见的商品SKU。
@@ -54,5 +54,5 @@ public interface SkuService {
      *
      * @param form SKU可见性设置表单对象，包含SKU ID和可见性状态。
      */
-    void setSkuVisibility(SkuVisibleSetForm form);
+    void setSkuVisibility(SkuVisibleSetFormVo form);
 }

@@ -2,12 +2,12 @@ package com.mi.aftersales.controller;
 
 import com.mi.aftersales.service.SkuService;
 import com.mi.aftersales.util.query.ConditionQuery;
-import com.mi.aftersales.vo.form.SkuVisibleSetForm;
-import com.mi.aftersales.vo.result.ClientSkuVo;
-import com.mi.aftersales.vo.PageResult;
-import com.mi.aftersales.vo.result.SkuVo;
-import com.mi.aftersales.vo.form.SkuForm;
-import com.mi.aftersales.vo.form.UpdateSkuVisibleForm;
+import com.mi.aftersales.pojo.vo.form.SkuVisibleSetFormVo;
+import com.mi.aftersales.pojo.vo.ClientSkuVo;
+import com.mi.aftersales.pojo.common.PageResult;
+import com.mi.aftersales.pojo.vo.SkuVo;
+import com.mi.aftersales.pojo.vo.form.SkuFormVo;
+import com.mi.aftersales.pojo.vo.form.UpdateSkuVisibleFormVo;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import org.springframework.web.bind.annotation.*;
@@ -31,13 +31,13 @@ public class SkuController {
 
     @PostMapping(path = "/")
     @Operation(summary = "管理员添加商品SKU", description = "管理员添加商品SKU")
-    public void postSpu(@RequestBody @Valid SkuForm form) {
+    public void postSpu(@RequestBody @Valid SkuFormVo form) {
         skuService.addSku(form);
     }
 
     @PutMapping(path = "/visible")
     @Operation(summary = "管理员更新商品Sku是否可见", description = "管理员更新商品Sku是否可见")
-    public void putSpuVisible(@RequestBody @Valid UpdateSkuVisibleForm form) {
+    public void putSpuVisible(@RequestBody @Valid UpdateSkuVisibleFormVo form) {
         skuService.updateSkuVisibility(form);
     }
 
@@ -56,7 +56,7 @@ public class SkuController {
 
     @PostMapping(path = "/visible")
     @Operation(summary = "设置商品Sku是否可见（管理员）", description = "设置商品Sku是否可见（管理员）")
-    public void list(@RequestBody @Valid SkuVisibleSetForm form) {
+    public void list(@RequestBody @Valid SkuVisibleSetFormVo form) {
         skuService.setSkuVisibility(form);
     }
 }

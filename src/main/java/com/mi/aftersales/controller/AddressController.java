@@ -3,8 +3,7 @@ package com.mi.aftersales.controller;
 import cn.dev33.satoken.stp.StpUtil;
 import com.mi.aftersales.aspect.anno.CheckLogin;
 import com.mi.aftersales.service.AddressService;
-import com.mi.aftersales.vo.form.ClientAddressForm;
-import com.mi.aftersales.vo.result.ClientAddressVo;
+import com.mi.aftersales.pojo.vo.form.ClientAddressFormVo;
 import io.swagger.v3.oas.annotations.Operation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,7 +33,7 @@ public class AddressController {
     @PostMapping(path = "/")
     @Operation(summary = "客户添加地址", description = "客户添加地址")
     @CheckLogin
-    public void postAddress(@RequestBody @Valid ClientAddressForm form) {
+    public void postAddress(@RequestBody @Valid ClientAddressFormVo form) {
         log.info("客户添加地址");
         addressService.addAddress(form, StpUtil.getLoginIdAsString());
     }
@@ -42,7 +41,7 @@ public class AddressController {
     @GetMapping(path = "/")
     @Operation(summary = "客户查询地址", description = "客户查询地址")
     @CheckLogin
-    public List<ClientAddressVo> listAddress() {
+    public List<com.mi.aftersales.pojo.vo.ClientAddressVo> listAddress() {
         return addressService.listAddress(StpUtil.getLoginIdAsString());
     }
 

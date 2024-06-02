@@ -1,8 +1,8 @@
 package com.mi.aftersales.service;
 
-import com.mi.aftersales.vo.form.FapiaoForm;
-import com.mi.aftersales.vo.form.UpdateFapiaoForm;
-import com.mi.aftersales.vo.result.ClientFapiaoVo;
+import com.mi.aftersales.pojo.vo.form.FapiaoFormVo;
+import com.mi.aftersales.pojo.vo.form.UpdateFapiaoFormVo;
+import com.mi.aftersales.pojo.vo.ClientFapiaoVo;
 
 import java.util.List;
 
@@ -20,7 +20,7 @@ public interface FapiaoService {
      *
      * @param form 发票表单
      */
-    void addFapiao(FapiaoForm form);
+    void addFapiao(FapiaoFormVo form);
 
     /**
      * 查询当前用户发票。
@@ -44,5 +44,5 @@ public interface FapiaoService {
      * @param form 更新发票表单
      * @param loginId 用户登录ID
      */
-    void updateFapiaoByClient(UpdateFapiaoForm form, String loginId);
+    void updateFapiaoByClient(UpdateFapiaoFormVo form, String loginId);
 }

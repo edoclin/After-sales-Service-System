@@ -1,6 +1,6 @@
 package com.mi.aftersales.service;
 
-import com.mi.aftersales.vo.OrderStatusLogResult;
+import com.mi.aftersales.pojo.vo.OrderStatusLogVo;
 
 import java.util.List;
 
@@ -19,5 +19,5 @@ public interface OrderStatusLogService {
      * @param orderId 工单ID
      * @return 状态日志列表
      */
-    List<OrderStatusLogResult> listOrderStatusLogByOrderId(String orderId);
+    List<OrderStatusLogVo> listOrderStatusLogByOrderId(String orderId);
 }

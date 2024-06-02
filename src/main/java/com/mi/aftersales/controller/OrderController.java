@@ -2,11 +2,14 @@ package com.mi.aftersales.controller;
 
 import cn.dev33.satoken.stp.StpUtil;
 import com.mi.aftersales.aspect.anno.CheckLogin;
-import com.mi.aftersales.entity.enums.*;
+import com.mi.aftersales.enums.entity.EmployeeRoleEnum;
+import com.mi.aftersales.pojo.vo.ClientOrderSimpleVo;
+import com.mi.aftersales.pojo.vo.OrderDetailVo;
+import com.mi.aftersales.pojo.vo.OrderSimple4EngineerVo;
+import com.mi.aftersales.pojo.vo.PendingOrderSimple4EngineerVo;
+import com.mi.aftersales.pojo.vo.form.*;
 import com.mi.aftersales.service.OrderService;
 import com.mi.aftersales.util.query.ConditionQuery;
-import com.mi.aftersales.vo.form.*;
-import com.mi.aftersales.vo.result.*;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import org.springframework.transaction.annotation.Transactional;
@@ -38,7 +41,7 @@ public class OrderController {
 
     @PostMapping(path = "/engineer")
     @Operation(summary = "工程师查询所属工单", description = "工程师查询所属工单")
-    public List<OrderSimpleVo4Engineer> listEngineerOrder(@RequestBody ConditionQuery query) {
+    public List<OrderSimple4EngineerVo> listEngineerOrder(@RequestBody ConditionQuery query) {
         StpUtil.checkRole(EmployeeRoleEnum.ENGINEER.name());
         return orderService.listEngineerOrder(query);
     }
@@ -59,14 +62,14 @@ public class OrderController {
     @PostMapping(path = "/client/create")
     @Operation(summary = "客户创建工单", description = "客户创建工单")
     @CheckLogin
-    public void postOrder(@RequestBody @Valid ClientOrderForm form) {
+    public void postOrder(@RequestBody @Valid ClientOrderFormVo form) {
         orderService.createOrder(form, StpUtil.getLoginIdAsString());
     }
 
     @GetMapping(path = "/engineer/pending/{spuCategoryId}")
     @Operation(summary = "工程师查询待办工单", description = "工程师查询待办工单")
     @CheckLogin
-    public List<PendingOrderSimpleVo4Engineer> listPendingOrder(@PathVariable Integer spuCategoryId) {
+    public List<PendingOrderSimple4EngineerVo> listPendingOrder(@PathVariable Integer spuCategoryId) {
         StpUtil.checkRole(EmployeeRoleEnum.ENGINEER.name());
         return orderService.listPendingOrders(spuCategoryId);
     }
@@ -83,7 +86,7 @@ public class OrderController {
     @PostMapping(path = "/engineer/upload/before")
     @Operation(summary = "工程师上传检测前图片", description = "工程师上传检测前图片")
     @CheckLogin
-    public void engineerAcceptOrder(@RequestBody @Valid EngineerUploadForm form) {
+    public void engineerAcceptOrder(@RequestBody @Valid EngineerUploadFormVo form) {
         StpUtil.checkRole(EmployeeRoleEnum.ENGINEER.name());
         orderService.engineerUploadImage(form);
     }
@@ -99,7 +102,7 @@ public class OrderController {
     @PutMapping(path = "/engineer/faultDesc")
     @Operation(summary = "工程师上传故障描述", description = "工程师拆机维修，工程师故障描述")
     @CheckLogin
-    public void faultDescription(@RequestBody @Valid FaultDescriptionForm form) {
+    public void faultDescription(@RequestBody @Valid FaultDescriptionFormVo form) {
         StpUtil.checkRole(EmployeeRoleEnum.ENGINEER.name());
         orderService.uploadFaultDescription(form, StpUtil.getLoginIdAsString());
     }
@@ -107,7 +110,7 @@ public class OrderController {
     @PutMapping(path = "/engineer/feeConfirm")
     @Operation(summary = "工程师确认计费", description = "工程师确认计费")
     @CheckLogin
-    public void engineerFeeConfirm(@RequestBody @Valid OrderFeeConfirmForm form) {
+    public void engineerFeeConfirm(@RequestBody @Valid OrderFeeConfirmFormVo form) {
         StpUtil.checkRole(EmployeeRoleEnum.ENGINEER.name());
         orderService.confirmFee(form, StpUtil.getLoginIdAsString());
     }
@@ -137,7 +140,7 @@ public class OrderController {
     @PutMapping(path = "/material/distribute")
     @Operation(summary = "库管处理请求（分发物料）", description = "库管处理请求（分发物料）")
     @CheckLogin
-    public void materialDistribute(@RequestBody @Valid MaterialDistributeForm form) {
+    public void materialDistribute(@RequestBody @Valid MaterialDistributeFormVo form) {
         StpUtil.checkRole(EmployeeRoleEnum.MATERIAL_MANAGER.name());
         orderService.distributeMaterial(form, StpUtil.getLoginIdAsString());
     }
@@ -163,7 +166,7 @@ public class OrderController {
     @PutMapping(path = "/engineer/recheck/upload")
     @Operation(summary = "工程师上传维修结果（视频）", description = "工程师上传维修结果（视频）")
     @CheckLogin
-    public void engineerUploadVideo(@RequestBody @Valid EngineerUploadForm form) {
+    public void engineerUploadVideo(@RequestBody @Valid EngineerUploadFormVo form) {
         StpUtil.checkRole(EmployeeRoleEnum.ENGINEER.name());
         orderService.engineerUploadVideo(form);
     }

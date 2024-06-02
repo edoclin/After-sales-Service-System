@@ -6,7 +6,7 @@ import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
-import com.mi.aftersales.entity.enums.MaterialActionEnum;
+import com.mi.aftersales.enums.entity.MaterialActionEnum;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import lombok.Setter;

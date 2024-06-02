@@ -2,7 +2,7 @@ package com.mi.aftersales.mapper;
 
 import com.mi.aftersales.entity.SpuCategory;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.mi.aftersales.vo.result.SpuCategory4ClientVo;
+import com.mi.aftersales.pojo.vo.SpuCategory4ClientVo;
 import org.apache.ibatis.annotations.Mapper;
 
 import java.util.List;

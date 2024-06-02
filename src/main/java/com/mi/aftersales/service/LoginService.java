@@ -1,16 +1,12 @@
 package com.mi.aftersales.service;
 
-import com.mi.aftersales.vo.form.LoginBindForm;
-import com.mi.aftersales.vo.form.LoginBySmsForm;
-import com.mi.aftersales.vo.form.SendSmsCodeForm;
-import com.mi.aftersales.vo.result.LoginResultVo;
-import com.mi.aftersales.vo.result.SmsResultVo;
-import com.mi.aftersales.vo.result.ThirdLoginPageResultVo;
+import com.mi.aftersales.pojo.vo.form.LoginBindFormVo;
+import com.mi.aftersales.pojo.vo.form.LoginBySmsFormVo;
+import com.mi.aftersales.pojo.vo.form.SendSmsCodeFormVo;
+import com.mi.aftersales.pojo.vo.LoginResultVo;
+import com.mi.aftersales.pojo.vo.SmsResultVo;
+import com.mi.aftersales.pojo.vo.ThirdLoginPageResultVo;
 import me.zhyd.oauth.model.AuthCallback;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
-
-import javax.validation.Valid;
 
 /**
  * @description:
@@ -23,13 +19,13 @@ public interface LoginService {
 
     void logout();
 
-    SmsResultVo sendSmsCode(SendSmsCodeForm form);
+    SmsResultVo sendSmsCode(SendSmsCodeFormVo form);
 
     ThirdLoginPageResultVo githubRender(String client);
 
     LoginResultVo callback(String client, AuthCallback callback);
 
-    LoginResultVo bind(LoginBindForm form);
+    LoginResultVo bind(LoginBindFormVo form);
 
-    LoginResultVo loginBySms(LoginBySmsForm form);
+    LoginResultVo loginBySms(LoginBySmsFormVo form);
 }

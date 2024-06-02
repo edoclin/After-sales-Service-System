@@ -1,12 +1,12 @@
 package com.mi.aftersales.service;
 
-import com.mi.aftersales.config.enums.OrderStatusChangeEventEnum;
+import com.mi.aftersales.enums.config.OrderStatusChangeEventEnum;
+import com.mi.aftersales.pojo.vo.OrderSimple4EngineerVo;
+import com.mi.aftersales.pojo.vo.form.*;
 import com.mi.aftersales.util.query.ConditionQuery;
-import com.mi.aftersales.vo.form.*;
-import com.mi.aftersales.vo.result.OrderDetailVo;
-import com.mi.aftersales.vo.result.ClientOrderSimpleVo;
-import com.mi.aftersales.vo.result.OrderSimpleVo4Engineer;
-import com.mi.aftersales.vo.result.PendingOrderSimpleVo4Engineer;
+import com.mi.aftersales.pojo.vo.OrderDetailVo;
+import com.mi.aftersales.pojo.vo.ClientOrderSimpleVo;
+import com.mi.aftersales.pojo.vo.PendingOrderSimple4EngineerVo;
 import org.springframework.messaging.Message;
 
 import java.util.List;
@@ -71,14 +71,14 @@ public interface OrderService {
      * @param form    工单表单
      * @param loginId 登录ID
      */
-    void createOrder(ClientOrderForm form, String loginId);
+    void createOrder(ClientOrderFormVo form, String loginId);
 
     /**
      * 查询待办工单。
      *
      * @return 待办工单列表
      */
-    List<PendingOrderSimpleVo4Engineer> listPendingOrders(Integer spuCategoryId);
+    List<PendingOrderSimple4EngineerVo> listPendingOrders(Integer spuCategoryId);
 
     /**
      * 接受工单。
@@ -88,9 +88,9 @@ public interface OrderService {
      */
     void acceptOrder(String orderId, String loginId);
 
-    List<OrderSimpleVo4Engineer> listEngineerOrder(ConditionQuery query);
+    List<OrderSimple4EngineerVo> listEngineerOrder(ConditionQuery query);
 
-    void engineerUploadImage(EngineerUploadForm form);
+    void engineerUploadImage(EngineerUploadFormVo form);
 
     /**
      * 开始检测。
@@ -106,7 +106,7 @@ public interface OrderService {
      * @param form    故障描述表单
      * @param loginId 登录ID
      */
-    void uploadFaultDescription(FaultDescriptionForm form, String loginId);
+    void uploadFaultDescription(FaultDescriptionFormVo form, String loginId);
 
     /**
      * 确认计费。
@@ -114,7 +114,7 @@ public interface OrderService {
      * @param form    计费确认表单
      * @param loginId 登录ID
      */
-    void confirmFee(OrderFeeConfirmForm form, String loginId);
+    void confirmFee(OrderFeeConfirmFormVo form, String loginId);
 
     /**
      * 用户确认计费（确认维修）。
@@ -146,7 +146,7 @@ public interface OrderService {
      * @param form    分发物料表单
      * @param loginId 登录ID
      */
-    void distributeMaterial(MaterialDistributeForm form, String loginId);
+    void distributeMaterial(MaterialDistributeFormVo form, String loginId);
 
     /**
      * 开始维修。
@@ -165,7 +165,7 @@ public interface OrderService {
      */
     void startRechecking(String orderId, String loginId);
 
-    void engineerUploadVideo(EngineerUploadForm form);
+    void engineerUploadVideo(EngineerUploadFormVo form);
 
     /**
      * 完成维修，发送账单，等待支付。

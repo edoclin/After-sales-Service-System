@@ -2,7 +2,7 @@ package com.mi.aftersales.controller;
 
 import com.mi.aftersales.aspect.anno.CheckLogin;
 import com.mi.aftersales.service.LoginRoleService;
-import com.mi.aftersales.vo.form.LoginRoleForm;
+import com.mi.aftersales.pojo.vo.form.LoginRoleFormVo;
 import io.swagger.v3.oas.annotations.Operation;
 import org.springframework.web.bind.annotation.*;
 
@@ -26,7 +26,7 @@ public class LoginRoleController {
     @PostMapping(path = "/")
     @Operation(summary = "添加/修改用户角色", description = "添加修改用户角色")
     @CheckLogin
-    public void postLoginRole(@RequestBody @Valid LoginRoleForm form) {
+    public void postLoginRole(@RequestBody @Valid LoginRoleFormVo form) {
         loginRoleService.addOrUpdateLoginRole(form);
     }
 }

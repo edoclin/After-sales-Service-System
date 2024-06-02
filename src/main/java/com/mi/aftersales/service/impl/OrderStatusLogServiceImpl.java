@@ -8,7 +8,7 @@ import com.mi.aftersales.service.OrderStatusLogService;
 import com.mi.aftersales.repository.IOrderRepository;
 import com.mi.aftersales.repository.IOrderStatusLogRepository;
 import com.mi.aftersales.util.DateUtil;
-import com.mi.aftersales.vo.OrderStatusLogResult;
+import com.mi.aftersales.pojo.vo.OrderStatusLogVo;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -32,13 +32,13 @@ public class OrderStatusLogServiceImpl implements OrderStatusLogService {
     private IOrderRepository iOrderRepository;
 
     @Override
-    public List<OrderStatusLogResult> listOrderStatusLogByOrderId(String orderId) {
+    public List<OrderStatusLogVo> listOrderStatusLogByOrderId(String orderId) {
         if (BeanUtil.isEmpty(iOrderRepository.getById(orderId))) {
             throw new IllegalOrderIdException();
         }
-        List<OrderStatusLogResult> result = new ArrayList<>();
+        List<OrderStatusLogVo> result = new ArrayList<>();
         iOrderStatusLogRepository.list(new QueryWrapper<OrderStatusLog>().eq("order_id", orderId)).forEach(statusLog -> {
-            OrderStatusLogResult item = new OrderStatusLogResult();
+            OrderStatusLogVo item = new OrderStatusLogVo();
             BeanUtil.copyProperties(statusLog, item, DateUtil.copyDate2yyyyMMddHHmm());
             item.setOrderStatus(statusLog.getOrderStatus().getDesc());
             result.add(item);

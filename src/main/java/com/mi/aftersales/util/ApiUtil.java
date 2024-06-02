@@ -5,9 +5,8 @@ import cn.hutool.core.annotation.AnnotationUtil;
 import cn.hutool.core.text.CharSequenceUtil;
 import cn.hutool.core.util.ClassUtil;
 import com.mi.aftersales.entity.Api;
-import com.mi.aftersales.entity.enums.ApiMethodEnum;
+import com.mi.aftersales.enums.entity.ApiMethodEnum;
 import io.swagger.v3.oas.annotations.Operation;
-import lombok.val;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;

@@ -7,8 +7,8 @@ import com.mi.aftersales.entity.ClientServiceCenter;
 import com.mi.aftersales.exception.graceful.ServerErrorException;
 import com.mi.aftersales.service.ClientServiceCenterService;
 import com.mi.aftersales.repository.IClientServiceCenterRepository;
-import com.mi.aftersales.vo.form.ClientServiceCenterForm;
-import com.mi.aftersales.vo.form.UpdateClientServiceCenterForm;
+import com.mi.aftersales.pojo.vo.form.ClientServiceCenterFormVo;
+import com.mi.aftersales.pojo.vo.form.UpdateClientServiceCenterFormVo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -31,7 +31,7 @@ public class ClientServiceCenterServiceImpl implements ClientServiceCenterServic
     private IClientServiceCenterRepository iClientServiceCenterRepository;
 
     @Override
-    public void addClientServiceCenter(ClientServiceCenterForm form) {
+    public void addClientServiceCenter(ClientServiceCenterFormVo form) {
         ClientServiceCenter clientServiceCenter = new ClientServiceCenter();
         BeanUtil.copyProperties(form, clientServiceCenter);
         try {
@@ -43,7 +43,7 @@ public class ClientServiceCenterServiceImpl implements ClientServiceCenterServic
     }
 
     @Override
-    public void updateClientServiceCenter(UpdateClientServiceCenterForm form) {
+    public void updateClientServiceCenter(UpdateClientServiceCenterFormVo form) {
         ClientServiceCenter byId = iClientServiceCenterRepository.getById(form.getCenterId());
 
         if (BeanUtil.isNotEmpty(byId)) {

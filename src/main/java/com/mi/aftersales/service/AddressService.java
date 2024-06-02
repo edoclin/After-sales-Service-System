@@ -1,7 +1,6 @@
 package com.mi.aftersales.service;
 
-import com.mi.aftersales.vo.form.ClientAddressForm;
-import com.mi.aftersales.vo.result.ClientAddressVo;
+import com.mi.aftersales.pojo.vo.form.ClientAddressFormVo;
 
 import java.util.List;
 
@@ -23,7 +22,7 @@ public interface AddressService{
      * @param form 地址表单，包含地址信息。
      * @param loginId 当前登录用户的 ID。
      */
-    void addAddress(ClientAddressForm form, String loginId);
+    void addAddress(ClientAddressFormVo form, String loginId);
 
     /**
      * 获取指定用户的地址列表。
@@ -31,10 +30,10 @@ public interface AddressService{
      * <p>根据用户的登录 ID 查询该用户的所有地址信息，并进行适当的处理和格式化。</p>
      *
      * @param loginId 用户的登录 ID。
-     * @return 包含用户地址信息的列表，每个地址信息为 {@link ClientAddressVo} 对象。
+     * @return 包含用户地址信息的列表，每个地址信息为 {@link com.mi.aftersales.pojo.vo.ClientAddressVo} 对象。
      */
 
-    List<ClientAddressVo> listAddress(String loginId);
+    List<com.mi.aftersales.pojo.vo.ClientAddressVo> listAddress(String loginId);
 
     /**
      * 设置用户的默认地址。

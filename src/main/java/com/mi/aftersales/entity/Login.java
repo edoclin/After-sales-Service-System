@@ -5,8 +5,8 @@ import com.baomidou.mybatisplus.annotation.*;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
-import com.mi.aftersales.entity.enums.LoginOAuthSourceEnum;
-import com.mi.aftersales.entity.enums.LoginTypeEnum;
+import com.mi.aftersales.enums.entity.LoginOAuthSourceEnum;
+import com.mi.aftersales.enums.entity.LoginTypeEnum;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import lombok.Setter;

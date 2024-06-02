@@ -7,8 +7,8 @@ import com.mi.aftersales.exception.graceful.IllegalSpuCategoryIdException;
 import com.mi.aftersales.mapper.SpuCategoryMapper;
 import com.mi.aftersales.repository.ISpuCategoryRepository;
 import com.mi.aftersales.util.DateUtil;
-import com.mi.aftersales.vo.result.SpuCategory4ClientVo;
-import com.mi.aftersales.vo.result.SpuCategoryVo;
+import com.mi.aftersales.pojo.vo.SpuCategory4ClientVo;
+import com.mi.aftersales.pojo.vo.SpuCategoryVo;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;

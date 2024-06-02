@@ -4,13 +4,13 @@ import cn.hutool.core.bean.BeanUtil;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.mi.aftersales.entity.Login;
 import com.mi.aftersales.entity.LoginRole;
-import com.mi.aftersales.entity.enums.EmployeeRoleEnum;
+import com.mi.aftersales.enums.entity.EmployeeRoleEnum;
 import com.mi.aftersales.exception.graceful.IllegalLoginIdException;
 import com.mi.aftersales.exception.graceful.ServerErrorException;
 import com.mi.aftersales.service.LoginRoleService;
 import com.mi.aftersales.repository.ILoginRoleRepository;
 import com.mi.aftersales.repository.ILoginRepository;
-import com.mi.aftersales.vo.form.LoginRoleForm;
+import com.mi.aftersales.pojo.vo.form.LoginRoleFormVo;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -31,7 +31,7 @@ public class LoginRoleServiceImpl implements LoginRoleService {
     private ILoginRoleRepository iLoginRoleRepository;
 
     @Override
-    public void addOrUpdateLoginRole(LoginRoleForm form) {
+    public void addOrUpdateLoginRole(LoginRoleFormVo form) {
         Login login = iLoginRepository.getById(form.getLoginId());
 
         if (BeanUtil.isEmpty(login)) {

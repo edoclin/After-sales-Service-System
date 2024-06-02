@@ -2,9 +2,9 @@ package com.mi.aftersales.controller;
 
 import com.mi.aftersales.aspect.anno.CheckPermission;
 import com.mi.aftersales.service.SpuCategoryService;
-import com.mi.aftersales.vo.result.SpuCategory4ClientVo;
-import com.mi.aftersales.vo.form.SpuCategoryForm;
-import com.mi.aftersales.vo.form.SpuCategoryVisibleSetForm;
+import com.mi.aftersales.pojo.vo.SpuCategory4ClientVo;
+import com.mi.aftersales.pojo.vo.form.SpuCategoryFormVo;
+import com.mi.aftersales.pojo.vo.form.SpuCategoryVisibleSetFormVo;
 import io.swagger.v3.oas.annotations.Operation;
 import org.springframework.web.bind.annotation.*;
 
@@ -29,7 +29,7 @@ public class SpuCategoryController {
     @PostMapping(path = "/")
     @CheckPermission
     @Operation(summary = "SPU分类添加", description = "SPU分类添加")
-    public void postSpuCategory(@RequestBody @Valid SpuCategoryForm form) {
+    public void postSpuCategory(@RequestBody @Valid SpuCategoryFormVo form) {
         spuCategoryService.addSpuCategory(form);
     }
 
@@ -42,7 +42,7 @@ public class SpuCategoryController {
     @PutMapping(path = "/visible")
     @CheckPermission
     @Operation(summary = "SPU分类客户是否可见", description = "SPU分类客户是否可见")
-    public void setVisible(@RequestBody @Valid SpuCategoryVisibleSetForm form) {
+    public void setVisible(@RequestBody @Valid SpuCategoryVisibleSetFormVo form) {
         spuCategoryService.setSpuCategoryVisibility(form);
     }
 }
