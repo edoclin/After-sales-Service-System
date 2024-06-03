@@ -22,23 +22,23 @@ import javax.annotation.Resource;
 
 /**
  * @author QYenon
- * @create 2024/5/30
+ * @created:  2024/5/30
  */
 @ExtendWith(SpringExtension.class)
 @SpringBootTest
 @WebAppConfiguration
-class MiddleLoginPermissionControllerTest {
+class LoginPermissionControllerTest {
 
-    private static final Logger logger = LoggerFactory.getLogger(MiddleLoginPermissionControllerTest.class);
+    private static final Logger logger = LoggerFactory.getLogger(LoginPermissionControllerTest.class);
 
     @Resource
-    private MiddleLoginPermissionController middleLoginPermissionController;
+    private LoginPermissionController loginPermissionController;
 
     private MockMvc mockMvc;
 
     @BeforeEach
     void setUp() {
-        mockMvc = MockMvcBuilders.standaloneSetup(middleLoginPermissionController).build();
+        mockMvc = MockMvcBuilders.standaloneSetup(loginPermissionController).build();
     }
 
     @Test

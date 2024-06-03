@@ -1,15 +1,16 @@
 package com.mi.aftersales.service.impl;
 
 import cn.dev33.satoken.stp.StpUtil;
+import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.text.CharSequenceUtil;
 import cn.hutool.core.util.IdUtil;
 import com.mi.aftersales.config.yaml.bean.TencentCosConfig;
 import com.mi.aftersales.entity.File;
 import com.mi.aftersales.exception.graceful.ServerErrorException;
+import com.mi.aftersales.pojo.vo.FileUploadVo;
 import com.mi.aftersales.pojo.vo.form.FileFormVo;
 import com.mi.aftersales.repository.IFileRepository;
 import com.mi.aftersales.service.FileService;
-import com.mi.aftersales.pojo.vo.FileUploadVo;
 import com.qcloud.cos.COSClient;
 import com.qcloud.cos.ClientConfig;
 import com.qcloud.cos.auth.BasicCOSCredentials;
@@ -48,7 +49,7 @@ public class FileServiceImpl implements FileService {
 
 
     @Override
-    public List<FileUploadVo> postFile(FileFormVo form) {
+    public List<FileUploadVo> generateFileIds(FileFormVo form) {
         ArrayList<FileUploadVo> result = new ArrayList<>();
         ArrayList<File> files = new ArrayList<>();
 
@@ -85,9 +86,10 @@ public class FileServiceImpl implements FileService {
                 PutObjectRequest putObjectRequest = new PutObjectRequest(cosConfig.getBucketName(), cosConfig.getPrefix() + key, uploadFile);
                 UploadResult uploadResult = transferManager.upload(putObjectRequest).waitForUploadResult();
                 fileFormVo.getKeys().add(uploadResult.getKey());
-                if (Boolean.FALSE.equals(localFile.delete()) || Boolean.FALSE.equals(uploadFile.delete())) {
+                if (Boolean.FALSE.equals(FileUtil.del(localFile)) || Boolean.FALSE.equals(FileUtil.del(uploadFile))) {
                     log.warn("缓存文件删除失败：{}", key);
                 }
+
             }
         } catch (IOException e) {
             log.error("文件转换失败！");
@@ -96,8 +98,9 @@ public class FileServiceImpl implements FileService {
         } catch (InterruptedException e) {
             log.error("文件上传失败！");
             log.error(e.getMessage());
+            Thread.currentThread().interrupt();
             throw new ServerErrorException();
         }
-        return postFile(fileFormVo);
+        return generateFileIds(fileFormVo);
     }
 }

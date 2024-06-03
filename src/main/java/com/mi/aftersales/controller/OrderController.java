@@ -3,6 +3,7 @@ package com.mi.aftersales.controller;
 import cn.dev33.satoken.stp.StpUtil;
 import com.mi.aftersales.aspect.anno.CheckLogin;
 import com.mi.aftersales.enums.entity.EmployeeRoleEnum;
+import com.mi.aftersales.pojo.common.PageResult;
 import com.mi.aftersales.pojo.vo.ClientOrderSimpleVo;
 import com.mi.aftersales.pojo.vo.OrderDetailVo;
 import com.mi.aftersales.pojo.vo.OrderSimple4EngineerVo;
@@ -41,18 +42,18 @@ public class OrderController {
 
     @PostMapping(path = "/engineer")
     @Operation(summary = "工程师查询所属工单", description = "工程师查询所属工单")
-    public List<OrderSimple4EngineerVo> listEngineerOrder(@RequestBody ConditionQuery query) {
+    public PageResult<OrderSimple4EngineerVo> listEngineerOrder(@RequestBody ConditionQuery query) {
         StpUtil.checkRole(EmployeeRoleEnum.ENGINEER.name());
         return orderService.listEngineerOrder(query);
     }
 
-    @GetMapping(path = "/client/{orderId}")
+    @GetMapping(path = "/client/detail/{orderId}")
     @Operation(summary = "客户查询工单详情", description = "客户查询工单详情")
     public OrderDetailVo orderDetailByClientId(@PathVariable String orderId) {
         return orderService.getClientOrderDetail(orderId, StpUtil.getLoginIdAsString(), Boolean.TRUE);
     }
 
-    @GetMapping(path = "/engineer/{orderId}")
+    @GetMapping(path = "/engineer/detail/{orderId}")
     @Operation(summary = "工程师查询工单详情", description = "工程师查询工单详情")
     public OrderDetailVo orderDetailByEngineerId(@PathVariable String orderId) {
         StpUtil.checkRole(EmployeeRoleEnum.ENGINEER.name());
@@ -99,7 +100,7 @@ public class OrderController {
         orderService.startChecking(orderId, StpUtil.getLoginIdAsString());
     }
 
-    @PutMapping(path = "/engineer/faultDesc")
+    @PutMapping(path = "/engineer/fault-desc")
     @Operation(summary = "工程师上传故障描述", description = "工程师拆机维修，工程师故障描述")
     @CheckLogin
     public void faultDescription(@RequestBody @Valid FaultDescriptionFormVo form) {
@@ -107,7 +108,7 @@ public class OrderController {
         orderService.uploadFaultDescription(form, StpUtil.getLoginIdAsString());
     }
 
-    @PutMapping(path = "/engineer/feeConfirm")
+    @PutMapping(path = "/engineer/fee-confirm")
     @Operation(summary = "工程师确认计费", description = "工程师确认计费")
     @CheckLogin
     public void engineerFeeConfirm(@RequestBody @Valid OrderFeeConfirmFormVo form) {
@@ -115,7 +116,7 @@ public class OrderController {
         orderService.confirmFee(form, StpUtil.getLoginIdAsString());
     }
 
-    @PutMapping(path = "/client/feeConfirm/{orderId}")
+    @PutMapping(path = "/client/fee-confirm/{orderId}")
     @Operation(summary = "用户确认计费（确认维修）", description = "用户确认计费（确认维修）")
     @CheckLogin
     public void clientConfirmFee(@PathVariable String orderId) {
@@ -129,7 +130,7 @@ public class OrderController {
         orderService.clientRejectRepair(orderId, StpUtil.getLoginIdAsString());
     }
 
-    @PutMapping(path = "/material/apply/{orderId}")
+    @PutMapping(path = "/engineer/material-apply/{orderId}")
     @Operation(summary = "工程师申请物料", description = "工程师申请物料")
     @CheckLogin
     public void materialApply(@PathVariable String orderId) {
@@ -137,7 +138,7 @@ public class OrderController {
         orderService.applyMaterial(orderId, StpUtil.getLoginIdAsString());
     }
 
-    @PutMapping(path = "/material/distribute")
+    @PutMapping(path = "/manager/material-distribute")
     @Operation(summary = "库管处理请求（分发物料）", description = "库管处理请求（分发物料）")
     @CheckLogin
     public void materialDistribute(@RequestBody @Valid MaterialDistributeFormVo form) {
@@ -147,7 +148,7 @@ public class OrderController {
 
     @PutMapping(path = "/engineer/repair/{orderId}/{material}")
     @Operation(summary = "工程师开始维修", description = "工程师开始维修")
-    @Parameter(name = "material", description = "无需物料：false")
+    @Parameter(name = "material", description = "确认计费后直接开始维修时取false，确认维修后走申请物料为true")
     @CheckLogin
     public void engineerStartRepairing(@PathVariable String orderId, @PathVariable Boolean material) {
         StpUtil.checkRole(EmployeeRoleEnum.ENGINEER.name());
@@ -171,13 +172,15 @@ public class OrderController {
         orderService.engineerUploadVideo(form);
     }
 
-    @PutMapping(path = "/engineer/toBePaid/{orderId}")
+    @PutMapping(path = "/engineer/to-be-paid/{orderId}")
     @Operation(summary = "工程师完成维修，发送账单，等待支付", description = "工程师完成维修，发送账单，等待支付")
     @CheckLogin
     public void engineerFinishedRepair(@PathVariable String orderId) {
         StpUtil.checkRole(EmployeeRoleEnum.ENGINEER.name());
         orderService.finishRepair(orderId, StpUtil.getLoginIdAsString());
     }
+
+    // 客户完成支付流程变更在支付回调中
 
     @PutMapping(path = "/engineer/return/{orderId}")
     @Operation(summary = "工程师开始返还物品", description = "工程师开始返还物品")

@@ -22,6 +22,7 @@ import com.mi.aftersales.pojo.vo.form.SkuFormVo;
 import com.mi.aftersales.pojo.vo.form.UpdateSkuVisibleFormVo;
 import com.mi.aftersales.pojo.vo.ClientSkuVo;
 import com.mi.aftersales.pojo.vo.SkuVo;
+import com.mi.aftersales.util.view.ViewUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DuplicateKeyException;
@@ -106,26 +107,28 @@ public class SkuServiceImpl implements SkuService {
     }
 
     @Override
-    public PageResult<ClientSkuVo> listClientSku(ConditionQuery query) {
+    public PageResult<ClientSkuVo> listClientSku(ConditionQuery query, String spuId) {
         PageResult<ClientSkuVo> result = new PageResult<>();
 
-        QueryWrapper<Sku> wrapper = QueryUtil.buildWrapper(query, Sku.class);
+        QueryWrapper<Sku> wrapper = QueryUtil.buildEmptyQueryWrapper(Sku.class);
 
-        wrapper = wrapper.eq("visible", true);
+        wrapper = wrapper.eq("spu_id", spuId).eq("visible", true);
 
         result.setTotal(iSkuRepository.count(wrapper));
 
-        iSkuRepository.page(new Page<>(query.getCurrent(), query.getLimit()), wrapper).getRecords().forEach(sku -> {
-            ClientSkuVo clientSkuVo = new ClientSkuVo();
-            BeanUtil.copyProperties(sku, clientSkuVo, DateUtil.copyDate2yyyyMMddHHmm());
+        iSkuRepository.page(new Page<>(query.getCurrent(), query.getLimit()), wrapper).getRecords()
 
-            File file = iFileRepository.getById(sku.getSkuCoverFileId());
-            if (BeanUtil.isNotEmpty(file)) {
-                clientSkuVo.setSkuCoverUrl(COSUtil.generateAccessUrl(file.getAccessKey()));
-            }
+                .forEach(sku -> {
+                    ClientSkuVo clientSkuVo = new ClientSkuVo();
+                    BeanUtil.copyProperties(sku, clientSkuVo, DateUtil.copyDate2yyyyMMddHHmm());
 
-            result.getData().add(clientSkuVo);
-        });
+                    File file = iFileRepository.getById(sku.getSkuCoverFileId());
+                    if (BeanUtil.isNotEmpty(file)) {
+                        clientSkuVo.setSkuCoverUrl(COSUtil.generateAccessUrl(file.getAccessKey()));
+                    }
+
+                    result.getData().add(clientSkuVo);
+                });
 
         return result;
     }
@@ -136,6 +139,7 @@ public class SkuServiceImpl implements SkuService {
 
         PageResult<SkuVo> result = new PageResult<>();
         result.setTotal(iSkuRepository.count(wrapper));
+        result.setDataColumns(ViewUtil.dataColumns(SkuVo.class));
 
         iSkuRepository.page(new Page<>(query.getCurrent(), query.getLimit()), wrapper).getRecords().forEach(sku -> {
             SkuVo skuVo = new SkuVo();

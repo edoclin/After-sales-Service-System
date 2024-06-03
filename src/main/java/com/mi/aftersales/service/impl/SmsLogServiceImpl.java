@@ -11,11 +11,10 @@ import com.mi.aftersales.service.SmsLogService;
 import com.mi.aftersales.util.DateUtil;
 import com.mi.aftersales.util.query.ConditionQuery;
 import com.mi.aftersales.util.query.QueryUtil;
+import com.mi.aftersales.util.view.ViewUtil;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * <p>
@@ -40,14 +39,12 @@ public class SmsLogServiceImpl implements SmsLogService {
         QueryWrapper<SmsLog> wrapper = QueryUtil.buildWrapper(query, SmsLog.class);
 
         result.setTotal(iSmsLogRepository.count(wrapper));
-
+        result.setDataColumns(ViewUtil.dataColumns(SmsLogVo.class));
         iSmsLogRepository.page(new Page<>(query.getCurrent(), query.getLimit()), wrapper).getRecords().forEach(smsLog -> {
             SmsLogVo item = new SmsLogVo();
             BeanUtil.copyProperties(smsLog, item, DateUtil.copyDate2yyyyMMddHHmm());
 
-
             item.setSmsType(smsLog.getSmsType().getDesc());
-
 
         });
         return result;

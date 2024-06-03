@@ -3,6 +3,7 @@ package com.mi.aftersales.service;
 import com.mi.aftersales.pojo.vo.form.SpuCategoryFormVo;
 import com.mi.aftersales.pojo.vo.form.SpuCategoryVisibleSetFormVo;
 import com.mi.aftersales.pojo.vo.SpuCategory4ClientVo;
+import com.mi.aftersales.pojo.vo.form.UpdateSpuCategoryFormVo;
 
 import java.util.List;
 
@@ -21,6 +22,10 @@ public interface SpuCategoryService {
      * @param form SPU分类表单对象
      */
     void addSpuCategory(SpuCategoryFormVo form);
+
+    void updateSpuCategory(UpdateSpuCategoryFormVo form);
+
+    void deleteSpuCategoryById(Integer categoryId);
 
     List<Integer> childrenCategoryId(Integer parentCategoryId);
 

@@ -33,6 +33,7 @@ import com.mi.aftersales.pojo.vo.form.ManagerUpdateMaterialFormVo;
 import com.mi.aftersales.pojo.vo.form.MaterialFormVo;
 import com.mi.aftersales.pojo.vo.MaterialLogVo;
 import com.mi.aftersales.pojo.vo.MaterialVo;
+import com.mi.aftersales.util.view.ViewUtil;
 import org.apache.rocketmq.spring.core.RocketMQTemplate;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
@@ -175,10 +176,11 @@ public class MaterialServiceImpl implements MaterialService {
             }
         } catch (ConvertException e) {
             throw new GracefulResponseException("物料类型不合法!");
-        } catch (BaseCustomException e) {
+        } catch (GracefulResponseException e) {
             throw e;
         } catch (InterruptedException e) {
             // 加锁失败
+            Thread.currentThread().interrupt();
             throw new ServerErrorException();
         } finally {
             if (null != fairLock) {
@@ -203,11 +205,11 @@ public class MaterialServiceImpl implements MaterialService {
             result.setCoverUrl(COSUtil.generateAccessUrl(file.getAccessKey()));
         }
 
-        iMaterialLogRepository.lambdaQuery().eq(MaterialLog::getMaterialId, material.getMaterialId()).list().forEach(log -> {
+        iMaterialLogRepository.lambdaQuery().eq(MaterialLog::getMaterialId, material.getMaterialId()).list().forEach(innerLog -> {
             MaterialLogVo logVo = new MaterialLogVo();
-            BeanUtil.copyProperties(log, logVo, DateUtil.copyDate2yyyyMMddHHmm());
-            logVo.setAction(log.getAction().getDesc());
-            logVo.setDelta(log.getDelta().stripTrailingZeros().toEngineeringString());
+            BeanUtil.copyProperties(innerLog, logVo, DateUtil.copyDate2yyyyMMddHHmm());
+            logVo.setAction(innerLog.getAction().getDesc());
+            logVo.setDelta(innerLog.getDelta().stripTrailingZeros().toEngineeringString());
             result.getLogs().add(logVo);
         });
 
@@ -219,11 +221,9 @@ public class MaterialServiceImpl implements MaterialService {
         QueryWrapper<Material> wrapper = QueryUtil.buildWrapper(query, Material.class);
         PageResult<MaterialVo> result = new PageResult<>();
 
-        List<Integer> in = new ArrayList<>();
-
         for (QueryParam param : query.getParams()) {
             if (param.getOperator() == Operator.CUSTOM) {
-                in.addAll(spuCategoryService.childrenCategoryId(Integer.valueOf(param.getValue())));
+                List<Integer> in = new ArrayList<>(spuCategoryService.childrenCategoryId(Integer.valueOf(param.getValue())));
 
                 if (CollUtil.isNotEmpty(in)) {
                     wrapper = wrapper.in("spu_category_id", in);
@@ -236,6 +236,7 @@ public class MaterialServiceImpl implements MaterialService {
 
 
         result.setTotal(iMaterialRepository.count(wrapper));
+        result.setDataColumns(ViewUtil.dataColumns(MaterialVo.class));
 
         iMaterialRepository.page(new Page<>(query.getCurrent(), query.getLimit()), wrapper).getRecords().forEach(material -> {
             MaterialVo materialVo = new MaterialVo();

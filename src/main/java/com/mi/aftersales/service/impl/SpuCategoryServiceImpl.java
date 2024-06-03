@@ -1,9 +1,12 @@
 package com.mi.aftersales.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.collection.CollUtil;
 import com.feiniaojin.gracefulresponse.GracefulResponseException;
 import com.mi.aftersales.entity.SpuCategory;
+import com.mi.aftersales.exception.graceful.IllegalSpuCategoryIdException;
 import com.mi.aftersales.exception.graceful.ServerErrorException;
+import com.mi.aftersales.pojo.vo.form.UpdateSpuCategoryFormVo;
 import com.mi.aftersales.service.SpuCategoryService;
 import com.mi.aftersales.repository.ISpuCategoryRepository;
 import com.mi.aftersales.pojo.vo.form.SpuCategoryFormVo;
@@ -45,13 +48,41 @@ public class SpuCategoryServiceImpl implements SpuCategoryService {
     }
 
     @Override
+    public void updateSpuCategory(UpdateSpuCategoryFormVo form) {
+        if (form.getParentCategoryId() != 0 && BeanUtil.isEmpty(iSpuCategoryRepository.getById(form.getParentCategoryId()))) {
+            throw new IllegalSpuCategoryIdException();
+        }
+        SpuCategory spuCategory = new SpuCategory();
+        BeanUtil.copyProperties(form, spuCategory);
+
+        iSpuCategoryRepository.save(spuCategory);
+    }
+
+    @Override
+    public void deleteSpuCategoryById(Integer categoryId) {
+        if (BeanUtil.isEmpty(iSpuCategoryRepository.getById(categoryId))) {
+            throw new IllegalSpuCategoryIdException();
+        }
+
+        if (CollUtil.isNotEmpty(iSpuCategoryRepository.lambdaQuery().eq(SpuCategory::getParentCategoryId, categoryId).list())) {
+            throw new GracefulResponseException("存在依赖于当前分类的子分类！");
+        }
+
+
+        if (Boolean.FALSE.equals(iSpuCategoryRepository.removeById(categoryId))) {
+            throw new ServerErrorException();
+        }
+    }
+
+    @Override
     public List<Integer> childrenCategoryId(Integer parentCategoryId) {
         List<Integer> result = new ArrayList<>();
         if (parentCategoryId != null) {
             result.add(parentCategoryId);
-            iSpuCategoryRepository.lambdaQuery().eq(SpuCategory::getParentCategoryId, parentCategoryId).list().forEach(item -> {
-                result.addAll(childrenCategoryId(item.getCategoryId()));
-            });
+            iSpuCategoryRepository
+                    .lambdaQuery()
+                    .eq(SpuCategory::getParentCategoryId, parentCategoryId)
+                    .list().forEach(item -> result.addAll(childrenCategoryId(item.getCategoryId())));
         }
         return result;
     }
@@ -61,7 +92,7 @@ public class SpuCategoryServiceImpl implements SpuCategoryService {
     public void setSpuCategoryVisibility(SpuCategoryVisibleSetFormVo form) {
         SpuCategory spuCategory = iSpuCategoryRepository.getById(form.getCategoryId());
         if (BeanUtil.isEmpty(spuCategory)) {
-            throw new GracefulResponseException("分类ID不存在");
+            throw new IllegalSpuCategoryIdException();
         }
 
         spuCategory.setVisible(form.getVisible());

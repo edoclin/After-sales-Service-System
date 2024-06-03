@@ -3,25 +3,26 @@ package com.mi.aftersales.service.impl;
 import cn.hutool.core.bean.BeanUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.feiniaojin.gracefulresponse.GracefulResponseException;
 import com.mi.aftersales.entity.SkuAttr;
+import com.mi.aftersales.exception.graceful.IllegalSkuIdException;
 import com.mi.aftersales.exception.graceful.ServerErrorException;
-import com.mi.aftersales.service.SkuAttrService;
+import com.mi.aftersales.exception.graceful.alias.IllegalSkuAttrIdException;
+import com.mi.aftersales.pojo.common.PageResult;
+import com.mi.aftersales.pojo.vo.ClientSkuAttrVo;
+import com.mi.aftersales.pojo.vo.SkuAttrVo;
+import com.mi.aftersales.pojo.vo.form.SkuAttrFormVo;
+import com.mi.aftersales.pojo.vo.form.SkuAttrVisibleSetFormVo;
 import com.mi.aftersales.repository.ISkuAttrRepository;
 import com.mi.aftersales.repository.ISkuRepository;
+import com.mi.aftersales.service.SkuAttrService;
 import com.mi.aftersales.util.DateUtil;
 import com.mi.aftersales.util.query.ConditionQuery;
 import com.mi.aftersales.util.query.QueryUtil;
-import com.mi.aftersales.pojo.common.PageResult;
-import com.mi.aftersales.pojo.vo.form.SkuAttrFormVo;
-import com.mi.aftersales.pojo.vo.form.SkuAttrVisibleSetFormVo;
-import com.mi.aftersales.pojo.vo.ClientSkuAttrVo;
-import com.mi.aftersales.pojo.vo.SkuAttrVo;
-import org.springframework.dao.DuplicateKeyException;
+import com.mi.aftersales.util.view.ViewUtil;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
-import java.util.List;
+
 /**
  * <p>
  * sku属性 服务实现类
@@ -41,23 +42,20 @@ public class SkuAttrServiceImpl implements SkuAttrService {
     @Override
     public void addSkuAttr(SkuAttrFormVo form) {
         if (BeanUtil.isEmpty(iSkuRepository.getById(form.getSkuId()))) {
-            throw new GracefulResponseException("商品SKU不存在！");
+            throw new IllegalSkuIdException();
         }
 
         SkuAttr skuAttr = new SkuAttr();
         BeanUtil.copyProperties(form, skuAttr);
-        try {
-            iSkuAttrRepository.save(skuAttr);
-        } catch (DuplicateKeyException e) {
-            throw new GracefulResponseException("商品SKU属性名称重复！");
-        }
+
+        iSkuAttrRepository.save(skuAttr);
     }
 
     @Override
     public void updateSkuAttrVisibility(SkuAttrVisibleSetFormVo form) {
         SkuAttr skuAttr = iSkuAttrRepository.getById(form.getAttrId());
         if (BeanUtil.isEmpty(skuAttr)) {
-            throw new GracefulResponseException("商品SKU属性不存在！");
+            throw new IllegalSkuAttrIdException();
         }
 
         skuAttr.setVisible(form.getVisible());
@@ -69,19 +67,18 @@ public class SkuAttrServiceImpl implements SkuAttrService {
     @Override
     public PageResult<ClientSkuAttrVo> listClientSkuAttrs(ConditionQuery query, String skuId) {
         if (BeanUtil.isEmpty(iSkuRepository.getById(skuId))) {
-            throw new GracefulResponseException("商品Sku不存在！");
+            throw new IllegalSkuIdException();
         }
 
         PageResult<ClientSkuAttrVo> result = new PageResult<>();
-        result.setTotal(iSkuAttrRepository.count(new QueryWrapper<SkuAttr>()
-                .eq("sku_id", skuId)
-                .eq("visible", true)));
-        List<SkuAttr> skuAttrList = iSkuAttrRepository.page(new Page<>(query.getCurrent(), query.getLimit()),
-                new QueryWrapper<SkuAttr>()
-                        .eq("sku_id", skuId)
-                        .eq("visible", true)).getRecords();
 
-        skuAttrList.forEach(skuAttr -> {
+
+        QueryWrapper<SkuAttr> wrapper = QueryUtil.buildEmptyQueryWrapper(SkuAttr.class);
+        wrapper = wrapper.eq("sku_id", skuId)
+                .eq("visible", true);
+        result.setTotal(iSkuAttrRepository.count(wrapper));
+         iSkuAttrRepository.page(new Page<>(query.getCurrent(), query.getLimit()), wrapper).getRecords()
+        .forEach(skuAttr -> {
             ClientSkuAttrVo clientSkuAttrVo = new ClientSkuAttrVo();
             BeanUtil.copyProperties(skuAttr, clientSkuAttrVo);
             result.getData().add(clientSkuAttrVo);
@@ -91,19 +88,17 @@ public class SkuAttrServiceImpl implements SkuAttrService {
     }
 
     @Override
-    public PageResult<SkuAttrVo> listSkuAttrs(ConditionQuery query, String skuId) {
-        if (BeanUtil.isEmpty(iSkuRepository.getById(skuId))) {
-            throw new GracefulResponseException("商品Sku不存在！");
-        }
+    public PageResult<SkuAttrVo> listSkuAttrs(ConditionQuery query) {
 
-        QueryWrapper<SkuAttr> wrapper = QueryUtil.buildWrapper(query, SkuAttr.class).eq("sku_id", skuId);
+
+        QueryWrapper<SkuAttr> wrapper = QueryUtil.buildWrapper(query, SkuAttr.class);
 
         PageResult<SkuAttrVo> result = new PageResult<>();
         result.setTotal(iSkuAttrRepository.count(wrapper));
+        result.setDataColumns(ViewUtil.dataColumns(SkuAttr.class));
 
-        List<SkuAttr> skuAttrList = iSkuAttrRepository.page(new Page<>(query.getCurrent(), query.getLimit()), wrapper).getRecords();
-
-        skuAttrList.forEach(skuAttr -> {
+        iSkuAttrRepository.page(new Page<>(query.getCurrent(), query.getLimit()), wrapper).getRecords()
+        .forEach(skuAttr -> {
             SkuAttrVo skuAttrVo = new SkuAttrVo();
             BeanUtil.copyProperties(skuAttr, skuAttrVo, DateUtil.copyDate2yyyyMMddHHmm());
             result.getData().add(skuAttrVo);
