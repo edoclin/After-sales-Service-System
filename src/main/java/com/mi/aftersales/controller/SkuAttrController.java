@@ -50,7 +50,7 @@ public class SkuAttrController {
         return skuAttrService.listClientSkuAttrs(form, skuId);
     }
 
-    @PostMapping(path = "/manager/condition")
+    @PostMapping(path = "/manager/query")
     @Operation(summary = "查询商品（管理员）", description = "查询商品（管理员）")
     @Parameter(name = "skuId", description = "商品SkuId", required = true)
     public PageResult<SkuAttrVo> list(@RequestBody ConditionQuery query) {

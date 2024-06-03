@@ -64,7 +64,7 @@ public class MaterialController {
         return materialService.getMaterialDetailById(materialId);
     }
 
-    @PostMapping(path = "/manager/condition")
+    @PostMapping(path = "/manager/query")
     @Operation(summary = "查询物料", description = "查询物料")
     public PageResult<MaterialVo> conditionQuery(@RequestBody @Valid ConditionQuery query) {
         StpUtil.checkRoleOr(EmployeeRoleEnum.MATERIAL_MANAGER.name(), EmployeeRoleEnum.ENGINEER.name());
