@@ -3,6 +3,7 @@ package com.mi.aftersales.config;
 import com.feiniaojin.gracefulresponse.AbstractExceptionAliasRegisterConfig;
 import com.feiniaojin.gracefulresponse.ExceptionAliasRegister;
 import com.mi.aftersales.exception.graceful.alias.AliasInvalidFormatException;
+import com.mi.aftersales.exception.graceful.alias.AliasSQLSyntaxErrorException;
 import com.mi.aftersales.exception.graceful.alias.AliasUploadSizeExceededException;
 import com.mi.aftersales.exception.graceful.alias.AliasUrlNotFoundException;
 import org.springframework.context.annotation.Configuration;
@@ -23,6 +24,9 @@ public class GracefulResponseConfig extends AbstractExceptionAliasRegisterConfig
         aliasRegister
                 .doRegisterExceptionAlias(AliasUrlNotFoundException.class)
                 .doRegisterExceptionAlias(AliasUploadSizeExceededException.class)
-                .doRegisterExceptionAlias(AliasInvalidFormatException.class);
+                .doRegisterExceptionAlias(AliasInvalidFormatException.class)
+                .doRegisterExceptionAlias(AliasSQLSyntaxErrorException.class)
+
+        ;
     }
 }
