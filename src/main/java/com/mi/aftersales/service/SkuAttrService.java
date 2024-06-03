@@ -43,8 +43,7 @@ public interface SkuAttrService {
      * 查询管理员SKU属性。
      *
      * @param query 查询条件
-     * @param skuId SKU ID
      * @return SKU属性分页结果
      */
-    PageResult<SkuAttrVo> listSkuAttrs(ConditionQuery query, String skuId);
+    PageResult<SkuAttrVo> listSkuAttrs(ConditionQuery query);
 }

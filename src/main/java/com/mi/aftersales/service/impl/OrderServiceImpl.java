@@ -8,22 +8,24 @@ import cn.hutool.core.date.LocalDateTimeUtil;
 import cn.hutool.core.text.CharSequenceUtil;
 import cn.hutool.core.util.ArrayUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.feiniaojin.gracefulresponse.GracefulResponseException;
-import com.mi.aftersales.enums.config.OrderStatusChangeEventEnum;
-import com.mi.aftersales.statemachine.OrderStateMachineBuilder;
 import com.mi.aftersales.config.yaml.bean.OrderConfig;
 import com.mi.aftersales.entity.*;
+import com.mi.aftersales.enums.config.OrderStatusChangeEventEnum;
 import com.mi.aftersales.enums.entity.*;
 import com.mi.aftersales.exception.graceful.*;
+import com.mi.aftersales.pojo.common.PageResult;
+import com.mi.aftersales.pojo.message.PendingOrderMessage;
 import com.mi.aftersales.pojo.vo.*;
 import com.mi.aftersales.pojo.vo.form.*;
 import com.mi.aftersales.repository.*;
 import com.mi.aftersales.service.OrderService;
+import com.mi.aftersales.statemachine.OrderStateMachineBuilder;
 import com.mi.aftersales.util.COSUtil;
 import com.mi.aftersales.util.DateUtil;
 import com.mi.aftersales.util.query.ConditionQuery;
 import com.mi.aftersales.util.query.QueryUtil;
-import com.mi.aftersales.pojo.message.PendingOrderMessage;
 import org.apache.rocketmq.spring.core.RocketMQTemplate;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
@@ -144,9 +146,9 @@ public class OrderServiceImpl implements OrderService {
             throw new IllegalOrderIdException();
         }
 
-        if (isClient && !CharSequenceUtil.equals(order.getClientLoginId(), loginId)) {
-            throw new IllegalLoginIdException();
-        } else if (!CharSequenceUtil.equals(order.getEngineerLoginId(), loginId)) {
+        if ((Boolean.TRUE.equals(isClient) && !CharSequenceUtil.equals(order.getClientLoginId(), loginId)) ||
+                Boolean.FALSE.equals(isClient) && !CharSequenceUtil.equals(order.getEngineerLoginId(), loginId)
+        ) {
             throw new IllegalLoginIdException();
         }
 
@@ -156,11 +158,11 @@ public class OrderServiceImpl implements OrderService {
         orderDetailVo.setOrderStatusValue(order.getOrderStatus().getValue());
 
         // 状态日志
-        iOrderStatusLogRepository.lambdaQuery().eq(OrderStatusLog::getOrderId, order.getOrderId()).orderByAsc(OrderStatusLog::getOrderStatus).list().forEach(log -> {
+        iOrderStatusLogRepository.lambdaQuery().eq(OrderStatusLog::getOrderId, order.getOrderId()).orderByAsc(OrderStatusLog::getOrderStatus).list().forEach(innerLog -> {
             ClientOrderStatusLogVo logVo = new ClientOrderStatusLogVo();
-            BeanUtil.copyProperties(log, logVo, DateUtil.copyDate2yyyyMMddHHmm());
-            logVo.setOrderStatus(log.getOrderStatus().getDesc());
-            logVo.setOrderStatusValue(log.getOrderStatus().getValue());
+            BeanUtil.copyProperties(innerLog, logVo, DateUtil.copyDate2yyyyMMddHHmm());
+            logVo.setOrderStatus(innerLog.getOrderStatus().getDesc());
+            logVo.setOrderStatusValue(innerLog.getOrderStatus().getValue());
             orderDetailVo.getStatusLogs().add(logVo);
         });
 
@@ -210,13 +212,13 @@ public class OrderServiceImpl implements OrderService {
     public void createOrder(ClientOrderFormVo form, String loginId) {
         Fapiao fapiao = iFapiaoRepository.getById(form.getFapiaoId());
         if (BeanUtil.isEmpty(fapiao) || !CharSequenceUtil.equals(fapiao.getCreatedId(), loginId)) {
-            throw new GracefulResponseException("非法的发票Id！");
+            throw new IllegalFapiaoIdException();
         }
 
         Sku sku = iSkuRepository.getById(form.getSkuId());
 
         if (BeanUtil.isEmpty(sku) || Boolean.FALSE.equals(sku.getVisible())) {
-            throw new GracefulResponseException("非法的商品Sku！");
+            throw new IllegalSkuIdException();
         }
 
         Spu spu = iSpuRepository.getById(sku.getSpuId());
@@ -303,13 +305,13 @@ public class OrderServiceImpl implements OrderService {
             if (CollUtil.isEmpty(pendingOrders)) {
                 break;
             }
-            for (Object pendingOrder : pendingOrders) {
-                if (pendingOrder instanceof PendingOrderMessage) {
-                    if (!CollUtil.contains(((PendingOrderMessage) pendingOrder).getCategories(), item -> Objects.equals(item.getCategoryId(), spuCategoryId))) {
+            for (Object obj : pendingOrders) {
+                if (obj instanceof PendingOrderMessage pendingOrder) {
+                    if (!CollUtil.contains(pendingOrder.getCategories(), item -> Objects.equals(item.getCategoryId(), spuCategoryId))) {
                         // 不属于查询分类
                         continue;
                     }
-                    Order order = iOrderRepository.getById(((PendingOrderMessage) pendingOrder).getOrderId());
+                    Order order = iOrderRepository.getById(pendingOrder.getOrderId());
                     if (BeanUtil.isNotEmpty(order)) {
                         PendingOrderSimple4EngineerVo item = new PendingOrderSimple4EngineerVo();
                         BeanUtil.copyProperties(order, item, DateUtil.copyDate2yyyyMMddHHmm());
@@ -317,7 +319,7 @@ public class OrderServiceImpl implements OrderService {
                         item.setSkuDisplayName(sku.getSkuDisplayName());
                         Spu spu = iSpuRepository.getById(sku.getSpuId());
                         item.setSpuName(spu.getSpuName());
-                        ((PendingOrderMessage) pendingOrder).getCategories().forEach(category -> item.getCategories().add(category.getCategoryName()));
+                        pendingOrder.getCategories().forEach(category -> item.getCategories().add(category.getCategoryName()));
                         item.setOrderType(order.getOrderType().getDesc());
                         result.add(item);
                         if (result.size() >= orderConfig.getTopN()) {
@@ -338,8 +340,7 @@ public class OrderServiceImpl implements OrderService {
      **/
     @Override
     public void acceptOrder(String orderId, String loginId) {
-        // finished
-        Boolean isPending = Boolean.FALSE;
+        boolean isPending = Boolean.FALSE;
         Set<Object> pendingOrders;
         for (int i = 0; ; i += orderConfig.getTopN()) {
             pendingOrders = redisTemplate.opsForZSet().range(NAMESPACE_4_PENDING_ORDER, i, i + orderConfig.getTopN() - 1);
@@ -352,7 +353,7 @@ public class OrderServiceImpl implements OrderService {
             }
         }
 
-        if (!isPending) {
+        if (Boolean.FALSE.equals(isPending)) {
             throw new GracefulResponseException("该工单已被受理！");
         }
         RLock fairLock = redissonClient.getFairLock(NAMESPACE_4_ORDER_LOCK + orderId);
@@ -366,9 +367,10 @@ public class OrderServiceImpl implements OrderService {
             }
         } catch (InterruptedException e) {
             log.error(e.getMessage());
+            Thread.currentThread().interrupt();
             throw new ServerErrorException();
         } catch (BaseCustomException e) {
-            log.error(e.getMessage());
+            log.warn(e.getMessage());
             throw e;
         } finally {
             if (fairLock.isLocked()) {
@@ -384,24 +386,28 @@ public class OrderServiceImpl implements OrderService {
      * @created: 2024/6/2 15:21
      **/
     @Override
-    public List<OrderSimple4EngineerVo> listEngineerOrder(ConditionQuery query) {
-        List<OrderSimple4EngineerVo> result = new ArrayList<>();
+    public PageResult<OrderSimple4EngineerVo> listEngineerOrder(ConditionQuery query) {
+
+        PageResult<OrderSimple4EngineerVo> result = new PageResult<>();
 
         QueryWrapper<Order> wrapper = QueryUtil.buildWrapper(query, Order.class);
+
         wrapper = wrapper.eq("engineer_login_id", StpUtil.getLoginIdAsString()).orderByDesc("created_time");
 
+        result.setTotal(iOrderRepository.count(wrapper));
 
-        iOrderRepository.list(wrapper).forEach(order -> {
-            OrderSimple4EngineerVo item = new OrderSimple4EngineerVo();
-            BeanUtil.copyProperties(order, item, DateUtil.copyDate2yyyyMMddHHmm());
-            item.setOrderStatus(order.getOrderStatus().getDesc());
-            Sku sku = iSkuRepository.getById(order.getSkuId());
-            Spu spu = iSpuRepository.getById(sku.getSpuId());
-            item.setCategories(iSpuCategoryRepository.listAllSpuCategoryName(spu.getCategoryId()));
-            item.setOrderStatusValue(order.getOrderStatus().getValue());
-            item.setOrderType(order.getOrderType().getDesc());
-            result.add(item);
-        });
+        iOrderRepository.page(new Page<>(query.getCurrent(), query.getLimit()), wrapper).getRecords()
+                .forEach(order -> {
+                    OrderSimple4EngineerVo item = new OrderSimple4EngineerVo();
+                    BeanUtil.copyProperties(order, item, DateUtil.copyDate2yyyyMMddHHmm());
+                    item.setOrderStatus(order.getOrderStatus().getDesc());
+                    Sku sku = iSkuRepository.getById(order.getSkuId());
+                    Spu spu = iSpuRepository.getById(sku.getSpuId());
+                    item.setCategories(iSpuCategoryRepository.listAllSpuCategoryName(spu.getCategoryId()));
+                    item.setOrderStatusValue(order.getOrderStatus().getValue());
+                    item.setOrderType(order.getOrderType().getDesc());
+                    result.getData().add(item);
+                });
         return result;
     }
 
@@ -500,14 +506,6 @@ public class OrderServiceImpl implements OrderService {
             throw new ServerErrorException();
         }
 
-        // 用消息队列写OrderStatus日志，更新Order表就对应一条记录 todo 状态没有变换，考虑不写日志
-//        OrderStatusLog orderStatusLog = new OrderStatusLog();
-//        orderStatusLog.setOrderId(order.getOrderId());
-//        orderStatusLog.setOrderStatus(order.getOrderStatus());
-//        orderStatusLog.setStatusDetail("工程师上传故障描述");
-//
-//        Message<OrderStatusLog> msg = MessageBuilder.withPayload(orderStatusLog).build();
-//        rocketmqTemplate.send(ROCKETMQ_TOPIC_4_ORDER_LOG, msg);
     }
 
     /**
@@ -547,17 +545,19 @@ public class OrderServiceImpl implements OrderService {
 
         try {
             iOrderRepository.updateById(order);
-            if (Boolean.FALSE.equals(sendEvent(statusFlow(OrderStatusChangeEventEnum.ENGINEER_COMPLETED_FEE_CONFIRM, order.getOrderId())))) {
-                throw new IllegalOrderStatusFlowException();
-            }
 
-            // 异步更新工单物料
-            Message<List<MiddleOrderMaterial>> msg = MessageBuilder.withPayload(batch).build();
-            rocketmqTemplate.send(ROCKETMQ_TOPIC_4_ORDER_MATERIAL, msg);
-        } catch (BaseCustomException e) {
+        } catch (Exception e) {
             log.error(e.getMessage());
-            throw e;
+            throw new ServerErrorException();
         }
+
+        if (Boolean.FALSE.equals(sendEvent(statusFlow(OrderStatusChangeEventEnum.ENGINEER_COMPLETED_FEE_CONFIRM, order.getOrderId())))) {
+            throw new IllegalOrderStatusFlowException();
+        }
+
+        // 异步更新工单物料
+        Message<List<MiddleOrderMaterial>> msg = MessageBuilder.withPayload(batch).build();
+        rocketmqTemplate.send(ROCKETMQ_TOPIC_4_ORDER_MATERIAL, msg);
     }
 
     /**
@@ -676,8 +676,9 @@ public class OrderServiceImpl implements OrderService {
             }
         } catch (BaseCustomException e) {
             throw e;
-        } catch (Exception e) {
+        } catch (InterruptedException e) {
             log.error(e.getMessage());
+            Thread.currentThread().interrupt();
             throw new ServerErrorException();
         } finally {
             if (fairLock.isLocked()) {

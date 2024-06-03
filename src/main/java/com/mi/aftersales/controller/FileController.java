@@ -30,11 +30,11 @@ public class FileController {
     @CheckLogin
     @Operation(summary = "保存COS的accessKey并返回文件Id", description = "保存COS的accessKey并返回文件Id")
     public List<FileUploadVo> postFile(@RequestBody @Valid FileFormVo form) {
-        return fileService.postFile(form);
+        return fileService.generateFileIds(form);
     }
 
 
-    @PostMapping(path = "/upload/byServer")
+    @PostMapping(path = "/upload/by-server")
     @CheckLogin
     @Operation(summary = "上传到服务器再上传到COS", description = "上传到服务器再上传到COS")
     public List<FileUploadVo> uploadByServer(@RequestBody MultipartFile[] files) {

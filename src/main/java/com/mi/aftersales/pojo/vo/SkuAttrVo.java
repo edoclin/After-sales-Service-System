@@ -12,11 +12,11 @@ import lombok.experimental.Accessors;
 @Getter
 @Setter
 @Accessors(chain = true)
-@Schema(title = "商品SKU属性（管理员）", description = "商品SKU属性（管理员）")
+@Schema(title = "商品Sku属性（管理员）", description = "商品Sku属性（管理员）")
 public class SkuAttrVo {
-    @Schema(description = "商品SKU属性ID")
+    @Schema(description = "商品Sku属性Id")
     private String attrId;
-    @Schema(description = "商品SKU_ID")
+    @Schema(description = "商品SkuId")
     private String skuId;
     @Schema(description = "属性名称")
     private String attrName;

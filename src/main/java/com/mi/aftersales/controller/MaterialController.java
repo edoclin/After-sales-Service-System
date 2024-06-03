@@ -35,7 +35,7 @@ public class MaterialController {
      *
      * @param form 物料表单
      */
-    @PostMapping(path = "/")
+    @PostMapping(path = "/manager")
     @Operation(summary = "库管添加物料", description = "库管添加物料")
     @CheckLogin
     public void addMaterial(@RequestBody @Valid MaterialFormVo form) {
@@ -48,7 +48,7 @@ public class MaterialController {
      *
      * @param form 更新物料表单
      */
-    @PutMapping(path = "/")
+    @PutMapping(path = "/manager")
     @Operation(summary = "库管更新物料信息", description = "库管更新物料信息")
     @CheckLogin
     public void updateMaterial(@RequestBody @Valid ManagerUpdateMaterialFormVo form) {
@@ -56,15 +56,15 @@ public class MaterialController {
         materialService.updateMaterial(form);
     }
 
-    @GetMapping(path = "/{materialId}")
-    @Operation(summary = "查询物料变动日志", description = "查询物料变动日志")
+    @GetMapping(path = "/manager/{materialId}")
+    @Operation(summary = "查询物料详情（含日志）", description = "查询物料详情（含日志）")
     @CheckLogin
     public MaterialVo getMaterialDetailById(@PathVariable String materialId) {
         StpUtil.checkRole(EmployeeRoleEnum.MATERIAL_MANAGER.name());
         return materialService.getMaterialDetailById(materialId);
     }
 
-    @PostMapping(path = "/condition")
+    @PostMapping(path = "/manager/condition")
     @Operation(summary = "查询物料", description = "查询物料")
     public PageResult<MaterialVo> conditionQuery(@RequestBody @Valid ConditionQuery query) {
         StpUtil.checkRoleOr(EmployeeRoleEnum.MATERIAL_MANAGER.name(), EmployeeRoleEnum.ENGINEER.name());

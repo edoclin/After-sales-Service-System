@@ -39,7 +39,7 @@ public interface SkuService {
      * @param query 查询条件对象，包含分页信息。
      * @return 分页结果，包含客户可见的SKU列表。
      */
-    PageResult<ClientSkuVo> listClientSku(ConditionQuery query);
+    PageResult<ClientSkuVo> listClientSku(ConditionQuery query, String spuId);
 
     /**
      * 分页查询所有商品SKU（管理员）。

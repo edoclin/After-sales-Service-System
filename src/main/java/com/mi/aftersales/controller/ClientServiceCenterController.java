@@ -1,5 +1,7 @@
 package com.mi.aftersales.controller;
 
+import cn.dev33.satoken.stp.StpUtil;
+import com.mi.aftersales.enums.entity.EmployeeRoleEnum;
 import com.mi.aftersales.service.ClientServiceCenterService;
 import com.mi.aftersales.pojo.vo.form.ClientServiceCenterFormVo;
 import com.mi.aftersales.pojo.vo.form.UpdateClientServiceCenterFormVo;
@@ -18,14 +20,15 @@ import javax.validation.Valid;
  * @since 2024-05-14
  */
 @RestController
-@RequestMapping("/aftersales/clientServiceCenter")
+@RequestMapping("/aftersales/client-service-center")
 public class ClientServiceCenterController {
     @Resource
     private ClientServiceCenterService clientServiceCenterService;
 
-    @PostMapping(path = "/")
+    @PostMapping(path = "/manager")
     @Operation(summary = "添加用户服务中心", description = "添加用户服务中心")
     public void postClientServiceCenter(@RequestBody @Valid ClientServiceCenterFormVo form) {
+        StpUtil.checkRole(EmployeeRoleEnum.SYSTEM_MANAGER.name());
         clientServiceCenterService.addClientServiceCenter(form);
     }
 
@@ -34,9 +37,10 @@ public class ClientServiceCenterController {
      *
      * @param form 更新用户服务中心表单
      */
-    @PutMapping(path = "/")
+    @PutMapping(path = "/manager")
     @Operation(summary = "修改用户服务中心", description = "修改用户服务中心")
     public void putClientServiceCenter(@RequestBody @Valid UpdateClientServiceCenterFormVo form) {
+        StpUtil.checkRole(EmployeeRoleEnum.SYSTEM_MANAGER.name());
         clientServiceCenterService.updateClientServiceCenter(form);
     }
 }

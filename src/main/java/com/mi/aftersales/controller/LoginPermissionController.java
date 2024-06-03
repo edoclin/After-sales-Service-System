@@ -18,12 +18,12 @@ import javax.validation.Valid;
  * @since 2024-05-14
  */
 @RestController
-@RequestMapping("/aftersales/middleLoginPermission")
-public class MiddleLoginPermissionController {
+@RequestMapping("/aftersales/login-permission")
+public class LoginPermissionController {
     @Resource
     private MiddleLoginPermissionService middleLoginPermissionService;
 
-    @PostMapping(path = "/")
+    @PostMapping(path = "/manager")
     @CheckPermission
     @Operation(summary = "关联用户权限", description = "关联用户权限")
     public void postMiddleLoginPermission(@RequestBody @Valid LoginPermissionFormVo form) {

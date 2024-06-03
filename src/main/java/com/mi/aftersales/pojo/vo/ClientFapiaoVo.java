@@ -16,7 +16,7 @@ import lombok.experimental.Accessors;
 @Schema(title = "客户发票信息", description = "客户发票信息")
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 public class ClientFapiaoVo {
-    @Schema(description = "发票ID")
+    @Schema(description = "发票Id")
     private String fapiaoId;
     @Schema(description = "发票代码")
     private String fapiaoNo;

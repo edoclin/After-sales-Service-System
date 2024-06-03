@@ -4,16 +4,17 @@ import cn.dev33.satoken.stp.StpUtil;
 import com.mi.aftersales.aspect.anno.CheckLogin;
 import com.mi.aftersales.enums.entity.EmployeeRoleEnum;
 import com.mi.aftersales.pojo.common.PageResult;
-import com.mi.aftersales.pojo.vo.OrderStatusLogVo;
 import com.mi.aftersales.pojo.vo.SmsLogVo;
 import com.mi.aftersales.service.SmsLogService;
 import com.mi.aftersales.util.query.ConditionQuery;
 import io.swagger.v3.oas.annotations.Operation;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
 import javax.validation.Valid;
-import java.util.List;
 
 /**
  * <p>
@@ -24,7 +25,7 @@ import java.util.List;
  * @since 2024-05-14
  */
 @RestController
-@RequestMapping("/aftersales/smsLog")
+@RequestMapping("/aftersales/sms-log")
 public class SmsLogController {
     @Resource
     private SmsLogService smsLogService;
@@ -37,4 +38,5 @@ public class SmsLogController {
         StpUtil.checkRole(EmployeeRoleEnum.SYSTEM_MANAGER.name());
         return smsLogService.listSmsLog(query);
     }
+
 }

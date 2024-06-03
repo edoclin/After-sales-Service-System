@@ -6,7 +6,9 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.feiniaojin.gracefulresponse.GracefulResponseException;
 import com.mi.aftersales.entity.File;
 import com.mi.aftersales.entity.Spu;
+import com.mi.aftersales.exception.graceful.IllegalSpuIdException;
 import com.mi.aftersales.exception.graceful.ServerErrorException;
+import com.mi.aftersales.pojo.vo.form.UpdateSpuFormVo;
 import com.mi.aftersales.service.SpuService;
 import com.mi.aftersales.repository.IFileRepository;
 import com.mi.aftersales.repository.ISpuCategoryRepository;
@@ -20,10 +22,12 @@ import com.mi.aftersales.pojo.vo.form.SpuFormVo;
 import com.mi.aftersales.pojo.vo.form.UpdateSpuVisibleFormVo;
 import com.mi.aftersales.pojo.vo.ClientSpuVo;
 import com.mi.aftersales.pojo.vo.SpuVo;
+import com.mi.aftersales.util.view.ViewUtil;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+
 /**
  * <p>
  * 商品 服务实现类
@@ -67,7 +71,20 @@ public class SpuServiceImpl implements SpuService {
     public void updateSpuVisibility(UpdateSpuVisibleFormVo form) {
         Spu spu = iSpuRepository.getById(form.getSpuId());
         if (BeanUtil.isEmpty(spu)) {
-            throw new GracefulResponseException("商品SPU不存在！");
+            throw new IllegalSpuIdException();
+        }
+
+        spu.setVisible(form.getVisible());
+        if (!iSpuRepository.updateById(spu)) {
+            throw new ServerErrorException();
+        }
+    }
+
+    @Override
+    public void updateSpuById(UpdateSpuFormVo form) {
+        Spu spu = iSpuRepository.getById(form.getSpuId());
+        if (BeanUtil.isEmpty(spu)) {
+            throw new IllegalSpuIdException();
         }
 
         spu.setVisible(form.getVisible());
@@ -79,17 +96,16 @@ public class SpuServiceImpl implements SpuService {
     @Override
     public PageResult<ClientSpuVo> listClientSpu(ConditionQuery query, Integer categoryId) {
         if (BeanUtil.isEmpty(iSpuCategoryRepository.getById(categoryId))) {
-            throw new GracefulResponseException("商品所属分类不存在！");
+            throw new IllegalSpuIdException();
         }
 
+        QueryWrapper<Spu> wrapper = QueryUtil.buildWrapper(query, Spu.class);
+        wrapper = wrapper.eq("category_id", categoryId)
+                .eq("visible", true);
         PageResult<ClientSpuVo> result = new PageResult<>();
-        result.setTotal(iSpuRepository.count(new QueryWrapper<Spu>()
-                .eq("category_id", categoryId)
-                .eq("visible", true)));
+        result.setTotal(iSpuRepository.count(wrapper));
 
-        iSpuRepository.page(new Page<>(query.getCurrent(), query.getLimit()), new QueryWrapper<Spu>()
-                .eq("category_id", categoryId)
-                .eq("visible", true)).getRecords().forEach(spu -> {
+        iSpuRepository.page(new Page<>(query.getCurrent(), query.getLimit()), wrapper).getRecords().forEach(spu -> {
             ClientSpuVo clientSpuVo = new ClientSpuVo();
             BeanUtil.copyProperties(spu, clientSpuVo, DateUtil.copyDate2yyyyMMddHHmm());
 
@@ -104,14 +120,11 @@ public class SpuServiceImpl implements SpuService {
     }
 
     @Override
-    public PageResult<SpuVo> listSpu(ConditionQuery query, Integer categoryId) {
-        if (BeanUtil.isEmpty(iSpuCategoryRepository.getById(categoryId))) {
-            throw new GracefulResponseException("商品所属分类不存在！");
-        }
-
-        QueryWrapper<Spu> wrapper = QueryUtil.buildWrapper(query, Spu.class).eq("category_id", categoryId);
+    public PageResult<SpuVo> listSpu(ConditionQuery query) {
+        QueryWrapper<Spu> wrapper = QueryUtil.buildWrapper(query, Spu.class);
         PageResult<SpuVo> result = new PageResult<>();
         result.setTotal(iSpuRepository.count(wrapper));
+        result.setDataColumns(ViewUtil.dataColumns(SpuVo.class));
 
         iSpuRepository.page(new Page<>(query.getCurrent(), query.getLimit()), wrapper).getRecords().forEach(spu -> {
             SpuVo spuVo = new SpuVo();

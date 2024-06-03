@@ -1,15 +1,15 @@
 package com.mi.aftersales.entity;
 
 import com.baomidou.mybatisplus.annotation.*;
-
-import java.io.Serializable;
-import java.time.LocalDateTime;
-
 import com.mi.aftersales.util.query.EnableQuery;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Accessors;
+
+import java.io.Serial;
+import java.io.Serializable;
+import java.time.LocalDateTime;
 
 /**
  * <p>
@@ -26,11 +26,13 @@ import lombok.experimental.Accessors;
 @Schema(name = "Spu", description = "商品")
 public class Spu implements Serializable {
 
+    @Serial
     private static final long serialVersionUID = 1L;
+
     @Schema(description = "创建时间")
     @TableField(fill = FieldFill.INSERT)
     @EnableQuery
-    private LocalDateTime createdTime;
+     private LocalDateTime createdTime;
 
     @Schema(description = "更新时间")
     @TableField(fill = FieldFill.UPDATE)
@@ -57,6 +59,7 @@ public class Spu implements Serializable {
     private String spuId;
 
     @Schema(description = "所属分类ID")
+    @EnableQuery
     private Integer categoryId;
 
     @Schema(description = "展示权重")

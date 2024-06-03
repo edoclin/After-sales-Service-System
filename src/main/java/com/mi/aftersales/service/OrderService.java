@@ -1,12 +1,13 @@
 package com.mi.aftersales.service;
 
 import com.mi.aftersales.enums.config.OrderStatusChangeEventEnum;
+import com.mi.aftersales.pojo.common.PageResult;
+import com.mi.aftersales.pojo.vo.ClientOrderSimpleVo;
+import com.mi.aftersales.pojo.vo.OrderDetailVo;
 import com.mi.aftersales.pojo.vo.OrderSimple4EngineerVo;
+import com.mi.aftersales.pojo.vo.PendingOrderSimple4EngineerVo;
 import com.mi.aftersales.pojo.vo.form.*;
 import com.mi.aftersales.util.query.ConditionQuery;
-import com.mi.aftersales.pojo.vo.OrderDetailVo;
-import com.mi.aftersales.pojo.vo.ClientOrderSimpleVo;
-import com.mi.aftersales.pojo.vo.PendingOrderSimple4EngineerVo;
 import org.springframework.messaging.Message;
 
 import java.util.List;
@@ -42,10 +43,6 @@ public interface OrderService {
     String CLIENT_CHOICE = "client-choice";
     String ENGINEER_CHOICE = "engineer-choice";
 
-//    String STATE_MACHINE_HEADER_ORDER_NAME = "orderName";
-//    String CLIENT_CHOICE = "clientChoice";
-//    String ENGINEER_CHOICE = "engineerChoice";
-//    String NAMESPACE_4_PENDING_ORDER = "namespace:pending:order";
 
     /**
      * 查询客户工单列表。
@@ -88,7 +85,7 @@ public interface OrderService {
      */
     void acceptOrder(String orderId, String loginId);
 
-    List<OrderSimple4EngineerVo> listEngineerOrder(ConditionQuery query);
+    PageResult<OrderSimple4EngineerVo> listEngineerOrder(ConditionQuery query);
 
     void engineerUploadImage(EngineerUploadFormVo form);
 

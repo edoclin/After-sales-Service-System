@@ -2,12 +2,11 @@ package com.mi.aftersales.controller;
 
 import cn.dev33.satoken.stp.StpUtil;
 import com.mi.aftersales.aspect.anno.CheckLogin;
-import com.mi.aftersales.entity.EmployeeInfo;
 import com.mi.aftersales.enums.entity.EmployeeRoleEnum;
-import com.mi.aftersales.service.PayOrderService;
-import com.mi.aftersales.util.query.ConditionQuery;
 import com.mi.aftersales.pojo.common.PageResult;
 import com.mi.aftersales.pojo.vo.PayOrderVo;
+import com.mi.aftersales.service.PayOrderService;
+import com.mi.aftersales.util.query.ConditionQuery;
 import io.swagger.v3.oas.annotations.Operation;
 import org.springframework.web.bind.annotation.*;
 
@@ -23,7 +22,7 @@ import java.util.List;
  * @since 2024-05-14
  */
 @RestController
-@RequestMapping("/aftersales/payOrder")
+@RequestMapping("/aftersales/pay-order")
 public class PayOrderController {
 
     @Resource
@@ -36,7 +35,7 @@ public class PayOrderController {
         return payOrderService.listClientPayOrders();
     }
 
-    @PostMapping(path = "/")
+    @PostMapping(path = "/manager")
     @Operation(summary = "查询支付账单", description = "查询支付账单")
     @CheckLogin
     public PageResult<PayOrderVo> listClientOrderByCondition(@RequestBody ConditionQuery query) {

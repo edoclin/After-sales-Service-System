@@ -18,9 +18,16 @@ import java.time.LocalDateTime;
 @Accessors(chain = true)
 @Schema(title = "更新客户发票", description = "更新客户发票")
 public class UpdateFapiaoFormVo {
-    @Schema(description = "发票编号")
-    @NotEmpty(message = "发票编号不能为空")
+    @Schema(description = "发票Id")
+    @NotEmpty(message = "发票Id不能为空")
     private String fapiaoId;
+
+
+    @Schema(description = "发票号码")
+    private String fapiaoNo;
+
+    @Schema(description = "发票代码")
+    private String fapiaoCode;
 
     @Schema(description = "发票信息")
     private String fapiaoInfo;

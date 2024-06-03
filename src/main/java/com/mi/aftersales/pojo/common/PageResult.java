@@ -22,6 +22,8 @@ import java.util.List;
 public class PageResult<T> {
     @Schema(description = "总数据数量")
     private Long total;
+    @Schema(description = "数据列")
+    private List<DataColumn> dataColumns;
     @Schema(description = "数据")
     private List<T> data = new ArrayList<>();
 }
