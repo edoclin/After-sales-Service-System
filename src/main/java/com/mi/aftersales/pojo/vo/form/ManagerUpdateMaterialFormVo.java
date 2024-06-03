@@ -17,8 +17,8 @@ import java.math.BigDecimal;
 @Getter
 @Setter
 @Accessors(chain = true)
-@Schema(title = "库管更新物料信息",description = "库管更新物料信息")
-public class ManngerUpdateMaterialFormVo {
+@Schema(title = "库管更新物料信息", description = "库管更新物料信息")
+public class ManagerUpdateMaterialFormVo {
 
 
     @Schema(description = "物料ID")
@@ -36,8 +36,8 @@ public class ManngerUpdateMaterialFormVo {
     private String materialCoverFileId;
 
 
-    @Schema(description = "物料所属Spu分类Id")
-    private Integer spuCategoryId;
+    @Schema(description = "物料所属Spu分类Id（默认通用=0）")
+    private Integer spuCategoryId = 0;
 
     @Schema(description = "计量单位")
     private String unit;

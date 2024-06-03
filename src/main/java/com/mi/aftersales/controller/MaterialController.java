@@ -7,7 +7,7 @@ import com.mi.aftersales.service.MaterialService;
 import com.mi.aftersales.util.query.ConditionQuery;
 import com.mi.aftersales.pojo.common.PageResult;
 import com.mi.aftersales.pojo.vo.form.MaterialFormVo;
-import com.mi.aftersales.pojo.vo.form.ManngerUpdateMaterialFormVo;
+import com.mi.aftersales.pojo.vo.form.ManagerUpdateMaterialFormVo;
 import com.mi.aftersales.pojo.vo.MaterialVo;
 import io.swagger.v3.oas.annotations.Operation;
 import org.springframework.web.bind.annotation.*;
@@ -51,7 +51,7 @@ public class MaterialController {
     @PutMapping(path = "/")
     @Operation(summary = "库管更新物料信息", description = "库管更新物料信息")
     @CheckLogin
-    public void updateMaterial(@RequestBody @Valid ManngerUpdateMaterialFormVo form) {
+    public void updateMaterial(@RequestBody @Valid ManagerUpdateMaterialFormVo form) {
         StpUtil.checkRole(EmployeeRoleEnum.MATERIAL_MANAGER.name());
         materialService.updateMaterial(form);
     }

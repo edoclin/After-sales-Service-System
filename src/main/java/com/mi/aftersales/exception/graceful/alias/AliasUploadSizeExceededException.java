@@ -9,6 +9,6 @@ import org.springframework.web.multipart.MaxUploadSizeExceededException;
  * @author: edoclin
  * @created: 2024/6/1 17:50
  **/
-@ExceptionAliasFor(code = "1", msg = "单个文件大小超出限制！", aliasFor = MaxUploadSizeExceededException.class)
+@ExceptionAliasFor(code = "-1", msg = "单个文件大小超出限制！", aliasFor = MaxUploadSizeExceededException.class)
 public class AliasUploadSizeExceededException extends RuntimeException {
 }

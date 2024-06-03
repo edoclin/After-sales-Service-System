@@ -25,10 +25,11 @@ import com.mi.aftersales.service.SpuCategoryService;
 import com.mi.aftersales.util.COSUtil;
 import com.mi.aftersales.util.DateUtil;
 import com.mi.aftersales.util.query.ConditionQuery;
+import com.mi.aftersales.util.query.QueryParam;
 import com.mi.aftersales.util.query.QueryUtil;
 import com.mi.aftersales.util.query.enums.Operator;
 import com.mi.aftersales.pojo.common.PageResult;
-import com.mi.aftersales.pojo.vo.form.ManngerUpdateMaterialFormVo;
+import com.mi.aftersales.pojo.vo.form.ManagerUpdateMaterialFormVo;
 import com.mi.aftersales.pojo.vo.form.MaterialFormVo;
 import com.mi.aftersales.pojo.vo.MaterialLogVo;
 import com.mi.aftersales.pojo.vo.MaterialVo;
@@ -130,7 +131,7 @@ public class MaterialServiceImpl implements MaterialService {
     }
 
     @Override
-    public void updateMaterial(ManngerUpdateMaterialFormVo form) {
+    public void updateMaterial(ManagerUpdateMaterialFormVo form) {
         Material material = iMaterialRepository.getById(form.getMaterialId());
 
         if (BeanUtil.isEmpty(material)) {
@@ -220,13 +221,20 @@ public class MaterialServiceImpl implements MaterialService {
 
         List<Integer> in = new ArrayList<>();
 
-        query.getParams().forEach(param -> {
+        for (QueryParam param : query.getParams()) {
             if (param.getOperator() == Operator.CUSTOM) {
                 in.addAll(spuCategoryService.childrenCategoryId(Integer.valueOf(param.getValue())));
-            }
-        });
 
-        wrapper = wrapper.in("spu_category_id", in);
+                if (CollUtil.isNotEmpty(in)) {
+                    wrapper = wrapper.in("spu_category_id", in);
+                } else {
+                    log.warn("非法的Spu分类Id：{}", param.getValue());
+                }
+                break;
+            }
+        }
+
+
         result.setTotal(iMaterialRepository.count(wrapper));
 
         iMaterialRepository.page(new Page<>(query.getCurrent(), query.getLimit()), wrapper).getRecords().forEach(material -> {

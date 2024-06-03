@@ -4,7 +4,7 @@ import com.alibaba.fastjson.JSON;
 import com.mi.aftersales.entity.Material;
 
 
-import com.mi.aftersales.pojo.vo.form.ManngerUpdateMaterialFormVo;
+import com.mi.aftersales.pojo.vo.form.ManagerUpdateMaterialFormVo;
 import com.mi.aftersales.pojo.vo.form.MaterialFormVo;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -89,7 +89,7 @@ class MaterialControllerTest {
     public void updateMaterial() throws Exception {
 
         // 创建一个更新物料表单对象
-        ManngerUpdateMaterialFormVo form = new ManngerUpdateMaterialFormVo();
+        ManagerUpdateMaterialFormVo form = new ManagerUpdateMaterialFormVo();
         form.setMaterialId("1795750940717076480");
         form.setMaterialName("UpdatedTest1");
         form.setMaterialDesc("UpdatedTestUpdateMaterial");
