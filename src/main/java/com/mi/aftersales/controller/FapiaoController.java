@@ -2,10 +2,11 @@ package com.mi.aftersales.controller;
 
 import cn.dev33.satoken.stp.StpUtil;
 import com.mi.aftersales.aspect.anno.CheckLogin;
-import com.mi.aftersales.service.FapiaoService;
+import com.mi.aftersales.enums.entity.EmployeeRoleEnum;
 import com.mi.aftersales.pojo.vo.ClientFapiaoVo;
 import com.mi.aftersales.pojo.vo.form.FapiaoFormVo;
 import com.mi.aftersales.pojo.vo.form.UpdateFapiaoFormVo;
+import com.mi.aftersales.service.FapiaoService;
 import io.swagger.v3.oas.annotations.Operation;
 import org.springframework.web.bind.annotation.*;
 
@@ -28,7 +29,7 @@ public class FapiaoController {
     @Resource
     private FapiaoService fapiaoService;
 
-    @PostMapping(path = "/")
+    @PostMapping(path = "/client")
     @CheckLogin
     @Operation(summary = "添加发票", description = "添加发票")
     public void postFapiao(@RequestBody @Valid FapiaoFormVo form) {
@@ -39,7 +40,16 @@ public class FapiaoController {
     @CheckLogin
     @Operation(summary = "查询当前登录用户发票", description = "查询当前登录用户发票")
     public List<ClientFapiaoVo> listFapiao() {
-        return fapiaoService.listFapiaoByClient(StpUtil.getLoginIdAsString());
+        return fapiaoService.listFapiaoByClientId(StpUtil.getLoginIdAsString());
+    }
+
+
+    @GetMapping(path = "/manager/{loginId}")
+    @CheckLogin
+    @Operation(summary = "查询给定用户发票", description = "查询给定用户发票")
+    public List<ClientFapiaoVo> listFapiaoByLoginId(@PathVariable("loginId") String loginId) {
+        StpUtil.checkRoleOr(EmployeeRoleEnum.SYSTEM_MANAGER.name(), EmployeeRoleEnum.ENGINEER.name());
+        return fapiaoService.listFapiaoByClientId(loginId);
     }
 
     @DeleteMapping(path = "/client/{fapiaoId}")

@@ -18,7 +18,7 @@ import javax.validation.Valid;
  * @since 2024-05-18
  */
 @RestController
-@RequestMapping("/aftersales/loginRole")
+@RequestMapping("/aftersales/login-role")
 public class LoginRoleController {
     @Resource
     private LoginRoleService loginRoleService;

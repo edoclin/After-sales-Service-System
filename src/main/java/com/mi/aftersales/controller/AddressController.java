@@ -30,7 +30,7 @@ public class AddressController {
     @Resource
     private AddressService addressService;
 
-    @PostMapping(path = "/")
+    @PostMapping(path = "/client")
     @Operation(summary = "客户添加地址", description = "客户添加地址")
     @CheckLogin
     public void postAddress(@RequestBody @Valid ClientAddressFormVo form) {
@@ -38,21 +38,21 @@ public class AddressController {
         addressService.addAddress(form, StpUtil.getLoginIdAsString());
     }
 
-    @GetMapping(path = "/")
+    @GetMapping(path = "/client")
     @Operation(summary = "客户查询地址", description = "客户查询地址")
     @CheckLogin
     public List<com.mi.aftersales.pojo.vo.ClientAddressVo> listAddress() {
         return addressService.listAddress(StpUtil.getLoginIdAsString());
     }
 
-    @PutMapping(path = "/defaulted/{addressId}")
+    @PutMapping(path = "/client/defaulted/{addressId}")
     @Operation(summary = "客户设置默认地址", description = "客户设置默认地址")
     @CheckLogin
     public void defaultAddress(@PathVariable String addressId) {
         addressService.setDefaultAddress(addressId, StpUtil.getLoginIdAsString());
     }
 
-    @DeleteMapping(path = "/{addressId}")
+    @DeleteMapping(path = "/client/{addressId}")
     @Operation(summary = "客户删除地址", description = "客户删除地址")
     @CheckLogin
     public void deleteAddress(@PathVariable String addressId) {

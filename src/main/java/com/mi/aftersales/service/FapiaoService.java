@@ -28,7 +28,7 @@ public interface FapiaoService {
      * @param loginId 用户登录ID
      * @return 发票列表
      */
-    List<ClientFapiaoVo> listFapiaoByClient(String loginId);
+    List<ClientFapiaoVo> listFapiaoByClientId(String loginId);
 
     /**
      * 删除当前用户的发票。

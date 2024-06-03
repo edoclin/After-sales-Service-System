@@ -5,14 +5,15 @@ import cn.hutool.core.bean.copier.CopyOptions;
 import cn.hutool.core.text.CharSequenceUtil;
 import com.feiniaojin.gracefulresponse.GracefulResponseException;
 import com.mi.aftersales.entity.Fapiao;
+import com.mi.aftersales.exception.graceful.IllegalFapiaoIdException;
 import com.mi.aftersales.exception.graceful.IllegalLoginIdException;
 import com.mi.aftersales.exception.graceful.ServerErrorException;
-import com.mi.aftersales.service.FapiaoService;
-import com.mi.aftersales.repository.IFapiaoRepository;
-import com.mi.aftersales.util.DateUtil;
+import com.mi.aftersales.pojo.vo.ClientFapiaoVo;
 import com.mi.aftersales.pojo.vo.form.FapiaoFormVo;
 import com.mi.aftersales.pojo.vo.form.UpdateFapiaoFormVo;
-import com.mi.aftersales.pojo.vo.ClientFapiaoVo;
+import com.mi.aftersales.repository.IFapiaoRepository;
+import com.mi.aftersales.service.FapiaoService;
+import com.mi.aftersales.util.DateUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DuplicateKeyException;
@@ -51,8 +52,9 @@ public class FapiaoServiceImpl implements FapiaoService {
     }
 
     @Override
-    public List<ClientFapiaoVo> listFapiaoByClient(String loginId) {
+    public List<ClientFapiaoVo> listFapiaoByClientId(String loginId) {
         ArrayList<ClientFapiaoVo> result = new ArrayList<>();
+
         iFapiaoRepository.lambdaQuery().eq(Fapiao::getCreatedId, loginId).list().forEach(fapiao -> {
             ClientFapiaoVo item = new ClientFapiaoVo();
             BeanUtil.copyProperties(fapiao, item, DateUtil.copyDate2yyyyMMddHHmm());
@@ -64,12 +66,14 @@ public class FapiaoServiceImpl implements FapiaoService {
     @Override
     public void deleteFapiaoByClient(String fapiaoId, String loginId) {
         Fapiao byId = iFapiaoRepository.getById(fapiaoId);
+
         if (BeanUtil.isEmpty(byId)) {
-            throw new GracefulResponseException("发票ID不存在！");
+            throw new IllegalFapiaoIdException();
         }
         if (!CharSequenceUtil.equals(byId.getCreatedId(), loginId)) {
             throw new IllegalLoginIdException();
         }
+
         try {
             iFapiaoRepository.removeById(fapiaoId);
         } catch (Exception e) {
@@ -82,8 +86,9 @@ public class FapiaoServiceImpl implements FapiaoService {
     public void updateFapiaoByClient(UpdateFapiaoFormVo form, String loginId) {
         Fapiao byId = iFapiaoRepository.getById(form.getFapiaoId());
         if (BeanUtil.isEmpty(byId)) {
-            throw new GracefulResponseException("发票ID不存在！");
+            throw new IllegalFapiaoIdException();
         }
+
         if (!CharSequenceUtil.equals(byId.getCreatedId(), loginId)) {
             throw new IllegalLoginIdException();
         }

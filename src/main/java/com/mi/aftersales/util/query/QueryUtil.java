@@ -18,7 +18,12 @@ import java.util.Set;
  * @author: edoclin
  * @created: 2024/5/17 21:31
  **/
+
 public class QueryUtil {
+
+    private QueryUtil() {
+
+    }
 
     public static <T> Set<String> columns(Class<T> clazz) {
         HashSet<String> res = new HashSet<>();
@@ -28,6 +33,10 @@ public class QueryUtil {
             }
         }
         return res;
+    }
+
+    public static <T> QueryWrapper<T> buildEmptyQueryWrapper(Class<T> clazz) {
+        return Wrappers.query(clazz).checkSqlInjection();
     }
 
     public static <T> QueryWrapper<T> buildWrapper(ConditionQuery query, Class<T> clazz) {
@@ -50,13 +59,12 @@ public class QueryUtil {
             switch (queryParam.getOperator()) {
                 case STR_EQ, NUM_EQ, BOOL_EQ -> wrapper = wrapper.eq(underlineColumn, queryParam.getValue());
                 case STR_LIKE -> wrapper = wrapper.like(underlineColumn, queryParam.getValue());
-                case DATE_RANGE -> wrapper = wrapper.between(underlineColumn, queryParam.getLeft(), queryParam.getRight());
+                case DATE_RANGE ->
+                        wrapper = wrapper.between(underlineColumn, queryParam.getLeft(), queryParam.getRight());
                 case NUM_GT -> wrapper = wrapper.gt(underlineColumn, queryParam.getValue());
                 case NUM_GE -> wrapper = wrapper.ge(underlineColumn, queryParam.getValue());
                 case NUM_LT -> wrapper = wrapper.lt(underlineColumn, queryParam.getValue());
                 case NUM_LE -> wrapper = wrapper.le(underlineColumn, queryParam.getValue());
-//                case IN -> wrapper = wrapper.in(underlineColumn, queryParam.getValue().split(","));
-                case CUSTOM -> {}
             }
 
             switch (queryParam.getOrderBy()) {

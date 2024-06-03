@@ -17,7 +17,7 @@ import java.util.List;
 public interface FileService {
 
 
-    List<FileUploadVo> postFile(FileFormVo form);
+    List<FileUploadVo> generateFileIds(FileFormVo form);
 
     List<FileUploadVo>  uploadByServer(MultipartFile[] files);
 }
