@@ -9,21 +9,21 @@ import cn.hutool.core.text.CharSequenceUtil;
 import cn.hutool.core.util.ArrayUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.feiniaojin.gracefulresponse.GracefulResponseException;
-import com.mi.aftersales.config.enums.OrderStatusChangeEventEnum;
-import com.mi.aftersales.config.statemachine.OrderStateMachineBuilder;
+import com.mi.aftersales.enums.config.OrderStatusChangeEventEnum;
+import com.mi.aftersales.statemachine.OrderStateMachineBuilder;
 import com.mi.aftersales.config.yaml.bean.OrderConfig;
 import com.mi.aftersales.entity.*;
-import com.mi.aftersales.entity.enums.*;
+import com.mi.aftersales.enums.entity.*;
 import com.mi.aftersales.exception.graceful.*;
+import com.mi.aftersales.pojo.vo.*;
+import com.mi.aftersales.pojo.vo.form.*;
 import com.mi.aftersales.repository.*;
 import com.mi.aftersales.service.OrderService;
 import com.mi.aftersales.util.COSUtil;
 import com.mi.aftersales.util.DateUtil;
 import com.mi.aftersales.util.query.ConditionQuery;
 import com.mi.aftersales.util.query.QueryUtil;
-import com.mi.aftersales.vo.form.*;
-import com.mi.aftersales.vo.message.PendingOrder;
-import com.mi.aftersales.vo.result.*;
+import com.mi.aftersales.pojo.message.PendingOrderMessage;
 import org.apache.rocketmq.spring.core.RocketMQTemplate;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
@@ -207,7 +207,7 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     @Transactional
-    public void createOrder(ClientOrderForm form, String loginId) {
+    public void createOrder(ClientOrderFormVo form, String loginId) {
         Fapiao fapiao = iFapiaoRepository.getById(form.getFapiaoId());
         if (BeanUtil.isEmpty(fapiao) || !CharSequenceUtil.equals(fapiao.getCreatedId(), loginId)) {
             throw new GracefulResponseException("非法的发票Id！");
@@ -293,8 +293,8 @@ public class OrderServiceImpl implements OrderService {
      * @created: 2024/6/2 15:21
      **/
     @Override
-    public List<PendingOrderSimpleVo4Engineer> listPendingOrders(Integer spuCategoryId) {
-        ArrayList<PendingOrderSimpleVo4Engineer> result = new ArrayList<>();
+    public List<PendingOrderSimple4EngineerVo> listPendingOrders(Integer spuCategoryId) {
+        ArrayList<PendingOrderSimple4EngineerVo> result = new ArrayList<>();
 
 //         按工单提交先后顺序，一次只能查询topN个
         Set<Object> pendingOrders;
@@ -304,20 +304,20 @@ public class OrderServiceImpl implements OrderService {
                 break;
             }
             for (Object pendingOrder : pendingOrders) {
-                if (pendingOrder instanceof PendingOrder) {
-                    if (!CollUtil.contains(((PendingOrder) pendingOrder).getCategories(), item -> Objects.equals(item.getCategoryId(), spuCategoryId))) {
+                if (pendingOrder instanceof PendingOrderMessage) {
+                    if (!CollUtil.contains(((PendingOrderMessage) pendingOrder).getCategories(), item -> Objects.equals(item.getCategoryId(), spuCategoryId))) {
                         // 不属于查询分类
                         continue;
                     }
-                    Order order = iOrderRepository.getById(((PendingOrder) pendingOrder).getOrderId());
+                    Order order = iOrderRepository.getById(((PendingOrderMessage) pendingOrder).getOrderId());
                     if (BeanUtil.isNotEmpty(order)) {
-                        PendingOrderSimpleVo4Engineer item = new PendingOrderSimpleVo4Engineer();
+                        PendingOrderSimple4EngineerVo item = new PendingOrderSimple4EngineerVo();
                         BeanUtil.copyProperties(order, item, DateUtil.copyDate2yyyyMMddHHmm());
                         Sku sku = iSkuRepository.getById(order.getSkuId());
                         item.setSkuDisplayName(sku.getSkuDisplayName());
                         Spu spu = iSpuRepository.getById(sku.getSpuId());
                         item.setSpuName(spu.getSpuName());
-                        ((PendingOrder) pendingOrder).getCategories().forEach(category -> item.getCategories().add(category.getCategoryName()));
+                        ((PendingOrderMessage) pendingOrder).getCategories().forEach(category -> item.getCategories().add(category.getCategoryName()));
                         item.setOrderType(order.getOrderType().getDesc());
                         result.add(item);
                         if (result.size() >= orderConfig.getTopN()) {
@@ -346,7 +346,7 @@ public class OrderServiceImpl implements OrderService {
             if (CollUtil.isEmpty(pendingOrders)) {
                 break;
             }
-            if (CollUtil.contains(pendingOrders, item -> CharSequenceUtil.equals(((PendingOrder) item).getOrderId(), orderId))) {
+            if (CollUtil.contains(pendingOrders, item -> CharSequenceUtil.equals(((PendingOrderMessage) item).getOrderId(), orderId))) {
                 isPending = Boolean.TRUE;
                 break;
             }
@@ -384,15 +384,15 @@ public class OrderServiceImpl implements OrderService {
      * @created: 2024/6/2 15:21
      **/
     @Override
-    public List<OrderSimpleVo4Engineer> listEngineerOrder(ConditionQuery query) {
-        List<OrderSimpleVo4Engineer> result = new ArrayList<>();
+    public List<OrderSimple4EngineerVo> listEngineerOrder(ConditionQuery query) {
+        List<OrderSimple4EngineerVo> result = new ArrayList<>();
 
         QueryWrapper<Order> wrapper = QueryUtil.buildWrapper(query, Order.class);
         wrapper = wrapper.eq("engineer_login_id", StpUtil.getLoginIdAsString()).orderByDesc("created_time");
 
 
         iOrderRepository.list(wrapper).forEach(order -> {
-            OrderSimpleVo4Engineer item = new OrderSimpleVo4Engineer();
+            OrderSimple4EngineerVo item = new OrderSimple4EngineerVo();
             BeanUtil.copyProperties(order, item, DateUtil.copyDate2yyyyMMddHHmm());
             item.setOrderStatus(order.getOrderStatus().getDesc());
             Sku sku = iSkuRepository.getById(order.getSkuId());
@@ -413,7 +413,7 @@ public class OrderServiceImpl implements OrderService {
      **/
     @Override
     @Transactional
-    public void engineerUploadImage(EngineerUploadForm form) {
+    public void engineerUploadImage(EngineerUploadFormVo form) {
         Order order = iOrderRepository.getById(form.getOrderId());
 
         if (BeanUtil.isEmpty(order)) {
@@ -481,7 +481,7 @@ public class OrderServiceImpl implements OrderService {
      **/
     @Override
     @Transactional
-    public void uploadFaultDescription(FaultDescriptionForm form, String loginId) {
+    public void uploadFaultDescription(FaultDescriptionFormVo form, String loginId) {
         Order order = iOrderRepository.getById(form.getOrderId());
         if (BeanUtil.isEmpty(order)) {
             throw new IllegalOrderIdException();
@@ -518,7 +518,7 @@ public class OrderServiceImpl implements OrderService {
      **/
     @Override
     @Transactional
-    public void confirmFee(OrderFeeConfirmForm form, String loginId) {
+    public void confirmFee(OrderFeeConfirmFormVo form, String loginId) {
         Order order = iOrderRepository.getById(form.getOrderId());
         if (BeanUtil.isEmpty(order)) {
             throw new IllegalOrderIdException();
@@ -640,7 +640,7 @@ public class OrderServiceImpl implements OrderService {
      **/
     @Override
     @Transactional
-    public void distributeMaterial(MaterialDistributeForm form, String loginId) {
+    public void distributeMaterial(MaterialDistributeFormVo form, String loginId) {
         // 当工单状态 == MATERIAL_APPLY时，库管开始处理申请
         Order order = iOrderRepository.getById(form.getOrderId());
         if (BeanUtil.isEmpty(order)) {
@@ -751,7 +751,7 @@ public class OrderServiceImpl implements OrderService {
      **/
     @Override
     @Transactional
-    public void engineerUploadVideo(EngineerUploadForm form) {
+    public void engineerUploadVideo(EngineerUploadFormVo form) {
         Order order = iOrderRepository.getById(form.getOrderId());
 
         if (ArrayUtil.isEmpty(form.getFileIds()) || form.getFileIds().length != 1) {

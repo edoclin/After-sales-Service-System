@@ -1,11 +1,10 @@
 package com.mi.aftersales.service;
 
 import com.mi.aftersales.util.query.ConditionQuery;
-import com.mi.aftersales.vo.PageResult;
-import com.mi.aftersales.vo.form.ManngerUpdateMaterialForm;
-import com.mi.aftersales.vo.form.MaterialForm;
-import com.mi.aftersales.vo.result.MaterialVo;
-import org.redisson.api.RedissonClient;
+import com.mi.aftersales.pojo.common.PageResult;
+import com.mi.aftersales.pojo.vo.form.ManagerUpdateMaterialFormVo;
+import com.mi.aftersales.pojo.vo.form.MaterialFormVo;
+import com.mi.aftersales.pojo.vo.MaterialVo;
 
 /**
  * <p>
@@ -22,14 +21,16 @@ public interface MaterialService {
      *
      * @param form 物料表单
      */
-    void addMaterial(MaterialForm form);
+    void addMaterial(MaterialFormVo form);
 
     /**
      * 更新物料信息。
      *
      * @param form 更新物料表单
      */
-    void updateMaterial(ManngerUpdateMaterialForm form);
+    void updateMaterial(ManagerUpdateMaterialFormVo form);
+
+    MaterialVo getMaterialDetailById(String materialId);
 
     PageResult<MaterialVo> conditionQuery(ConditionQuery query);
 

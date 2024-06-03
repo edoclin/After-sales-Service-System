@@ -10,6 +10,6 @@ import org.springframework.http.converter.HttpMessageNotReadableException;
  * @author: edoclin
  * @created: 2024/6/1 17:50
  **/
-@ExceptionAliasFor(code = "1", msg = "请求参数非法！", aliasFor = {InvalidFormatException.class, HttpMessageNotReadableException.class})
+@ExceptionAliasFor(code = "-1", msg = "请求参数非法！", aliasFor = {InvalidFormatException.class, HttpMessageNotReadableException.class})
 public class AliasInvalidFormatException extends RuntimeException {
 }

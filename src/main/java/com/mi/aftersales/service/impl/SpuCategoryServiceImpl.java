@@ -6,13 +6,14 @@ import com.mi.aftersales.entity.SpuCategory;
 import com.mi.aftersales.exception.graceful.ServerErrorException;
 import com.mi.aftersales.service.SpuCategoryService;
 import com.mi.aftersales.repository.ISpuCategoryRepository;
-import com.mi.aftersales.vo.form.SpuCategoryForm;
-import com.mi.aftersales.vo.form.SpuCategoryVisibleSetForm;
-import com.mi.aftersales.vo.result.SpuCategory4ClientVo;
+import com.mi.aftersales.pojo.vo.form.SpuCategoryFormVo;
+import com.mi.aftersales.pojo.vo.form.SpuCategoryVisibleSetFormVo;
+import com.mi.aftersales.pojo.vo.SpuCategory4ClientVo;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -29,7 +30,7 @@ public class SpuCategoryServiceImpl implements SpuCategoryService {
     private ISpuCategoryRepository iSpuCategoryRepository;
 
     @Override
-    public void addSpuCategory(SpuCategoryForm form) {
+    public void addSpuCategory(SpuCategoryFormVo form) {
         if (form.getParentCategoryId() != 0 && BeanUtil.isEmpty(iSpuCategoryRepository.getById(form.getParentCategoryId()))) {
             throw new GracefulResponseException("指定父级分类不存在");
         }
@@ -43,9 +44,21 @@ public class SpuCategoryServiceImpl implements SpuCategoryService {
         }
     }
 
+    @Override
+    public List<Integer> childrenCategoryId(Integer parentCategoryId) {
+        List<Integer> result = new ArrayList<>();
+        if (parentCategoryId != null) {
+            result.add(parentCategoryId);
+            iSpuCategoryRepository.lambdaQuery().eq(SpuCategory::getParentCategoryId, parentCategoryId).list().forEach(item -> {
+                result.addAll(childrenCategoryId(item.getCategoryId()));
+            });
+        }
+        return result;
+    }
+
 
     @Override
-    public void setSpuCategoryVisibility(SpuCategoryVisibleSetForm form) {
+    public void setSpuCategoryVisibility(SpuCategoryVisibleSetFormVo form) {
         SpuCategory spuCategory = iSpuCategoryRepository.getById(form.getCategoryId());
         if (BeanUtil.isEmpty(spuCategory)) {
             throw new GracefulResponseException("分类ID不存在");

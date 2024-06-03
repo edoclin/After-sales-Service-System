@@ -1,8 +1,8 @@
 package com.mi.aftersales.service;
 
 import com.mi.aftersales.util.query.ConditionQuery;
-import com.mi.aftersales.vo.PageResult;
-import com.mi.aftersales.vo.result.PayOrderResult;
+import com.mi.aftersales.pojo.common.PageResult;
+import com.mi.aftersales.pojo.vo.PayOrderVo;
 
 import java.util.List;
 
@@ -16,7 +16,7 @@ import java.util.List;
  */
 public interface PayOrderService {
 
-    List<PayOrderResult> listClientPayOrders();
+    List<PayOrderVo> listClientPayOrders();
 
-    PageResult<PayOrderResult> listClientOrderByCondition(ConditionQuery query);
+    PageResult<PayOrderVo> listClientOrderByCondition(ConditionQuery query);
 }

@@ -1,11 +1,11 @@
 package com.mi.aftersales.service;
 
 import com.mi.aftersales.util.query.ConditionQuery;
-import com.mi.aftersales.vo.PageResult;
-import com.mi.aftersales.vo.form.SpuForm;
-import com.mi.aftersales.vo.form.UpdateSpuVisibleForm;
-import com.mi.aftersales.vo.result.ClientSpuVo;
-import com.mi.aftersales.vo.result.SpuVo;
+import com.mi.aftersales.pojo.common.PageResult;
+import com.mi.aftersales.pojo.vo.form.SpuFormVo;
+import com.mi.aftersales.pojo.vo.form.UpdateSpuVisibleFormVo;
+import com.mi.aftersales.pojo.vo.ClientSpuVo;
+import com.mi.aftersales.pojo.vo.SpuVo;
 
 /**
  * <p>
@@ -21,14 +21,14 @@ public interface SpuService {
      *
      * @param form 商品表单对象
      */
-    void addSpu(SpuForm form);
+    void addSpu(SpuFormVo form);
 
     /**
      * 更新商品可见性。
      *
      * @param form 更新商品可见性表单对象
      */
-    void updateSpuVisibility(UpdateSpuVisibleForm form);
+    void updateSpuVisibility(UpdateSpuVisibleFormVo form);
 
     /**
      * 分页查询客户可见的商品。

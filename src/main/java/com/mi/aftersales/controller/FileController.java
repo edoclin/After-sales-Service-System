@@ -1,9 +1,9 @@
 package com.mi.aftersales.controller;
 
 import com.mi.aftersales.aspect.anno.CheckLogin;
+import com.mi.aftersales.pojo.vo.form.FileFormVo;
 import com.mi.aftersales.service.FileService;
-import com.mi.aftersales.vo.result.FileUploadVo;
-import com.mi.aftersales.vo.form.FileForm;
+import com.mi.aftersales.pojo.vo.FileUploadVo;
 import io.swagger.v3.oas.annotations.Operation;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -29,7 +29,7 @@ public class FileController {
     @PostMapping(path = "/upload")
     @CheckLogin
     @Operation(summary = "保存COS的accessKey并返回文件Id", description = "保存COS的accessKey并返回文件Id")
-    public List<FileUploadVo> postFile(@RequestBody @Valid FileForm form) {
+    public List<FileUploadVo> postFile(@RequestBody @Valid FileFormVo form) {
         return fileService.postFile(form);
     }
 

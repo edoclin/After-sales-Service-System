@@ -10,7 +10,7 @@ import com.mi.aftersales.service.MiddleLoginPermissionService;
 import com.mi.aftersales.repository.ILoginRepository;
 import com.mi.aftersales.repository.IMiddleLoginPermissionRepository;
 import com.mi.aftersales.repository.IPermissionRepository;
-import com.mi.aftersales.vo.form.LoginPermissionForm;
+import com.mi.aftersales.pojo.vo.form.LoginPermissionFormVo;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -35,7 +35,7 @@ public class MiddleLoginPermissionServiceImpl implements MiddleLoginPermissionSe
     private IMiddleLoginPermissionRepository iMiddleLoginPermissionRepository;
 
     @Override
-    public void addLoginPermission(LoginPermissionForm form) {
+    public void addLoginPermission(LoginPermissionFormVo form) {
         try {
             Login login = iLoginRepository.getById(form.getLoginId());
             if (BeanUtil.isEmpty(login)) {

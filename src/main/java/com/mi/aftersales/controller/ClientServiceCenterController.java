@@ -1,8 +1,8 @@
 package com.mi.aftersales.controller;
 
 import com.mi.aftersales.service.ClientServiceCenterService;
-import com.mi.aftersales.vo.form.ClientServiceCenterForm;
-import com.mi.aftersales.vo.form.UpdateClientServiceCenterForm;
+import com.mi.aftersales.pojo.vo.form.ClientServiceCenterFormVo;
+import com.mi.aftersales.pojo.vo.form.UpdateClientServiceCenterFormVo;
 import io.swagger.v3.oas.annotations.Operation;
 import org.springframework.web.bind.annotation.*;
 
@@ -25,7 +25,7 @@ public class ClientServiceCenterController {
 
     @PostMapping(path = "/")
     @Operation(summary = "添加用户服务中心", description = "添加用户服务中心")
-    public void postClientServiceCenter(@RequestBody @Valid ClientServiceCenterForm form) {
+    public void postClientServiceCenter(@RequestBody @Valid ClientServiceCenterFormVo form) {
         clientServiceCenterService.addClientServiceCenter(form);
     }
 
@@ -36,7 +36,7 @@ public class ClientServiceCenterController {
      */
     @PutMapping(path = "/")
     @Operation(summary = "修改用户服务中心", description = "修改用户服务中心")
-    public void putClientServiceCenter(@RequestBody @Valid UpdateClientServiceCenterForm form) {
+    public void putClientServiceCenter(@RequestBody @Valid UpdateClientServiceCenterFormVo form) {
         clientServiceCenterService.updateClientServiceCenter(form);
     }
 }

@@ -1,56 +1,22 @@
 package com.mi.aftersales.controller;
 
-import cn.dev33.satoken.session.SaSession;
-import cn.dev33.satoken.stp.StpUtil;
-import cn.dev33.satoken.temp.SaTempUtil;
-import cn.hutool.captcha.generator.RandomGenerator;
-import cn.hutool.core.bean.BeanUtil;
-import cn.hutool.core.date.DateUtil;
-import cn.hutool.core.text.CharSequenceUtil;
-import cn.hutool.core.util.IdUtil;
-import com.baomidou.mybatisplus.core.toolkit.Wrappers;
-import com.feiniaojin.gracefulresponse.GracefulResponseException;
-import com.mi.aftersales.aspect.CheckLoginAspect;
 import com.mi.aftersales.aspect.anno.CheckLogin;
-import com.mi.aftersales.config.yaml.bean.OAuthConfig;
-import com.mi.aftersales.config.yaml.bean.OAuthList;
-import com.mi.aftersales.config.yaml.bean.CustomSmsConfig;
-import com.mi.aftersales.entity.*;
-import com.mi.aftersales.entity.enums.LoginOAuthSourceEnum;
-import com.mi.aftersales.entity.enums.LoginTypeEnum;
-import com.mi.aftersales.controller.enums.SmsCodeType;
-import com.mi.aftersales.repository.*;
 import com.mi.aftersales.service.LoginService;
-import com.mi.aftersales.vo.form.LoginBindForm;
-import com.mi.aftersales.vo.form.LoginBySmsForm;
-import com.mi.aftersales.vo.form.SendSmsCodeForm;
-import com.mi.aftersales.vo.result.SmsResultVo;
-import com.mi.aftersales.vo.result.ThirdLoginPageResultVo;
-import com.mi.aftersales.vo.result.LoginResultVo;
+import com.mi.aftersales.pojo.vo.form.LoginBindFormVo;
+import com.mi.aftersales.pojo.vo.form.LoginBySmsFormVo;
+import com.mi.aftersales.pojo.vo.form.SendSmsCodeFormVo;
+import com.mi.aftersales.pojo.vo.SmsResultVo;
+import com.mi.aftersales.pojo.vo.ThirdLoginPageResultVo;
+import com.mi.aftersales.pojo.vo.LoginResultVo;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import me.zhyd.oauth.config.AuthConfig;
 import me.zhyd.oauth.model.AuthCallback;
-import me.zhyd.oauth.model.AuthResponse;
-import me.zhyd.oauth.model.AuthUser;
-import me.zhyd.oauth.request.AuthGithubRequest;
-import me.zhyd.oauth.request.AuthMiRequest;
-import me.zhyd.oauth.request.AuthRequest;
-import me.zhyd.oauth.utils.AuthStateUtils;
-import org.dromara.sms4j.api.SmsBlend;
-import org.dromara.sms4j.api.entity.SmsResponse;
-import org.dromara.sms4j.core.factory.SmsFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import javax.validation.Valid;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 /**
  * <p>
@@ -65,12 +31,7 @@ import java.util.concurrent.TimeUnit;
 public class LoginController {
     private static final Logger log = LoggerFactory.getLogger(LoginController.class);
 
-    /**
-     * @description: 三方登录成功状态码
-     * @return:
-     * @author: edoclin
-     * @created: 2024/5/14 16:35
-     **/
+
     @Resource
     private LoginService loginService;
 
@@ -78,11 +39,12 @@ public class LoginController {
     @Operation(summary = "检查是否登录", description = "检查是否登录")
     @CheckLogin
     public void checkLogin() {
+        // 根据返回值判断是否登录
         loginService.checkLogin();
     }
 
     @GetMapping(path = "/logout")
-    @Operation(summary = "退出登录", description = "退出登录")
+    @Operation(summary = "退出当前登录用户", description = "退出当前登录用户")
     @CheckLogin
     public void logout() {
         loginService.logout();
@@ -90,7 +52,7 @@ public class LoginController {
 
     @PostMapping(path = "/sms/send")
     @Operation(summary = "发送短信验证码", description = "发送短信验证码")
-    public SmsResultVo sendSmsCode(@RequestBody @Valid SendSmsCodeForm form) {
+    public SmsResultVo sendSmsCode(@RequestBody @Valid SendSmsCodeFormVo form) {
         return loginService.sendSmsCode(form);
     }
 
@@ -108,7 +70,6 @@ public class LoginController {
     @Parameter(name = "client", description = "三方登录类型", example = "github", required = true)
     @Parameter(name = "callback", description = "回调参数", example = "github", required = true)
     public LoginResultVo callback(@PathVariable String client, AuthCallback callback) {
-
         return loginService.callback(client, callback);
     }
 
@@ -117,7 +78,7 @@ public class LoginController {
     @Parameter(name = "mobile", description = "手机号", example = "13111111111", required = true)
     @Parameter(name = "code", description = "短信验证码", example = "123456", required = true)
     @Parameter(name = "tempToken", description = "临时令牌", example = "绑定所需的临时令牌，由callback接口提供", required = true)
-    public LoginResultVo bind(@RequestBody @Valid LoginBindForm form) {
+    public LoginResultVo bind(@RequestBody @Valid LoginBindFormVo form) {
         return loginService.bind(form);
     }
 
@@ -126,8 +87,8 @@ public class LoginController {
     @Operation(summary = "手机验证码登录", description = "手机验证码登录")
     @Parameter(name = "mobile", description = "手机号", example = "13111111111", required = true)
     @Parameter(name = "code", description = "短信验证码", example = "123456", required = true)
-    @Parameter(name = "autoRegister", description = "未注册用户是否自动注册", example = "true", required = true)
-    public LoginResultVo loginBySms(@RequestBody @Valid LoginBySmsForm form) {
+    @Parameter(name = "autoRegister", description = "开启自动注册", example = "true", required = true)
+    public LoginResultVo loginBySms(@RequestBody @Valid LoginBySmsFormVo form) {
         return loginService.loginBySms(form);
     }
 }

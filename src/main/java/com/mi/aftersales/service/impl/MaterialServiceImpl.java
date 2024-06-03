@@ -8,26 +8,31 @@ import cn.hutool.core.convert.ConvertException;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.feiniaojin.gracefulresponse.GracefulResponseException;
+import com.mi.aftersales.entity.File;
 import com.mi.aftersales.entity.Material;
 import com.mi.aftersales.entity.MaterialLog;
-import com.mi.aftersales.entity.SpuCategory;
-import com.mi.aftersales.entity.enums.MaterialActionEnum;
+import com.mi.aftersales.enums.entity.MaterialActionEnum;
 import com.mi.aftersales.exception.graceful.BaseCustomException;
 import com.mi.aftersales.exception.graceful.IllegalMaterialIdException;
 import com.mi.aftersales.exception.graceful.IllegalSpuCategoryIdException;
 import com.mi.aftersales.exception.graceful.ServerErrorException;
+import com.mi.aftersales.repository.IFileRepository;
 import com.mi.aftersales.repository.IMaterialLogRepository;
 import com.mi.aftersales.repository.ISpuCategoryRepository;
 import com.mi.aftersales.service.MaterialService;
 import com.mi.aftersales.repository.IMaterialRepository;
+import com.mi.aftersales.service.SpuCategoryService;
+import com.mi.aftersales.util.COSUtil;
 import com.mi.aftersales.util.DateUtil;
 import com.mi.aftersales.util.query.ConditionQuery;
+import com.mi.aftersales.util.query.QueryParam;
 import com.mi.aftersales.util.query.QueryUtil;
 import com.mi.aftersales.util.query.enums.Operator;
-import com.mi.aftersales.vo.PageResult;
-import com.mi.aftersales.vo.form.ManngerUpdateMaterialForm;
-import com.mi.aftersales.vo.form.MaterialForm;
-import com.mi.aftersales.vo.result.MaterialVo;
+import com.mi.aftersales.pojo.common.PageResult;
+import com.mi.aftersales.pojo.vo.form.ManagerUpdateMaterialFormVo;
+import com.mi.aftersales.pojo.vo.form.MaterialFormVo;
+import com.mi.aftersales.pojo.vo.MaterialLogVo;
+import com.mi.aftersales.pojo.vo.MaterialVo;
 import org.apache.rocketmq.spring.core.RocketMQTemplate;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
@@ -72,12 +77,18 @@ public class MaterialServiceImpl implements MaterialService {
     @Resource
     private IMaterialLogRepository iMaterialLogRepository;
 
+    @Resource
+    private IFileRepository iFileRepository;
+
 
     @Resource
     private RocketMQTemplate rocketmqTemplate;
 
+    @Resource
+    private SpuCategoryService spuCategoryService;
+
     @Override
-    public void addMaterial(MaterialForm form) {
+    public void addMaterial(MaterialFormVo form) {
         if (form.getAlertNum().compareTo(form.getStock()) > 0) {
             throw new GracefulResponseException("库存告警阈值不能大于物料剩余库存!");
         }
@@ -98,7 +109,6 @@ public class MaterialServiceImpl implements MaterialService {
             }
 
             // 添加日志
-
             MaterialLog materialLog = new MaterialLog();
             materialLog
                     .setMaterialId(material.getMaterialId())
@@ -112,11 +122,8 @@ public class MaterialServiceImpl implements MaterialService {
             throw new GracefulResponseException("物料类型不合法!");
         } catch (DuplicateKeyException e) {
             throw new GracefulResponseException("物料名称重复！");
-        } catch (GracefulResponseException e) {
+        } catch (BaseCustomException | GracefulResponseException e) {
             throw e;
-        } catch (BaseCustomException e) {
-            throw e;
-
         } catch (Exception e) {
             log.error(e.getMessage());
             throw new ServerErrorException();
@@ -124,7 +131,7 @@ public class MaterialServiceImpl implements MaterialService {
     }
 
     @Override
-    public void updateMaterial(ManngerUpdateMaterialForm form) {
+    public void updateMaterial(ManagerUpdateMaterialFormVo form) {
         Material material = iMaterialRepository.getById(form.getMaterialId());
 
         if (BeanUtil.isEmpty(material)) {
@@ -180,14 +187,30 @@ public class MaterialServiceImpl implements MaterialService {
         }
     }
 
-    private List<Integer> childrenCategoryId(Integer parentCategoryId) {
-        List<Integer> result = new ArrayList<>();
-        if (parentCategoryId != null) {
-            result.add(parentCategoryId);
-            iSpuCategoryRepository.lambdaQuery().eq(SpuCategory::getParentCategoryId, parentCategoryId).list().forEach(item -> {
-                result.addAll(childrenCategoryId(item.getCategoryId()));
-            });
+    @Override
+    public MaterialVo getMaterialDetailById(String materialId) {
+        Material material = iMaterialRepository.getById(materialId);
+
+        if (BeanUtil.isEmpty(material)) {
+            throw new IllegalMaterialIdException();
         }
+
+        MaterialVo result = new MaterialVo();
+        BeanUtil.copyProperties(material, result, DateUtil.copyDate2yyyyMMddHHmm());
+
+        File file = iFileRepository.getById(material.getMaterialCoverFileId());
+        if (BeanUtil.isNotEmpty(file)) {
+            result.setCoverUrl(COSUtil.generateAccessUrl(file.getAccessKey()));
+        }
+
+        iMaterialLogRepository.lambdaQuery().eq(MaterialLog::getMaterialId, material.getMaterialId()).list().forEach(log -> {
+            MaterialLogVo logVo = new MaterialLogVo();
+            BeanUtil.copyProperties(log, logVo, DateUtil.copyDate2yyyyMMddHHmm());
+            logVo.setAction(log.getAction().getDesc());
+            logVo.setDelta(log.getDelta().stripTrailingZeros().toEngineeringString());
+            result.getLogs().add(logVo);
+        });
+
         return result;
     }
 
@@ -198,31 +221,31 @@ public class MaterialServiceImpl implements MaterialService {
 
         List<Integer> in = new ArrayList<>();
 
-        query.getParams().forEach(param -> {
+        for (QueryParam param : query.getParams()) {
             if (param.getOperator() == Operator.CUSTOM) {
-                in.addAll(childrenCategoryId(Integer.valueOf(param.getValue())));
+                in.addAll(spuCategoryService.childrenCategoryId(Integer.valueOf(param.getValue())));
 
+                if (CollUtil.isNotEmpty(in)) {
+                    wrapper = wrapper.in("spu_category_id", in);
+                } else {
+                    log.warn("非法的Spu分类Id：{}", param.getValue());
+                }
+                break;
             }
-        });
+        }
 
-        wrapper = wrapper.in("spu_category_id", in);
+
         result.setTotal(iMaterialRepository.count(wrapper));
 
         iMaterialRepository.page(new Page<>(query.getCurrent(), query.getLimit()), wrapper).getRecords().forEach(material -> {
-
             MaterialVo materialVo = new MaterialVo();
-
             BeanUtil.copyProperties(material, materialVo, DateUtil.copyDate2yyyyMMddHHmm());
-            // todo 详情再查询日志
-//            iMaterialLogRepository.lambdaQuery().eq(MaterialLog::getMaterialId, material.getMaterialId()).list().forEach(log -> {
-//                MaterialLogVo logVo = new MaterialLogVo();
-//
-//                BeanUtil.copyProperties(log, logVo, DateUtil.copyDate2yyyyMMddHHmm());
-//                logVo.setAction(log.getAction().getDesc());
-//                logVo.setDelta(log.getDelta().stripTrailingZeros().toEngineeringString());
-//
-//                materialVo.getLogs().add(logVo);
-//            });
+
+            File file = iFileRepository.getById(material.getMaterialCoverFileId());
+
+            if (BeanUtil.isNotEmpty(file)) {
+                materialVo.setCoverUrl(COSUtil.generateAccessUrl(file.getAccessKey()));
+            }
 
             result.getData().add(materialVo);
         });

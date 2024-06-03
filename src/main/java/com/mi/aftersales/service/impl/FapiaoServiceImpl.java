@@ -5,13 +5,14 @@ import cn.hutool.core.bean.copier.CopyOptions;
 import cn.hutool.core.text.CharSequenceUtil;
 import com.feiniaojin.gracefulresponse.GracefulResponseException;
 import com.mi.aftersales.entity.Fapiao;
+import com.mi.aftersales.exception.graceful.IllegalLoginIdException;
 import com.mi.aftersales.exception.graceful.ServerErrorException;
 import com.mi.aftersales.service.FapiaoService;
 import com.mi.aftersales.repository.IFapiaoRepository;
 import com.mi.aftersales.util.DateUtil;
-import com.mi.aftersales.vo.form.FapiaoForm;
-import com.mi.aftersales.vo.form.UpdateFapiaoForm;
-import com.mi.aftersales.vo.result.ClientFapiaoVo;
+import com.mi.aftersales.pojo.vo.form.FapiaoFormVo;
+import com.mi.aftersales.pojo.vo.form.UpdateFapiaoFormVo;
+import com.mi.aftersales.pojo.vo.ClientFapiaoVo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DuplicateKeyException;
@@ -36,7 +37,7 @@ public class FapiaoServiceImpl implements FapiaoService {
     private IFapiaoRepository iFapiaoRepository;
 
     @Override
-    public void addFapiao(FapiaoForm form) {
+    public void addFapiao(FapiaoFormVo form) {
         Fapiao fapiao = new Fapiao();
         BeanUtil.copyProperties(form, fapiao);
         try {
@@ -67,7 +68,7 @@ public class FapiaoServiceImpl implements FapiaoService {
             throw new GracefulResponseException("发票ID不存在！");
         }
         if (!CharSequenceUtil.equals(byId.getCreatedId(), loginId)) {
-            throw new GracefulResponseException("该发票不属于当前用户！");
+            throw new IllegalLoginIdException();
         }
         try {
             iFapiaoRepository.removeById(fapiaoId);
@@ -78,13 +79,13 @@ public class FapiaoServiceImpl implements FapiaoService {
     }
 
     @Override
-    public void updateFapiaoByClient(UpdateFapiaoForm form, String loginId) {
+    public void updateFapiaoByClient(UpdateFapiaoFormVo form, String loginId) {
         Fapiao byId = iFapiaoRepository.getById(form.getFapiaoId());
         if (BeanUtil.isEmpty(byId)) {
             throw new GracefulResponseException("发票ID不存在！");
         }
         if (!CharSequenceUtil.equals(byId.getCreatedId(), loginId)) {
-            throw new GracefulResponseException("该发票不属于当前用户！");
+            throw new IllegalLoginIdException();
         }
         BeanUtil.copyProperties(form, byId, CopyOptions.create().ignoreNullValue());
         try {

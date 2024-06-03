@@ -5,6 +5,10 @@ import com.baomidou.mybatisplus.annotation.*;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
+import com.mi.aftersales.enums.controller.SmsType;
+import com.mi.aftersales.enums.entity.SmsResultEnum;
+import com.mi.aftersales.enums.entity.SmsTypeEnum;
+import com.mi.aftersales.util.query.EnableQuery;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import lombok.Setter;
@@ -29,10 +33,12 @@ public class SmsLog implements Serializable {
 
     @Schema(description = "创建时间")
     @TableField(fill = FieldFill.INSERT)
+    @EnableQuery
     private LocalDateTime createdTime;
 
     @Schema(description = "更新时间")
     @TableField(fill = FieldFill.UPDATE)
+    @EnableQuery
     private LocalDateTime updatedTime;
 
     @Schema(description = "创建者")
@@ -48,17 +54,20 @@ public class SmsLog implements Serializable {
     private Long deleted;
 
     @Schema(description = "日志ID")
-    @TableId(value = "sku_id", type = IdType.ASSIGN_UUID)
+    @TableId(value = "log_id", type = IdType.ASSIGN_UUID)
     private String logId;
 
     @Schema(description = "推送类型")
-    private Byte smsType;
+    @EnableQuery
+    private SmsTypeEnum smsType;
 
     @Schema(description = "目标手机号")
+    @EnableQuery
     private String mobile;
 
     @Schema(description = "推送结果")
-    private Byte result;
+    @EnableQuery
+    private SmsResultEnum result;
 
     @Schema(description = "响应结果")
     private String response;

@@ -12,13 +12,13 @@ import com.alipay.api.domain.AlipayTradePagePayModel;
 import com.alipay.api.request.AlipayTradePagePayRequest;
 import com.alipay.api.response.AlipayTradePagePayResponse;
 import com.feiniaojin.gracefulresponse.GracefulResponseException;
-import com.mi.aftersales.config.enums.OrderStatusChangeEventEnum;
+import com.mi.aftersales.enums.config.OrderStatusChangeEventEnum;
 import com.mi.aftersales.config.yaml.bean.AliPayConfig;
 import com.mi.aftersales.entity.Order;
 import com.mi.aftersales.entity.PayOrder;
-import com.mi.aftersales.entity.enums.OrderStatusEnum;
-import com.mi.aftersales.entity.enums.PayMethodEnum;
-import com.mi.aftersales.entity.enums.PayStatusEnum;
+import com.mi.aftersales.enums.entity.OrderStatusEnum;
+import com.mi.aftersales.enums.entity.PayMethodEnum;
+import com.mi.aftersales.enums.entity.PayStatusEnum;
 import com.mi.aftersales.exception.graceful.IllegalOrderIdException;
 import com.mi.aftersales.exception.graceful.IllegalOrderLoginIdException;
 import com.mi.aftersales.exception.graceful.IllegalOrderStatusFlowException;
@@ -26,8 +26,8 @@ import com.mi.aftersales.repository.IOrderRepository;
 import com.mi.aftersales.repository.IPayOrderRepository;
 import com.mi.aftersales.service.AliPayService;
 import com.mi.aftersales.service.OrderService;
-import com.mi.aftersales.vo.PayDetailVo;
-import com.mi.aftersales.vo.result.AlipayResult;
+import com.mi.aftersales.pojo.vo.PayDetailVo;
+import com.mi.aftersales.pojo.vo.AlipayVo;
 import org.apache.rocketmq.spring.core.RocketMQTemplate;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.support.MessageBuilder;
@@ -65,7 +65,7 @@ public class AliPayServiceImpl implements AliPayService {
      * @created: 2024/5/12 12:45
      **/
     @Override
-    public AlipayResult alipay(@PathVariable String orderId) throws AlipayApiException {
+    public AlipayVo alipay(@PathVariable String orderId) throws AlipayApiException {
         Order order = iOrderRepository.getById(orderId);
 
         if (BeanUtil.isEmpty(order)) {
@@ -99,7 +99,7 @@ public class AliPayServiceImpl implements AliPayService {
         model.setProductCode("FAST_INSTANT_TRADE_PAY");
         request.setBizModel(model);
         AlipayTradePagePayResponse response = alipayClient.pageExecute(request);
-        AlipayResult result = new AlipayResult();
+        AlipayVo result = new AlipayVo();
         result.setBody(response.getBody());
 
 

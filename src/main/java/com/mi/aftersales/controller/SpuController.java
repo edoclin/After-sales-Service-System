@@ -1,12 +1,12 @@
 package com.mi.aftersales.controller;
 
 import com.mi.aftersales.service.SpuService;
-import com.mi.aftersales.vo.result.ClientSpuVo;
-import com.mi.aftersales.vo.PageResult;
+import com.mi.aftersales.pojo.vo.ClientSpuVo;
+import com.mi.aftersales.pojo.common.PageResult;
 import com.mi.aftersales.util.query.ConditionQuery;
-import com.mi.aftersales.vo.result.SpuVo;
-import com.mi.aftersales.vo.form.SpuForm;
-import com.mi.aftersales.vo.form.UpdateSpuVisibleForm;
+import com.mi.aftersales.pojo.vo.SpuVo;
+import com.mi.aftersales.pojo.vo.form.SpuFormVo;
+import com.mi.aftersales.pojo.vo.form.UpdateSpuVisibleFormVo;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import org.springframework.web.bind.annotation.*;
@@ -30,13 +30,13 @@ public class SpuController {
 
     @PostMapping(path = "/")
     @Operation(summary = "管理员添加商品", description = "管理员添加商品")
-    public void postSpu(@RequestBody @Valid SpuForm form) {
+    public void postSpu(@RequestBody @Valid SpuFormVo form) {
         spuService.addSpu(form);
     }
 
     @PutMapping(path = "/visible")
     @Operation(summary = "管理员更新商品是否可见", description = "管理员更新商品是否可见")
-    public void putSpuVisible(@RequestBody @Valid UpdateSpuVisibleForm form) {
+    public void putSpuVisible(@RequestBody @Valid UpdateSpuVisibleFormVo form) {
         spuService.updateSpuVisibility(form);
     }
 

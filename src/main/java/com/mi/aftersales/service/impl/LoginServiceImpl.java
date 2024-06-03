@@ -13,18 +13,18 @@ import com.feiniaojin.gracefulresponse.GracefulResponseException;
 import com.mi.aftersales.config.yaml.bean.CustomSmsConfig;
 import com.mi.aftersales.config.yaml.bean.OAuthConfig;
 import com.mi.aftersales.config.yaml.bean.OAuthList;
-import com.mi.aftersales.controller.enums.SmsCodeType;
+import com.mi.aftersales.enums.controller.SmsType;
 import com.mi.aftersales.entity.*;
-import com.mi.aftersales.entity.enums.LoginOAuthSourceEnum;
-import com.mi.aftersales.entity.enums.LoginTypeEnum;
+import com.mi.aftersales.enums.entity.LoginOAuthSourceEnum;
+import com.mi.aftersales.enums.entity.LoginTypeEnum;
 import com.mi.aftersales.repository.*;
 import com.mi.aftersales.service.LoginService;
-import com.mi.aftersales.vo.form.LoginBindForm;
-import com.mi.aftersales.vo.form.LoginBySmsForm;
-import com.mi.aftersales.vo.form.SendSmsCodeForm;
-import com.mi.aftersales.vo.result.LoginResultVo;
-import com.mi.aftersales.vo.result.SmsResultVo;
-import com.mi.aftersales.vo.result.ThirdLoginPageResultVo;
+import com.mi.aftersales.pojo.vo.form.LoginBindFormVo;
+import com.mi.aftersales.pojo.vo.form.LoginBySmsFormVo;
+import com.mi.aftersales.pojo.vo.form.SendSmsCodeFormVo;
+import com.mi.aftersales.pojo.vo.LoginResultVo;
+import com.mi.aftersales.pojo.vo.SmsResultVo;
+import com.mi.aftersales.pojo.vo.ThirdLoginPageResultVo;
 import me.zhyd.oauth.config.AuthConfig;
 import me.zhyd.oauth.model.AuthCallback;
 import me.zhyd.oauth.model.AuthResponse;
@@ -40,11 +40,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
 
 import javax.annotation.Resource;
-import javax.validation.Valid;
 import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;
 
@@ -59,6 +56,14 @@ public class LoginServiceImpl implements LoginService {
 
     private static final Logger log = LoggerFactory.getLogger(LoginServiceImpl.class);
 
+
+    /**
+     * @description: 三方登录成功状态码
+     * @return:
+     * @author: edoclin
+     * @created: 2024/5/14 16:35
+     **/
+    private static final int OAUTH2_SUCCESS_CODE = 2000;
 
     @Resource
     private IApiRepository iApiRepository;
@@ -75,13 +80,6 @@ public class LoginServiceImpl implements LoginService {
     @Resource
     private StringRedisTemplate redisTemplate4Sms;
 
-    /**
-     * @description: 三方登录成功状态码
-     * @return:
-     * @author: edoclin
-     * @created: 2024/5/14 16:35
-     **/
-    private static final int OAUTH2_SUCCESS_CODE = 2000;
     @Resource
     private OAuthList oAuthList;
 
@@ -103,7 +101,7 @@ public class LoginServiceImpl implements LoginService {
         StpUtil.logout();
     }
     @Override
-    public SmsResultVo sendSmsCode(SendSmsCodeForm form) {
+    public SmsResultVo sendSmsCode(SendSmsCodeFormVo form) {
         SmsResultVo smsResultVo = new SmsResultVo();
         RandomGenerator randomGenerator = new RandomGenerator("0123456789", 6);
 
@@ -112,7 +110,7 @@ public class LoginServiceImpl implements LoginService {
         if (CharSequenceUtil.isBlank(smsCode)) {
             String code = randomGenerator.generate();
 
-            SmsBlend smsBlend = SmsFactory.getSmsBlend(SmsCodeType.LOGIN.getValue());
+            SmsBlend smsBlend = SmsFactory.getSmsBlend(SmsType.LOGIN.getValue());
             // todo 待处理
             SmsResponse smsResponse = smsBlend.sendMessage(form.getMobile(), code);
 
@@ -129,7 +127,7 @@ public class LoginServiceImpl implements LoginService {
                 smsResultVo.setInfo(CharSequenceUtil.format("请{}秒后再尝试!", customSmsConfig.getPeriod() - delta));
             } else {
                 String code = randomGenerator.generate();
-                SmsBlend smsBlend = SmsFactory.getSmsBlend(SmsCodeType.LOGIN.getValue());
+                SmsBlend smsBlend = SmsFactory.getSmsBlend(SmsType.LOGIN.getValue());
                 SmsResponse smsResponse = smsBlend.sendMessage(form.getMobile(), code);
 
                 code += "_" + DateUtil.currentSeconds();
@@ -168,7 +166,7 @@ public class LoginServiceImpl implements LoginService {
         return loginResultVo;
     }
     @Override
-    public LoginResultVo bind(LoginBindForm form) {
+    public LoginResultVo bind(LoginBindFormVo form) {
         LoginResultVo loginResultVo = new LoginResultVo();
         // 验证验证码是否正确
         String key = "sms:" + form.getMobile();
@@ -217,7 +215,7 @@ public class LoginServiceImpl implements LoginService {
     }
 
     @Override
-    public LoginResultVo loginBySms(LoginBySmsForm form) {
+    public LoginResultVo loginBySms(LoginBySmsFormVo form) {
         LoginResultVo loginResultVo = new LoginResultVo();
         // 验证验证码是否正确
         String key = "sms:" + form.getMobile();
