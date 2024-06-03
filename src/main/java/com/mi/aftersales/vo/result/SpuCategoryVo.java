@@ -17,7 +17,7 @@ import lombok.experimental.Accessors;
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 public class SpuCategoryVo {
     @Schema(description = "分类ID")
-    private String categoryId;
+    private Integer categoryId;
     @Schema(description = "分类名称")
     private String categoryName;
 }
