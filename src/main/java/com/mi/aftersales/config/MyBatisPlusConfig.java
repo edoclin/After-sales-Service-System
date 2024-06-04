@@ -23,6 +23,12 @@ import java.time.LocalDateTime;
 @Component
 public class MyBatisPlusConfig implements MetaObjectHandler, IdentifierGenerator {
 
+    /**
+     * @description: 排除自动填充**id的类
+     * @return:
+     * @author: edoclin
+     * @created: 2024/6/3 22:44
+     **/
     private boolean excludeFillEntity(MetaObject metaObject) {
         return
                 (metaObject.getOriginalObject() instanceof Login) ||
