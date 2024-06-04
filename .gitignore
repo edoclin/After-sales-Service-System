@@ -44,3 +44,7 @@ out/
 /generate/
 /data/
 /logs/
+/gradle/
+/gradlew
+/gradlew.bat
+/proxy.bat
