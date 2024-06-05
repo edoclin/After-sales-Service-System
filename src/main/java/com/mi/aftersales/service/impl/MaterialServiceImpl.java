@@ -17,7 +17,7 @@ import com.mi.aftersales.exception.graceful.IllegalMaterialIdException;
 import com.mi.aftersales.exception.graceful.IllegalSpuCategoryIdException;
 import com.mi.aftersales.exception.graceful.ServerErrorException;
 import com.mi.aftersales.mq.producer.MqProducer;
-import com.mi.aftersales.pojo.common.PageResult;
+import com.mi.aftersales.common.PageResult;
 import com.mi.aftersales.pojo.vo.MaterialLogVo;
 import com.mi.aftersales.pojo.vo.MaterialVo;
 import com.mi.aftersales.pojo.vo.form.ManagerUpdateMaterialFormVo;
@@ -46,7 +46,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import static com.mi.aftersales.util.RocketMqTopic.ROCKETMQ_TOPIC_4_MATERIAL_LOG;
+import static com.mi.aftersales.common.RocketMqTopic.ROCKETMQ_TOPIC_4_MATERIAL_LOG;
 
 /**
  * <p>

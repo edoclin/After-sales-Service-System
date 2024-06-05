@@ -1,6 +1,6 @@
 package com.mi.aftersales.service;
 
-import com.mi.aftersales.pojo.common.PageResult;
+import com.mi.aftersales.common.PageResult;
 import com.mi.aftersales.pojo.vo.OrderMaterialVo;
 import com.mi.aftersales.pojo.vo.form.OrderMaterialGroupVo;
 import com.mi.aftersales.util.query.ConditionQuery;

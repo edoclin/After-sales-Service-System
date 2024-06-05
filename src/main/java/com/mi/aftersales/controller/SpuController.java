@@ -3,7 +3,7 @@ package com.mi.aftersales.controller;
 import com.mi.aftersales.pojo.vo.form.UpdateSpuFormVo;
 import com.mi.aftersales.service.SpuService;
 import com.mi.aftersales.pojo.vo.ClientSpuVo;
-import com.mi.aftersales.pojo.common.PageResult;
+import com.mi.aftersales.common.PageResult;
 import com.mi.aftersales.util.query.ConditionQuery;
 import com.mi.aftersales.pojo.vo.SpuVo;
 import com.mi.aftersales.pojo.vo.form.SpuFormVo;

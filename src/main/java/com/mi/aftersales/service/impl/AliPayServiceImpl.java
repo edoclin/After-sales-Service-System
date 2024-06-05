@@ -38,8 +38,8 @@ import javax.annotation.Resource;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
-import static com.mi.aftersales.util.RocketMqTopic.ROCKETMQ_TOPIC_4_ALIPAY_ORDER;
-import static com.mi.aftersales.util.RocketMqTopic.ROCKETMQ_TOPIC_4_ORDER_LOG;
+import static com.mi.aftersales.common.RocketMqTopic.ROCKETMQ_TOPIC_4_ALIPAY_ORDER;
+import static com.mi.aftersales.common.RocketMqTopic.ROCKETMQ_TOPIC_4_ORDER_LOG;
 
 /**
  * @description: 支付宝支付服务

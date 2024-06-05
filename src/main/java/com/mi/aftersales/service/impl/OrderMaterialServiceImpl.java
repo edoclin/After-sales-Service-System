@@ -9,7 +9,7 @@ import com.mi.aftersales.entity.Order;
 import com.mi.aftersales.entity.OrderMaterial;
 import com.mi.aftersales.enums.entity.OrderStatusEnum;
 import com.mi.aftersales.mapper.OrderMaterialMapper;
-import com.mi.aftersales.pojo.common.PageResult;
+import com.mi.aftersales.common.PageResult;
 import com.mi.aftersales.pojo.vo.OrderMaterialVo;
 import com.mi.aftersales.pojo.vo.form.OrderMaterialGroupVo;
 import com.mi.aftersales.repository.ILoginRepository;

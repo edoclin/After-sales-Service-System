@@ -4,7 +4,7 @@ import cn.dev33.satoken.stp.StpUtil;
 import com.mi.aftersales.enums.entity.EmployeeRoleEnum;
 import com.mi.aftersales.service.SkuAttrService;
 import com.mi.aftersales.util.query.ConditionQuery;
-import com.mi.aftersales.pojo.common.PageResult;
+import com.mi.aftersales.common.PageResult;
 import com.mi.aftersales.pojo.vo.form.SkuAttrFormVo;
 import com.mi.aftersales.pojo.vo.form.SkuAttrVisibleSetFormVo;
 import com.mi.aftersales.pojo.vo.ClientSkuAttrVo;

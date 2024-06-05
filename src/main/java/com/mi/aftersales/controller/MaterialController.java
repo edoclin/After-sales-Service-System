@@ -7,7 +7,7 @@ import com.mi.aftersales.pojo.vo.OrderMaterialVo;
 import com.mi.aftersales.service.MaterialService;
 import com.mi.aftersales.service.OrderMaterialService;
 import com.mi.aftersales.util.query.ConditionQuery;
-import com.mi.aftersales.pojo.common.PageResult;
+import com.mi.aftersales.common.PageResult;
 import com.mi.aftersales.pojo.vo.form.MaterialFormVo;
 import com.mi.aftersales.pojo.vo.form.ManagerUpdateMaterialFormVo;
 import com.mi.aftersales.pojo.vo.MaterialVo;

@@ -2,7 +2,7 @@ package com.mi.aftersales.controller;
 
 import cn.dev33.satoken.stp.StpUtil;
 import com.mi.aftersales.enums.entity.EmployeeRoleEnum;
-import com.mi.aftersales.pojo.common.PageResult;
+import com.mi.aftersales.common.PageResult;
 import com.mi.aftersales.pojo.vo.ClientSkuVo;
 import com.mi.aftersales.pojo.vo.SkuVo;
 import com.mi.aftersales.pojo.vo.form.SkuFormVo;
