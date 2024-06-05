@@ -66,16 +66,7 @@ public class LoginServiceImpl implements LoginService {
     private static final int OAUTH2_SUCCESS_CODE = 2000;
 
     @Resource
-    private IApiRepository iApiRepository;
-
-    @Resource
     private ILoginRepository iLoginRepository;
-
-    @Resource
-    private IMiddlePermissionApiRepository iMiddlePermissionApiRepository;
-
-    @Resource
-    private IMiddleLoginPermissionRepository iMiddleLoginPermissionRepository;
 
     @Resource
     private StringRedisTemplate redisTemplate4Sms;
@@ -91,6 +82,7 @@ public class LoginServiceImpl implements LoginService {
 
     @Resource
     private ILoginRoleRepository iLoginRoleRepository;
+
     @Override
     public void checkLogin() {
         // 根据返回值判断是否登录
@@ -100,6 +92,7 @@ public class LoginServiceImpl implements LoginService {
     public void logout() {
         StpUtil.logout();
     }
+
     @Override
     public SmsResultVo sendSmsCode(SendSmsCodeFormVo form) {
         SmsResultVo smsResultVo = new SmsResultVo();
@@ -142,6 +135,7 @@ public class LoginServiceImpl implements LoginService {
     public ThirdLoginPageResultVo githubRender(String client) {
         return new ThirdLoginPageResultVo().setUrl(getAuthRequest(client).authorize(AuthStateUtils.createState()));
     }
+
     @Override
     public LoginResultVo callback(String client, AuthCallback callback) {
         LoginResultVo loginResultVo = new LoginResultVo();
@@ -165,6 +159,7 @@ public class LoginServiceImpl implements LoginService {
         }
         return loginResultVo;
     }
+
     @Override
     public LoginResultVo bind(LoginBindFormVo form) {
         LoginResultVo loginResultVo = new LoginResultVo();
@@ -221,35 +216,34 @@ public class LoginServiceImpl implements LoginService {
         String key = "sms:" + form.getMobile();
         String code = redisTemplate4Sms.opsForValue().get(key);
         if (CharSequenceUtil.isBlank(code)) {
-            throw new GracefulResponseException("验证码已过期");
+            throw new GracefulResponseException("验证码已过期！");
+        }
+        code = code.split("_")[0];
+        if (!CharSequenceUtil.equals(form.getCode(), code)) {
+            throw new GracefulResponseException("验证码错误");
+        }
+        // 验证码正确
+        redisTemplate4Sms.delete(key);
+        Login login = iLoginRepository.getOne(Wrappers.lambdaQuery(Login.class).eq(Login::getMobile, form.getMobile()));
+        if (BeanUtil.isNotEmpty(login)) {
+            login(login);
+            loginResultVo.setTokenName(StpUtil.getTokenName()).setTokenValue(StpUtil.getTokenValue()).setLoginId(login.getLoginId());
         } else {
-            code = code.split("_")[0];
-            if (CharSequenceUtil.equals(form.getCode(), code)) {
-                redisTemplate4Sms.delete(key);
-                // 验证码正确
-                Login login = iLoginRepository.getOne(Wrappers.lambdaQuery(Login.class).eq(Login::getMobile, form.getMobile()));
-                if (BeanUtil.isNotEmpty(login)) {
-                    login(login);
-                    loginResultVo.setTokenName(StpUtil.getTokenName()).setTokenValue(StpUtil.getTokenValue()).setLoginId(login.getLoginId());
-                } else {
-                    if (Boolean.TRUE.equals(form.getAutoRegister())) {
-                        // 自动注册
-                        login = new Login();
-                        login.setMobile(form.getMobile());
-                        login.setLoginType(LoginTypeEnum.CLIENT);
-                        login.setLoginId(IdUtil.getSnowflakeNextIdStr());
-                        if (iLoginRepository.save(login)) {
-                            login(login);
-                            loginResultVo.setTokenName(StpUtil.getTokenName()).setTokenValue(StpUtil.getTokenValue()).setLoginId(login.getLoginId());
-                        }
-                    } else {
-                        throw new GracefulResponseException("当前手机号未注册（未勾选自动注册）");
-                    }
-                }
-            } else {
-                throw new GracefulResponseException("验证码错误");
+            if (Boolean.FALSE.equals(form.getAutoRegister())) {
+                throw new GracefulResponseException("当前手机号未注册且未开启自动注册！");
+            }
+
+            // 自动注册
+            login = new Login();
+            login.setMobile(form.getMobile());
+            login.setLoginType(LoginTypeEnum.CLIENT);
+            login.setLoginId(IdUtil.getSnowflakeNextIdStr());
+            if (iLoginRepository.save(login)) {
+                login(login);
+                loginResultVo.setTokenName(StpUtil.getTokenName()).setTokenValue(StpUtil.getTokenValue()).setLoginId(login.getLoginId());
             }
         }
+
         return loginResultVo;
     }
 
@@ -301,9 +295,9 @@ public class LoginServiceImpl implements LoginService {
 
         // 默认具有CLIENT角色
         roles.add(LoginTypeEnum.CLIENT.name());
-        iLoginRoleRepository.lambdaQuery().eq(LoginRole::getLoginId, login.getLoginId()).list().forEach(loginRole -> {
-            roles.add(loginRole.getEmployeeRole().name());
-        });
+        iLoginRoleRepository.lambdaQuery()
+                .eq(LoginRole::getLoginId, login.getLoginId())
+                .list().forEach(loginRole -> roles.add(loginRole.getEmployeeRole().name()));
         StpUtil.getSession().set(SaSession.ROLE_LIST, roles);
     }
 }

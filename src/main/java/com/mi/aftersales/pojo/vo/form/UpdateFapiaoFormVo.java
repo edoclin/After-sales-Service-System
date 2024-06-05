@@ -22,7 +22,6 @@ public class UpdateFapiaoFormVo {
     @NotEmpty(message = "发票Id不能为空")
     private String fapiaoId;
 
-
     @Schema(description = "发票号码")
     private String fapiaoNo;
 

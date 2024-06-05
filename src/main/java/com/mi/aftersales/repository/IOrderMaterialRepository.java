@@ -1,6 +1,6 @@
 package com.mi.aftersales.repository;
 
-import com.mi.aftersales.entity.MiddleOrderMaterial;
+import com.mi.aftersales.entity.OrderMaterial;
 import com.baomidou.mybatisplus.extension.service.IService;
 
 /**
@@ -11,6 +11,6 @@ import com.baomidou.mybatisplus.extension.service.IService;
  * @author edoclin
  * @since 2024-05-14
  */
-public interface IMiddleOrderMaterialRepository extends IService<MiddleOrderMaterial> {
+public interface IOrderMaterialRepository extends IService<OrderMaterial> {
 
 }

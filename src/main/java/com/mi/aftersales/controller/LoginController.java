@@ -68,16 +68,13 @@ public class LoginController {
     @GetMapping(path = "/oauth2/{client}/callback")
     @Operation(summary = "三方登录回调接口", description = "三方登录回调接口")
     @Parameter(name = "client", description = "三方登录类型", example = "github", required = true)
-    @Parameter(name = "callback", description = "回调参数", example = "github", required = true)
+    @Parameter(name = "callback", description = "回调参数", required = true)
     public LoginResultVo callback(@PathVariable String client, AuthCallback callback) {
         return loginService.callback(client, callback);
     }
 
     @PostMapping(path = "/bind")
     @Operation(summary = "三方登录绑定手机号", description = "三方登录绑定手机号")
-    @Parameter(name = "mobile", description = "手机号", example = "13111111111", required = true)
-    @Parameter(name = "code", description = "短信验证码", example = "123456", required = true)
-    @Parameter(name = "tempToken", description = "临时令牌", example = "绑定所需的临时令牌，由callback接口提供", required = true)
     public LoginResultVo bind(@RequestBody @Valid LoginBindFormVo form) {
         return loginService.bind(form);
     }
@@ -85,9 +82,6 @@ public class LoginController {
 
     @PostMapping(path = "/sms")
     @Operation(summary = "手机验证码登录", description = "手机验证码登录")
-    @Parameter(name = "mobile", description = "手机号", example = "13111111111", required = true)
-    @Parameter(name = "code", description = "短信验证码", example = "123456", required = true)
-    @Parameter(name = "autoRegister", description = "开启自动注册", example = "true", required = true)
     public LoginResultVo loginBySms(@RequestBody @Valid LoginBySmsFormVo form) {
         return loginService.loginBySms(form);
     }

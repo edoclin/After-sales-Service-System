@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.mi.aftersales.mapper.OrderMaterialMapper">
+
+
+    <select id="listApplyingOrderMaterial" parameterType="com.mi.aftersales.util.query.ConditionQuery" resultType="com.mi.aftersales.pojo.vo.OrderMaterialVo">
+        <bind name="enableOrderBy" value="0"/>
+        SELECT
+        t1.id,t1.created_time,t1.updated_time,t1.created_id,t1.updated_id,t1.deleted,t1.order_id,t1.material_id,t1.material_amount
+        FROM t_middle_order_material t1 LEFT JOIN t_order t2 ON t1.order_id = t2.order_id WHERE t2.order_status = 6 AND
+        t1.deleted = 0
+        <foreach collection="params" item="item" index="index">
+            <if test="item.value != null and item.value != ''">
+                ${item.predicate} t1.${item.column}
+                <if test="item.operator == @com.mi.aftersales.util.query.enums.Operator@STR_EQ">=</if>
+                <if test="item.operator == @com.mi.aftersales.util.query.enums.Operator@STR_LIKE">like</if>
+                '%${item.value}%'
+            </if>
+            <if test="item.left != null and item.right != null and item.operator == @com.mi.aftersales.util.query.enums.Operator@DATE_RANGE">
+                ${item.predicate} t1.${item.column} between #{item.left} and #{item.right}
+            </if>
+            <if test="item.orderBy != null and item.orderBy != @com.mi.aftersales.util.query.enums.OrderBy@NONE">
+                <bind name="enableOrderBy" value="1"/>
+            </if>
+        </foreach>
+
+        <choose>
+            <when test="enableOrderBy == 1">
+                ORDER BY
+                <foreach collection="params" item="item" index="index" separator=",">
+                    <if test="item.orderBy != null and item.orderBy != @com.mi.aftersales.util.query.enums.OrderBy@NONE">
+                        t1.${item.column} ${item.orderBy}
+                    </if>
+                </foreach>
+            </when>
+            <otherwise>
+                ORDER BY t1.created_time DESC
+            </otherwise>
+        </choose>
+
+        <if test="current != null and limit != null">
+            limit ${current - 1}, ${limit}
+        </if>
+    </select>
+    <select id="applyingOrderMaterialTotal" resultType="java.lang.Long">
+        SELECT
+        t1.id,t1.created_time,t1.updated_time,t1.created_id,t1.updated_id,t1.deleted,t1.order_id,t1.material_id,t1.material_amount
+        FROM t_middle_order_material t1 LEFT JOIN t_order t2 ON t1.order_id = t2.order_id WHERE t2.order_status = 6 AND
+        t1.deleted = 0
+        <foreach collection="params" item="item" index="index">
+            <if test="item.value != null and item.value != ''">
+                ${item.predicate} t1.${item.column}
+                <if test="item.operator == @com.mi.aftersales.util.query.enums.Operator@STR_EQ">=</if>
+                <if test="item.operator == @com.mi.aftersales.util.query.enums.Operator@STR_LIKE">like</if>
+                '%${item.value}%'
+            </if>
+            <if test="item.left != null and item.right != null and item.operator == @com.mi.aftersales.util.query.enums.Operator@DATE_RANGE">
+                ${item.predicate} t1.${item.column} between #{item.left} and #{item.right}
+            </if>
+        </foreach>
+    </select>
+</mapper>

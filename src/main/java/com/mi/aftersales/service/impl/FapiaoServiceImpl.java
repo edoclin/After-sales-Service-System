@@ -3,7 +3,6 @@ package com.mi.aftersales.service.impl;
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.bean.copier.CopyOptions;
 import cn.hutool.core.text.CharSequenceUtil;
-import com.feiniaojin.gracefulresponse.GracefulResponseException;
 import com.mi.aftersales.entity.Fapiao;
 import com.mi.aftersales.exception.graceful.IllegalFapiaoIdException;
 import com.mi.aftersales.exception.graceful.IllegalLoginIdException;
@@ -16,7 +15,6 @@ import com.mi.aftersales.service.FapiaoService;
 import com.mi.aftersales.util.DateUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -43,8 +41,6 @@ public class FapiaoServiceImpl implements FapiaoService {
         BeanUtil.copyProperties(form, fapiao);
         try {
             iFapiaoRepository.save(fapiao);
-        } catch (DuplicateKeyException e) {
-            throw new GracefulResponseException("发票号码已存在！");
         } catch (Exception e) {
             log.error(e.getMessage());
             throw new ServerErrorException();
@@ -53,7 +49,7 @@ public class FapiaoServiceImpl implements FapiaoService {
 
     @Override
     public List<ClientFapiaoVo> listFapiaoByClientId(String loginId) {
-        ArrayList<ClientFapiaoVo> result = new ArrayList<>();
+        List<ClientFapiaoVo> result = new ArrayList<>();
 
         iFapiaoRepository.lambdaQuery().eq(Fapiao::getCreatedId, loginId).list().forEach(fapiao -> {
             ClientFapiaoVo item = new ClientFapiaoVo();
