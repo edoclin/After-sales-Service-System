@@ -16,11 +16,17 @@ import com.mi.aftersales.exception.graceful.BaseCustomException;
 import com.mi.aftersales.exception.graceful.IllegalMaterialIdException;
 import com.mi.aftersales.exception.graceful.IllegalSpuCategoryIdException;
 import com.mi.aftersales.exception.graceful.ServerErrorException;
+import com.mi.aftersales.mq.producer.MqProducer;
+import com.mi.aftersales.pojo.common.PageResult;
+import com.mi.aftersales.pojo.vo.MaterialLogVo;
+import com.mi.aftersales.pojo.vo.MaterialVo;
+import com.mi.aftersales.pojo.vo.form.ManagerUpdateMaterialFormVo;
+import com.mi.aftersales.pojo.vo.form.MaterialFormVo;
 import com.mi.aftersales.repository.IFileRepository;
 import com.mi.aftersales.repository.IMaterialLogRepository;
+import com.mi.aftersales.repository.IMaterialRepository;
 import com.mi.aftersales.repository.ISpuCategoryRepository;
 import com.mi.aftersales.service.MaterialService;
-import com.mi.aftersales.repository.IMaterialRepository;
 import com.mi.aftersales.service.SpuCategoryService;
 import com.mi.aftersales.util.COSUtil;
 import com.mi.aftersales.util.DateUtil;
@@ -28,20 +34,11 @@ import com.mi.aftersales.util.query.ConditionQuery;
 import com.mi.aftersales.util.query.QueryParam;
 import com.mi.aftersales.util.query.QueryUtil;
 import com.mi.aftersales.util.query.enums.Operator;
-import com.mi.aftersales.pojo.common.PageResult;
-import com.mi.aftersales.pojo.vo.form.ManagerUpdateMaterialFormVo;
-import com.mi.aftersales.pojo.vo.form.MaterialFormVo;
-import com.mi.aftersales.pojo.vo.MaterialLogVo;
-import com.mi.aftersales.pojo.vo.MaterialVo;
 import com.mi.aftersales.util.view.ViewUtil;
-import org.apache.rocketmq.spring.core.RocketMQTemplate;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.dao.DuplicateKeyException;
-import org.springframework.messaging.Message;
-import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -81,9 +78,8 @@ public class MaterialServiceImpl implements MaterialService {
     @Resource
     private IFileRepository iFileRepository;
 
-
     @Resource
-    private RocketMQTemplate rocketmqTemplate;
+    private MqProducer mqProducer;
 
     @Resource
     private SpuCategoryService spuCategoryService;
@@ -113,16 +109,15 @@ public class MaterialServiceImpl implements MaterialService {
             MaterialLog materialLog = new MaterialLog();
             materialLog
                     .setMaterialId(material.getMaterialId())
+                    .setLogDetail("添加新物料入库")
+                    .setOperatorId(StpUtil.getLoginIdAsString())
+                    .setAction(MaterialActionEnum.NEW)
+                    .setDelta(material.getStock())
+                    .setCreatedId(StpUtil.getLoginIdAsString());
 
-                    .setLogDetail("添加新物料入库").setOperatorId(StpUtil.getLoginIdAsString()).setAction(MaterialActionEnum.NEW).setDelta(material.getStock()).setCreatedId(StpUtil.getLoginIdAsString());
-
-            Message<List<MaterialLog>> msg = MessageBuilder.withPayload(CollUtil.list(Boolean.FALSE, materialLog)).build();
-            rocketmqTemplate.syncSend(ROCKETMQ_TOPIC_4_MATERIAL_LOG, msg);
-
+            mqProducer.asyncSend(ROCKETMQ_TOPIC_4_MATERIAL_LOG, CollUtil.list(Boolean.FALSE, materialLog));
         } catch (ConvertException e) {
             throw new GracefulResponseException("物料类型不合法!");
-        } catch (DuplicateKeyException e) {
-            throw new GracefulResponseException("物料名称重复！");
         } catch (BaseCustomException | GracefulResponseException e) {
             throw e;
         } catch (Exception e) {
@@ -143,25 +138,28 @@ public class MaterialServiceImpl implements MaterialService {
             throw new IllegalSpuCategoryIdException();
         }
 
-        //
-        RLock fairLock = null;
+
+        if (form.getAlertNum().compareTo(form.getStock()) > 0) {
+            throw new GracefulResponseException("库存告警阈值不能大于物料剩余库存!");
+        }
+        if (form.getCost().compareTo(form.getPrice()) > 0) {
+            throw new GracefulResponseException("物料成本不能大于销售价格!");
+        }
+
+        RLock fairLock = redissonClient.getFairLock(NAMESPACE_4_MATERIAL_LOCK + form.getMaterialId());
+
+        if (fairLock == null) {
+            throw new ServerErrorException();
+        }
+
+        MaterialLog materialLog = null;
         try {
-            fairLock = redissonClient.getFairLock(NAMESPACE_4_MATERIAL_LOCK + form.getMaterialId());
             if (fairLock.tryLock(30, TimeUnit.SECONDS)) {
                 BeanUtil.copyProperties(form, material, CopyOptions.create().ignoreNullValue());
 
-                if (material.getAlertNum().compareTo(material.getStock()) > 0) {
-                    throw new GracefulResponseException("库存告警阈值不能大于物料剩余库存!");
-                }
-                if (material.getCost().compareTo(material.getPrice()) > 0) {
-                    throw new GracefulResponseException("物料成本不能大于销售价格!");
-                }
-                if (Boolean.FALSE.equals(iMaterialRepository.updateById(material))) {
-                    throw new ServerErrorException();
-                }
-
+                iMaterialRepository.updateById(material);
                 // 日志
-                MaterialLog materialLog = new MaterialLog();
+                materialLog = new MaterialLog();
                 materialLog
                         .setMaterialId(material.getMaterialId())
                         .setLogDetail("修改物料信息")
@@ -169,24 +167,22 @@ public class MaterialServiceImpl implements MaterialService {
                         .setAction(MaterialActionEnum.UPDATE)
                         .setDelta(material.getStock())
                         .setCreatedId(StpUtil.getLoginIdAsString());
-
-                Message<List<MaterialLog>> msg = MessageBuilder.withPayload(CollUtil.list(Boolean.FALSE, materialLog)).build();
-                rocketmqTemplate.syncSend(ROCKETMQ_TOPIC_4_MATERIAL_LOG, msg);
-
             }
-        } catch (ConvertException e) {
-            throw new GracefulResponseException("物料类型不合法!");
-        } catch (GracefulResponseException e) {
-            throw e;
         } catch (InterruptedException e) {
             // 加锁失败
+            log.error(e.getMessage());
             Thread.currentThread().interrupt();
             throw new ServerErrorException();
+        } catch (Exception e) {
+            log.error(e.getMessage());
+            throw new ServerErrorException();
         } finally {
-            if (null != fairLock) {
-                fairLock.unlock();
-            }
+            fairLock.unlock();
         }
+        if (BeanUtil.isNotEmpty(materialLog)) {
+            mqProducer.asyncSend(ROCKETMQ_TOPIC_4_MATERIAL_LOG, CollUtil.list(Boolean.FALSE, materialLog));
+        }
+
     }
 
     @Override
@@ -201,6 +197,7 @@ public class MaterialServiceImpl implements MaterialService {
         BeanUtil.copyProperties(material, result, DateUtil.copyDate2yyyyMMddHHmm());
 
         File file = iFileRepository.getById(material.getMaterialCoverFileId());
+
         if (BeanUtil.isNotEmpty(file)) {
             result.setCoverUrl(COSUtil.generateAccessUrl(file.getAccessKey()));
         }
@@ -239,6 +236,7 @@ public class MaterialServiceImpl implements MaterialService {
         result.setDataColumns(ViewUtil.dataColumns(MaterialVo.class));
 
         iMaterialRepository.page(new Page<>(query.getCurrent(), query.getLimit()), wrapper).getRecords().forEach(material -> {
+
             MaterialVo materialVo = new MaterialVo();
             BeanUtil.copyProperties(material, materialVo, DateUtil.copyDate2yyyyMMddHHmm());
 
@@ -260,12 +258,12 @@ public class MaterialServiceImpl implements MaterialService {
         if (BeanUtil.isEmpty(material)) {
             throw new IllegalMaterialIdException();
         }
-
+        MaterialLog materialLog;
         try {
             iMaterialRepository.removeById(materialId);
 
             // 日志
-            MaterialLog materialLog = new MaterialLog();
+            materialLog = new MaterialLog();
             materialLog
                     .setMaterialId(materialId)
                     .setLogDetail("删除物料")
@@ -273,12 +271,13 @@ public class MaterialServiceImpl implements MaterialService {
                     .setAction(MaterialActionEnum.DELETE)
                     .setDelta(material.getStock())
                     .setCreatedId(StpUtil.getLoginIdAsString());
-
-            Message<List<MaterialLog>> msg = MessageBuilder.withPayload(CollUtil.list(Boolean.FALSE, materialLog)).build();
-            rocketmqTemplate.syncSend(ROCKETMQ_TOPIC_4_MATERIAL_LOG, msg);
         } catch (Exception e) {
             log.error(e.getMessage());
             throw new ServerErrorException();
+        }
+
+        if (BeanUtil.isNotEmpty(materialLog)) {
+            mqProducer.asyncSend(ROCKETMQ_TOPIC_4_MATERIAL_LOG, CollUtil.list(Boolean.FALSE, materialLog));
         }
     }
 

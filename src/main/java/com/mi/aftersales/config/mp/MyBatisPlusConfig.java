@@ -1,4 +1,4 @@
-package com.mi.aftersales.config;
+package com.mi.aftersales.config.mp;
 
 import cn.dev33.satoken.stp.StpUtil;
 import cn.hutool.core.util.IdUtil;
@@ -7,6 +7,7 @@ import com.baomidou.mybatisplus.core.handlers.MetaObjectHandler;
 import com.baomidou.mybatisplus.core.incrementer.IdentifierGenerator;
 import com.baomidou.mybatisplus.extension.plugins.MybatisPlusInterceptor;
 import com.baomidou.mybatisplus.extension.plugins.inner.PaginationInnerInterceptor;
+import com.mi.aftersales.config.mp.interceptor.MyBatisPlusDataChangeRecorderInnerInterceptor;
 import com.mi.aftersales.entity.*;
 import org.apache.ibatis.reflection.MetaObject;
 import org.springframework.context.annotation.Bean;
@@ -22,6 +23,8 @@ import java.time.LocalDateTime;
  **/
 @Component
 public class MyBatisPlusConfig implements MetaObjectHandler, IdentifierGenerator {
+
+
 
     /**
      * @description: 排除自动填充**id的类

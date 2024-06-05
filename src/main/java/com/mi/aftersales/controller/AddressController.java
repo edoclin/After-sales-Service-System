@@ -2,6 +2,7 @@ package com.mi.aftersales.controller;
 
 import cn.dev33.satoken.stp.StpUtil;
 import com.mi.aftersales.aspect.anno.CheckLogin;
+import com.mi.aftersales.pojo.vo.ClientAddressVo;
 import com.mi.aftersales.service.AddressService;
 import com.mi.aftersales.pojo.vo.form.ClientAddressFormVo;
 import io.swagger.v3.oas.annotations.Operation;
@@ -39,9 +40,9 @@ public class AddressController {
     }
 
     @GetMapping(path = "/client")
-    @Operation(summary = "客户查询地址", description = "客户查询地址")
+    @Operation(summary = "客户查询所有地址", description = "客户查询所有地址")
     @CheckLogin
-    public List<com.mi.aftersales.pojo.vo.ClientAddressVo> listAddress() {
+    public List<ClientAddressVo> listAddress() {
         return addressService.listAddress(StpUtil.getLoginIdAsString());
     }
 

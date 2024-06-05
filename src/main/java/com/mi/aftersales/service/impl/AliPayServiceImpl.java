@@ -12,25 +12,25 @@ import com.alipay.api.domain.AlipayTradePagePayModel;
 import com.alipay.api.request.AlipayTradePagePayRequest;
 import com.alipay.api.response.AlipayTradePagePayResponse;
 import com.feiniaojin.gracefulresponse.GracefulResponseException;
-import com.mi.aftersales.enums.config.OrderStatusChangeEventEnum;
 import com.mi.aftersales.config.yaml.bean.AliPayConfig;
 import com.mi.aftersales.entity.Order;
+import com.mi.aftersales.entity.OrderStatusLog;
 import com.mi.aftersales.entity.PayOrder;
+import com.mi.aftersales.enums.config.OrderStatusChangeEventEnum;
 import com.mi.aftersales.enums.entity.OrderStatusEnum;
 import com.mi.aftersales.enums.entity.PayMethodEnum;
 import com.mi.aftersales.enums.entity.PayStatusEnum;
 import com.mi.aftersales.exception.graceful.IllegalOrderIdException;
 import com.mi.aftersales.exception.graceful.IllegalOrderLoginIdException;
 import com.mi.aftersales.exception.graceful.IllegalOrderStatusFlowException;
+import com.mi.aftersales.exception.graceful.IllegalPayOrderIdException;
+import com.mi.aftersales.mq.producer.MqProducer;
+import com.mi.aftersales.pojo.vo.AlipayVo;
+import com.mi.aftersales.pojo.vo.PayDetailVo;
 import com.mi.aftersales.repository.IOrderRepository;
 import com.mi.aftersales.repository.IPayOrderRepository;
 import com.mi.aftersales.service.AliPayService;
 import com.mi.aftersales.service.OrderService;
-import com.mi.aftersales.pojo.vo.PayDetailVo;
-import com.mi.aftersales.pojo.vo.AlipayVo;
-import org.apache.rocketmq.spring.core.RocketMQTemplate;
-import org.springframework.messaging.Message;
-import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.PathVariable;
 
@@ -39,7 +39,14 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 import static com.mi.aftersales.util.RocketMqTopic.ROCKETMQ_TOPIC_4_ALIPAY_ORDER;
+import static com.mi.aftersales.util.RocketMqTopic.ROCKETMQ_TOPIC_4_ORDER_LOG;
 
+/**
+ * @description: 支付宝支付服务
+ * @return:
+ * @author: edoclin
+ * @created: 2024/6/5 12:30
+ **/
 @Service
 public class AliPayServiceImpl implements AliPayService {
 
@@ -52,7 +59,7 @@ public class AliPayServiceImpl implements AliPayService {
     private OrderService orderService;
 
     @Resource
-    private RocketMQTemplate rocketmqTemplate;
+    private MqProducer mqProducer;
 
     @Resource
     private IPayOrderRepository iPayOrderRepository;
@@ -111,8 +118,7 @@ public class AliPayServiceImpl implements AliPayService {
                 .setCreatedId(StpUtil.getLoginIdAsString());
 
         // 异步创建订单
-        Message<PayOrder> msg = MessageBuilder.withPayload(payOrder).build();
-        rocketmqTemplate.syncSend(ROCKETMQ_TOPIC_4_ALIPAY_ORDER, msg);
+        mqProducer.asyncSend(ROCKETMQ_TOPIC_4_ALIPAY_ORDER, payOrder);
         return result;
     }
 
@@ -130,20 +136,28 @@ public class AliPayServiceImpl implements AliPayService {
         PayOrder payOrder = iPayOrderRepository.getById(out_trade_no);
 
         if (BeanUtil.isEmpty(payOrder)) {
-            throw new GracefulResponseException("支付订单Id非法！");
+            throw new IllegalPayOrderIdException();
         }
 
         payOrder.setPayStatus(PayStatusEnum.PAID);
         payOrder.setPayDetail(JSONUtil.toJsonStr(new PayDetailVo().setPaidTime(LocalDateTime.now())));
 
-        if (orderService.sendEvent(orderService.statusFlow(OrderStatusChangeEventEnum.CLIENT_COMPLETED_PAY, payOrder.getOrderId()))) {
+        if (!orderService.sendEvent(orderService.statusFlow(OrderStatusChangeEventEnum.CLIENT_COMPLETED_PAY, payOrder.getOrderId()))) {
             throw new IllegalOrderStatusFlowException();
         }
 
-        // 更新支付订单
-        Message<PayOrder> msg = MessageBuilder.withPayload(payOrder).build();
-        rocketmqTemplate.syncSend(ROCKETMQ_TOPIC_4_ALIPAY_ORDER, msg);
 
+        OrderStatusLog orderStatusLog = new OrderStatusLog();
+        orderStatusLog.setOrderId(payOrder.getOrderId()).setOrderStatus(OrderStatusEnum.PAID);
+        orderStatusLog.setStatusDetail("客户完成支付，工程师准备返还维修物品！");
+
+
+        mqProducer.asyncSend(ROCKETMQ_TOPIC_4_ORDER_LOG, orderStatusLog);
+
+        orderService.sendSms(payOrder.getOrderId());
+
+        // 更新支付订单
+        mqProducer.asyncSend(ROCKETMQ_TOPIC_4_ALIPAY_ORDER, payOrder);
     }
 
 }

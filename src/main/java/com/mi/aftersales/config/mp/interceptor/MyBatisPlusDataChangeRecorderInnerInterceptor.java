@@ -1,4 +1,4 @@
-package com.mi.aftersales.config;
+package com.mi.aftersales.config.mp.interceptor;
 
 import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.extension.plugins.inner.DataChangeRecorderInnerInterceptor;

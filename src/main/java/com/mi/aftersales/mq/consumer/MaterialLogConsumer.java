@@ -1,4 +1,4 @@
-package com.mi.aftersales.consumer;
+package com.mi.aftersales.mq.consumer;
 
 
 import cn.hutool.core.collection.CollUtil;

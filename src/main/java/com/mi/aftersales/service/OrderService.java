@@ -21,28 +21,7 @@ import java.util.List;
  * @since 2024-05-14
  */
 public interface OrderService {
-
-    String NAMESPACE_4_PENDING_ORDER = "order:pending:";
-    String NAMESPACE_4_MACHINE_STATE = "machine:persist:";
-    String CREATED = "CREATED";
-    String WAITING = "WAITING";
-    String ACCEPTED = "ACCEPTED";
-    String CHECKING = "CHECKING";
-    String FEE_CONFIRMING = "FEE_CONFIRMING";
-    String FEE_CONFIRMED = "FEE_CONFIRMED";
-    String MATERIAL_APPLYING = "MATERIAL_APPLYING";
-    String MATERIAL_DISTRIBUTING = "MATERIAL_DISTRIBUTING";
-    String REPAIRING = "REPAIRING";
-    String RE_CHECKING = "RE_CHECKING";
-    String TO_BE_PAID = "TO_BE_PAID";
-    String PAID = "PAID";
-    String RETURNING = "RETURNING";
-    String CLOSED = "CLOSED";
-    String STATE_MACHINE_HEADER_ORDER_NAME = "order-id";
-    String STATE_MACHINE_HEADER_CATEGORY_ID = "category-id";
-    String CLIENT_CHOICE = "client-choice";
-    String ENGINEER_CHOICE = "engineer-choice";
-
+    void sendSms(String orderId);
 
     /**
      * 查询客户工单列表。
@@ -138,12 +117,10 @@ public interface OrderService {
     void applyMaterial(String orderId, String loginId);
 
     /**
-     * 分发物料。
-     *
-     * @param form    分发物料表单
+     * 分发物料
      * @param loginId 登录ID
      */
-    void distributeMaterial(MaterialDistributeFormVo form, String loginId);
+    void distributeMaterial(String orderId, String loginId);
 
     /**
      * 开始维修。
@@ -170,7 +147,7 @@ public interface OrderService {
      * @param orderId 工单ID
      * @param loginId 登录ID
      */
-    void finishRepair(String orderId, String loginId);
+    void finishRecheck(String orderId, String loginId);
 
     /**
      * 开始返还物品。

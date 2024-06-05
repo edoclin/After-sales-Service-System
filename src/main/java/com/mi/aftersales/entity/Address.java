@@ -2,6 +2,7 @@ package com.mi.aftersales.entity;
 
 import com.baomidou.mybatisplus.annotation.*;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -24,6 +25,7 @@ import lombok.experimental.Accessors;
 @Schema(name = "Address", description = "客户联系地址")
 public class Address implements Serializable {
 
+    @Serial
     private static final long serialVersionUID = 1L;
 
     @Schema(description = "创建时间")
@@ -46,7 +48,7 @@ public class Address implements Serializable {
     @TableLogic
     private Long deleted;
 
-    @Schema(description = "地址ID")
+    @Schema(description = "地址Id")
     @TableId(value = "address_id", type = IdType.ASSIGN_UUID)
     private String addressId;
 
@@ -56,7 +58,7 @@ public class Address implements Serializable {
     @Schema(description = "详细地址")
     private String addressDetail;
 
-    @Schema(description = "客户ID")
+    @Schema(description = "客户Id")
     private String loginId;
 
     @Schema(description = "联系方式")
