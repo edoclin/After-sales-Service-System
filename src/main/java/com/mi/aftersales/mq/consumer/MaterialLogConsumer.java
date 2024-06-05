@@ -13,7 +13,7 @@ import org.springframework.stereotype.Component;
 import javax.annotation.Resource;
 import java.util.List;
 
-import static com.mi.aftersales.util.RocketMqTopic.ROCKETMQ_TOPIC_4_MATERIAL_LOG;
+import static com.mi.aftersales.common.RocketMqTopic.ROCKETMQ_TOPIC_4_MATERIAL_LOG;
 
 /**
  * @description:

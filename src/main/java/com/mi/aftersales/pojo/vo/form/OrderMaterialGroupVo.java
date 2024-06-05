@@ -1,7 +1,7 @@
 package com.mi.aftersales.pojo.vo.form;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.mi.aftersales.pojo.common.PageResult;
+import com.mi.aftersales.common.PageResult;
 import com.mi.aftersales.pojo.vo.OrderMaterialVo;
 import com.mi.aftersales.util.view.anno.View;
 import io.swagger.v3.oas.annotations.media.Schema;

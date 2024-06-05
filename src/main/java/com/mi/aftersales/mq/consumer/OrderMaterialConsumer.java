@@ -14,7 +14,7 @@ import javax.annotation.Resource;
 
 import java.util.List;
 
-import static com.mi.aftersales.util.RocketMqTopic.ROCKETMQ_TOPIC_4_ORDER_MATERIAL;
+import static com.mi.aftersales.common.RocketMqTopic.ROCKETMQ_TOPIC_4_ORDER_MATERIAL;
 
 /**
  * @description:

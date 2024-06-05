@@ -1,7 +1,7 @@
 package com.mi.aftersales.service;
 
 import com.mi.aftersales.enums.config.OrderStatusChangeEventEnum;
-import com.mi.aftersales.pojo.common.PageResult;
+import com.mi.aftersales.common.PageResult;
 import com.mi.aftersales.pojo.vo.ClientOrderSimpleVo;
 import com.mi.aftersales.pojo.vo.OrderDetailVo;
 import com.mi.aftersales.pojo.vo.OrderSimple4EngineerVo;

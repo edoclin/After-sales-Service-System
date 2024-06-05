@@ -16,7 +16,7 @@ import com.mi.aftersales.enums.config.OrderStatusChangeEventEnum;
 import com.mi.aftersales.enums.entity.*;
 import com.mi.aftersales.exception.graceful.*;
 import com.mi.aftersales.mq.producer.MqProducer;
-import com.mi.aftersales.pojo.common.PageResult;
+import com.mi.aftersales.common.PageResult;
 import com.mi.aftersales.pojo.message.PendingOrderMessage;
 import com.mi.aftersales.pojo.vo.*;
 import com.mi.aftersales.pojo.vo.form.ClientOrderFormVo;
@@ -52,7 +52,7 @@ import java.util.concurrent.TimeUnit;
 
 import static com.mi.aftersales.common.RedisNamespace.*;
 import static com.mi.aftersales.common.StateMachineOrderStatus.*;
-import static com.mi.aftersales.util.RocketMqTopic.*;
+import static com.mi.aftersales.common.RocketMqTopic.*;
 
 /**
  * <p>

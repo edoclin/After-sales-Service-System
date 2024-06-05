@@ -1,4 +1,4 @@
-package com.mi.aftersales.pojo.common;
+package com.mi.aftersales.common;
 
 
 import lombok.Data;

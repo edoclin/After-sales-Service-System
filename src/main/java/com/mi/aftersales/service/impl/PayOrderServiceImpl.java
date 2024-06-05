@@ -12,7 +12,7 @@ import com.mi.aftersales.service.PayOrderService;
 import com.mi.aftersales.util.DateUtil;
 import com.mi.aftersales.util.query.ConditionQuery;
 import com.mi.aftersales.util.query.QueryUtil;
-import com.mi.aftersales.pojo.common.PageResult;
+import com.mi.aftersales.common.PageResult;
 import com.mi.aftersales.pojo.vo.PayOrderVo;
 import com.mi.aftersales.util.view.ViewUtil;
 import org.springframework.stereotype.Service;

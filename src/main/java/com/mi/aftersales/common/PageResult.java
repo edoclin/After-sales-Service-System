@@ -1,4 +1,4 @@
-package com.mi.aftersales.pojo.common;
+package com.mi.aftersales.common;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import io.swagger.v3.oas.annotations.media.Schema;

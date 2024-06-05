@@ -26,7 +26,7 @@ import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
 
-import static com.mi.aftersales.util.RocketMqTopic.ROCKETMQ_TOPIC_4_SMS;
+import static com.mi.aftersales.common.RocketMqTopic.ROCKETMQ_TOPIC_4_SMS;
 
 /**
  * @description:
