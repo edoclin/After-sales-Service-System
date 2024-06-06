@@ -17,7 +17,7 @@ import com.mi.aftersales.util.COSUtil;
 import com.mi.aftersales.util.DateUtil;
 import com.mi.aftersales.util.query.ConditionQuery;
 import com.mi.aftersales.util.query.QueryUtil;
-import com.mi.aftersales.pojo.common.PageResult;
+import com.mi.aftersales.common.PageResult;
 import com.mi.aftersales.pojo.vo.form.SpuFormVo;
 import com.mi.aftersales.pojo.vo.form.UpdateSpuVisibleFormVo;
 import com.mi.aftersales.pojo.vo.ClientSpuVo;

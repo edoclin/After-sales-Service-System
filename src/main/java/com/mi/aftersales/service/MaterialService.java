@@ -1,7 +1,7 @@
 package com.mi.aftersales.service;
 
 import com.mi.aftersales.util.query.ConditionQuery;
-import com.mi.aftersales.pojo.common.PageResult;
+import com.mi.aftersales.common.PageResult;
 import com.mi.aftersales.pojo.vo.form.ManagerUpdateMaterialFormVo;
 import com.mi.aftersales.pojo.vo.form.MaterialFormVo;
 import com.mi.aftersales.pojo.vo.MaterialVo;

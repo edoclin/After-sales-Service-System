@@ -21,7 +21,7 @@ public class ClientAddressFormVo {
     @NotEmpty(message = "收货人不能为空")
     private String receiver;
 
-    @Schema(description = "是否默认")
+    @Schema(description = "是否默认地址")
     private Boolean defaulted = false;
 
     @Schema(description = "联系电话")

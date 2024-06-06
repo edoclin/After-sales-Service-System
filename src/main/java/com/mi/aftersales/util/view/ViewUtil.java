@@ -3,7 +3,7 @@ package com.mi.aftersales.util.view;
 import cn.hutool.core.annotation.AnnotationUtil;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.ReflectUtil;
-import com.mi.aftersales.pojo.common.DataColumn;
+import com.mi.aftersales.common.DataColumn;
 import com.mi.aftersales.util.view.anno.View;
 
 import java.lang.reflect.Field;

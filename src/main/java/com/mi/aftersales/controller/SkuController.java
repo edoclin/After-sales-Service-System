@@ -2,7 +2,7 @@ package com.mi.aftersales.controller;
 
 import cn.dev33.satoken.stp.StpUtil;
 import com.mi.aftersales.enums.entity.EmployeeRoleEnum;
-import com.mi.aftersales.pojo.common.PageResult;
+import com.mi.aftersales.common.PageResult;
 import com.mi.aftersales.pojo.vo.ClientSkuVo;
 import com.mi.aftersales.pojo.vo.SkuVo;
 import com.mi.aftersales.pojo.vo.form.SkuFormVo;
@@ -54,7 +54,7 @@ public class SkuController {
         return skuService.listClientSku(form, spuId);
     }
 
-    @GetMapping(path = "/manager")
+    @PostMapping(path = "/manager/query")
     @Operation(summary = "查询商品Sku（管理员）", description = "查询商品Sku（管理员）")
     public PageResult<SkuVo> conditionList(@RequestBody ConditionQuery query) {
         StpUtil.checkRole(EmployeeRoleEnum.SYSTEM_MANAGER.name());

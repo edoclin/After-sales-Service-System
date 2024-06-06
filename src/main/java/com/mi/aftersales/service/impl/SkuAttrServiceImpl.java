@@ -7,7 +7,7 @@ import com.mi.aftersales.entity.SkuAttr;
 import com.mi.aftersales.exception.graceful.IllegalSkuIdException;
 import com.mi.aftersales.exception.graceful.ServerErrorException;
 import com.mi.aftersales.exception.graceful.alias.IllegalSkuAttrIdException;
-import com.mi.aftersales.pojo.common.PageResult;
+import com.mi.aftersales.common.PageResult;
 import com.mi.aftersales.pojo.vo.ClientSkuAttrVo;
 import com.mi.aftersales.pojo.vo.SkuAttrVo;
 import com.mi.aftersales.pojo.vo.form.SkuAttrFormVo;

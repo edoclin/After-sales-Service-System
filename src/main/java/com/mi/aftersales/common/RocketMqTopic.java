@@ -1,4 +1,4 @@
-package com.mi.aftersales.util;
+package com.mi.aftersales.common;
 
 import org.springframework.stereotype.Service;
 

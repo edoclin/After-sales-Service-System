@@ -4,7 +4,7 @@ import cn.dev33.satoken.stp.StpUtil;
 import com.mi.aftersales.enums.entity.EmployeeRoleEnum;
 import com.mi.aftersales.service.SkuAttrService;
 import com.mi.aftersales.util.query.ConditionQuery;
-import com.mi.aftersales.pojo.common.PageResult;
+import com.mi.aftersales.common.PageResult;
 import com.mi.aftersales.pojo.vo.form.SkuAttrFormVo;
 import com.mi.aftersales.pojo.vo.form.SkuAttrVisibleSetFormVo;
 import com.mi.aftersales.pojo.vo.ClientSkuAttrVo;
@@ -50,7 +50,7 @@ public class SkuAttrController {
         return skuAttrService.listClientSkuAttrs(form, skuId);
     }
 
-    @GetMapping(path = "/manager")
+    @PostMapping(path = "/manager/query")
     @Operation(summary = "查询商品（管理员）", description = "查询商品（管理员）")
     @Parameter(name = "skuId", description = "商品SkuId", required = true)
     public PageResult<SkuAttrVo> list(@RequestBody ConditionQuery query) {

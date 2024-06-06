@@ -43,3 +43,11 @@ out/
 /src/main/java/com/mi/aftersales/util/CodeGenerator.java
 /generate/
 /data/
+/logs/
+/gradle/
+/gradlew
+/gradlew.bat
+/proxy.bat
+/ops/
+/ops/
+/src/main/resources/application-dev-docker.yaml

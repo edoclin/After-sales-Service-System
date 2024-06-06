@@ -26,7 +26,7 @@ public class ClientServiceCenterController {
     private ClientServiceCenterService clientServiceCenterService;
 
     @PostMapping(path = "/manager")
-    @Operation(summary = "添加用户服务中心", description = "添加用户服务中心")
+    @Operation(summary = "添加用户服务中心（SYSTEM_MANAGER）", description = "添加用户服务中心（SYSTEM_MANAGER）")
     public void postClientServiceCenter(@RequestBody @Valid ClientServiceCenterFormVo form) {
         StpUtil.checkRole(EmployeeRoleEnum.SYSTEM_MANAGER.name());
         clientServiceCenterService.addClientServiceCenter(form);
@@ -38,7 +38,7 @@ public class ClientServiceCenterController {
      * @param form 更新用户服务中心表单
      */
     @PutMapping(path = "/manager")
-    @Operation(summary = "修改用户服务中心", description = "修改用户服务中心")
+    @Operation(summary = "修改用户服务中心（SYSTEM_MANAGER）", description = "修改用户服务中心（SYSTEM_MANAGER）")
     public void putClientServiceCenter(@RequestBody @Valid UpdateClientServiceCenterFormVo form) {
         StpUtil.checkRole(EmployeeRoleEnum.SYSTEM_MANAGER.name());
         clientServiceCenterService.updateClientServiceCenter(form);

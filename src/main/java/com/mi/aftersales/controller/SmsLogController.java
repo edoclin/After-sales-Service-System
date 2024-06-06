@@ -3,7 +3,7 @@ package com.mi.aftersales.controller;
 import cn.dev33.satoken.stp.StpUtil;
 import com.mi.aftersales.aspect.anno.CheckLogin;
 import com.mi.aftersales.enums.entity.EmployeeRoleEnum;
-import com.mi.aftersales.pojo.common.PageResult;
+import com.mi.aftersales.common.PageResult;
 import com.mi.aftersales.pojo.vo.SmsLogVo;
 import com.mi.aftersales.service.SmsLogService;
 import com.mi.aftersales.util.query.ConditionQuery;

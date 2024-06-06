@@ -1,4 +1,4 @@
-package com.mi.aftersales.consumer;
+package com.mi.aftersales.mq.consumer;
 
 
 import cn.hutool.core.bean.BeanUtil;
@@ -13,7 +13,7 @@ import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
 
-import static com.mi.aftersales.util.RocketMqTopic.ROCKETMQ_TOPIC_4_ALIPAY_ORDER;
+import static com.mi.aftersales.common.RocketMqTopic.ROCKETMQ_TOPIC_4_ALIPAY_ORDER;
 
 /**
  * @description:

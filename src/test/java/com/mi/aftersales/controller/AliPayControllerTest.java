@@ -47,7 +47,6 @@ class AliPayControllerTest {
         MvcResult mvcResult = testConfig.getMockMvcResult("/aftersales/alipay/pay/" + orderId);
 
         logger.info("调用返回的结果：{}",mvcResult.getResponse().getContentAsString());
-
     }
 
     @Test

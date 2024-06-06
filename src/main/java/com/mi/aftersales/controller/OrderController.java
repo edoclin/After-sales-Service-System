@@ -3,7 +3,7 @@ package com.mi.aftersales.controller;
 import cn.dev33.satoken.stp.StpUtil;
 import com.mi.aftersales.aspect.anno.CheckLogin;
 import com.mi.aftersales.enums.entity.EmployeeRoleEnum;
-import com.mi.aftersales.pojo.common.PageResult;
+import com.mi.aftersales.common.PageResult;
 import com.mi.aftersales.pojo.vo.ClientOrderSimpleVo;
 import com.mi.aftersales.pojo.vo.OrderDetailVo;
 import com.mi.aftersales.pojo.vo.OrderSimple4EngineerVo;
@@ -138,12 +138,12 @@ public class OrderController {
         orderService.applyMaterial(orderId, StpUtil.getLoginIdAsString());
     }
 
-    @PutMapping(path = "/manager/material-distribute")
+    @PutMapping(path = "/manager/material-distribute/{orderId}")
     @Operation(summary = "库管处理请求（分发物料）", description = "库管处理请求（分发物料）")
     @CheckLogin
-    public void materialDistribute(@RequestBody @Valid MaterialDistributeFormVo form) {
+    public void materialDistribute(@PathVariable String orderId) {
         StpUtil.checkRole(EmployeeRoleEnum.MATERIAL_MANAGER.name());
-        orderService.distributeMaterial(form, StpUtil.getLoginIdAsString());
+        orderService.distributeMaterial(orderId, StpUtil.getLoginIdAsString());
     }
 
     @PutMapping(path = "/engineer/repair/{orderId}/{material}")
@@ -173,11 +173,11 @@ public class OrderController {
     }
 
     @PutMapping(path = "/engineer/to-be-paid/{orderId}")
-    @Operation(summary = "工程师完成维修，发送账单，等待支付", description = "工程师完成维修，发送账单，等待支付")
+    @Operation(summary = "工程师完成复检，发送账单，等待支付", description = "工程师完成复检，发送账单，等待支付")
     @CheckLogin
-    public void engineerFinishedRepair(@PathVariable String orderId) {
+    public void engineerFinishedRecheck(@PathVariable String orderId) {
         StpUtil.checkRole(EmployeeRoleEnum.ENGINEER.name());
-        orderService.finishRepair(orderId, StpUtil.getLoginIdAsString());
+        orderService.finishRecheck(orderId, StpUtil.getLoginIdAsString());
     }
 
     // 客户完成支付流程变更在支付回调中

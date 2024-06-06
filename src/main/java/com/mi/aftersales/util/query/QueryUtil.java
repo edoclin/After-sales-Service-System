@@ -1,11 +1,14 @@
 package com.mi.aftersales.util.query;
 
 import cn.hutool.core.annotation.AnnotationUtil;
+import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.text.CharSequenceUtil;
+import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.ReflectUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.feiniaojin.gracefulresponse.GracefulResponseException;
+import com.mi.aftersales.exception.graceful.alias.AliasInvalidFormatException;
 import com.mi.aftersales.util.query.enums.Predicate;
 
 import java.lang.reflect.Field;
@@ -40,6 +43,10 @@ public class QueryUtil {
     }
 
     public static <T> QueryWrapper<T> buildWrapper(ConditionQuery query, Class<T> clazz) {
+        if (BeanUtil.isEmpty(query) || BeanUtil.isEmpty(query.getParams())) {
+            return buildEmptyQueryWrapper(clazz);
+        }
+
         Set<String> columns = columns(clazz);
 
         // 开启SQL防注入检查
@@ -57,22 +64,49 @@ public class QueryUtil {
             String underlineColumn = CharSequenceUtil.toUnderlineCase(queryParam.getColumn());
 
             switch (queryParam.getOperator()) {
-                case STR_EQ, NUM_EQ, BOOL_EQ -> wrapper = wrapper.eq(underlineColumn, queryParam.getValue());
-                case STR_LIKE -> wrapper = wrapper.like(underlineColumn, queryParam.getValue());
-                case DATE_RANGE ->
+                case STR_EQ, NUM_EQ, BOOL_EQ -> {
+                    if (CharSequenceUtil.isNotBlank(queryParam.getValue())) {
+                        wrapper = wrapper.eq(underlineColumn, queryParam.getValue());
+                    }
+                }
+                case STR_LIKE -> {
+                    if (CharSequenceUtil.isNotBlank(queryParam.getValue())) {
+                        wrapper = wrapper.like(underlineColumn, queryParam.getValue());
+                    }
+                }
+                case DATE_RANGE -> {
+                    if (ObjectUtil.isNotNull(queryParam.getLeft()) && ObjectUtil.isNotNull(queryParam.getRight())) {
                         wrapper = wrapper.between(underlineColumn, queryParam.getLeft(), queryParam.getRight());
-                case NUM_GT -> wrapper = wrapper.gt(underlineColumn, queryParam.getValue());
-                case NUM_GE -> wrapper = wrapper.ge(underlineColumn, queryParam.getValue());
-                case NUM_LT -> wrapper = wrapper.lt(underlineColumn, queryParam.getValue());
-                case NUM_LE -> wrapper = wrapper.le(underlineColumn, queryParam.getValue());
+                    }
+                }
+                case NUM_GT -> {
+                    if (CharSequenceUtil.isNotBlank(queryParam.getValue())) {
+                        wrapper = wrapper.gt(underlineColumn, queryParam.getValue());
+                    }
+                }
+                case NUM_GE -> {
+                    if (CharSequenceUtil.isNotBlank(queryParam.getValue())) {
+                        wrapper = wrapper.ge(underlineColumn, queryParam.getValue());
+                    }
+                }
+                case NUM_LT -> {
+                    if (CharSequenceUtil.isNotBlank(queryParam.getValue())) {
+                        wrapper = wrapper.lt(underlineColumn, queryParam.getValue());
+                    }
+                }
+                case NUM_LE -> {
+                    if (CharSequenceUtil.isNotBlank(queryParam.getValue())) {
+                        wrapper = wrapper.le(underlineColumn, queryParam.getValue());
+                    }
+                }
+                default -> throw new AliasInvalidFormatException();
             }
-
             switch (queryParam.getOrderBy()) {
                 case ASC -> wrapper = wrapper.orderByAsc(underlineColumn);
                 case DESC -> wrapper = wrapper.orderByDesc(underlineColumn);
+                default -> throw new AliasInvalidFormatException();
             }
         }
-
         return wrapper;
     }
 

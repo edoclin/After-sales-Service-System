@@ -1,0 +1,6 @@
+version: '3'
+services:
+  aftersales-server:
+    build:
+      context: .
+    image: aftersales-server:1.0.0-alpha

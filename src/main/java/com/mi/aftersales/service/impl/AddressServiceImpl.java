@@ -1,17 +1,15 @@
 package com.mi.aftersales.service.impl;
 
-import cn.dev33.satoken.stp.StpUtil;
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.text.CharSequenceUtil;
 import cn.hutool.core.util.DesensitizedUtil;
 import com.mi.aftersales.entity.Address;
-import com.mi.aftersales.exception.graceful.BaseCustomException;
 import com.mi.aftersales.exception.graceful.IllegalAddressIdException;
 import com.mi.aftersales.exception.graceful.IllegalLoginIdException;
 import com.mi.aftersales.exception.graceful.ServerErrorException;
-import com.mi.aftersales.service.AddressService;
-import com.mi.aftersales.repository.IAddressRepository;
 import com.mi.aftersales.pojo.vo.form.ClientAddressFormVo;
+import com.mi.aftersales.repository.IAddressRepository;
+import com.mi.aftersales.service.AddressService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -58,7 +56,7 @@ public class AddressServiceImpl implements AddressService {
     public List<com.mi.aftersales.pojo.vo.ClientAddressVo> listAddress(String loginId) {
         ArrayList<com.mi.aftersales.pojo.vo.ClientAddressVo> result = new ArrayList<>();
         iAddressRepository.lambdaQuery()
-                .eq(Address::getLoginId, StpUtil.getLoginIdAsString())
+                .eq(Address::getLoginId, loginId)
                 .list().forEach(address -> {
                     com.mi.aftersales.pojo.vo.ClientAddressVo item = new com.mi.aftersales.pojo.vo.ClientAddressVo();
                     BeanUtil.copyProperties(address, item);
@@ -71,6 +69,17 @@ public class AddressServiceImpl implements AddressService {
 
     @Override
     public void setDefaultAddress(String addressId, String loginId) {
+
+        Address address = iAddressRepository.getById(addressId);
+
+        if (BeanUtil.isEmpty(address)) {
+            throw new IllegalAddressIdException();
+        }
+
+        if (!CharSequenceUtil.equals(address.getLoginId(), loginId)) {
+            throw new IllegalLoginIdException();
+        }
+
         try {
             iAddressRepository
                     .lambdaUpdate()
@@ -78,12 +87,9 @@ public class AddressServiceImpl implements AddressService {
                     .set(Address::getDefaulted, Boolean.FALSE)
                     .update();
 
-            iAddressRepository
-                    .lambdaUpdate()
-                    .eq(Address::getAddressId, addressId)
-                    .eq(Address::getLoginId, loginId)
-                    .set(Address::getDefaulted, Boolean.TRUE)
-                    .update();
+            address.setDefaulted(Boolean.TRUE);
+
+            iAddressRepository.updateById(address);
 
         } catch (Exception e) {
             log.error(e.getMessage());
@@ -93,18 +99,16 @@ public class AddressServiceImpl implements AddressService {
 
     @Override
     public void removeAddress(String addressId, String loginId) {
-        try {
-            Address address = iAddressRepository.getById(addressId);
-            if (BeanUtil.isEmpty(address)) {
-                throw new IllegalAddressIdException();
-            }
-            if (!CharSequenceUtil.equals(address.getLoginId(), loginId)) {
-                throw new IllegalLoginIdException();
-            }
+        Address address = iAddressRepository.getById(addressId);
+        if (BeanUtil.isEmpty(address)) {
+            throw new IllegalAddressIdException();
+        }
+        if (!CharSequenceUtil.equals(address.getLoginId(), loginId)) {
+            throw new IllegalLoginIdException();
+        }
 
+        try {
             iAddressRepository.removeById(addressId);
-        } catch (BaseCustomException e) {
-            throw e;
         } catch (Exception e) {
             log.error(e.getMessage());
             throw new ServerErrorException();

@@ -1,4 +1,4 @@
-package com.mi.aftersales.consumer;
+package com.mi.aftersales.mq.consumer;
 
 
 import cn.hutool.core.text.CharSequenceUtil;
@@ -15,7 +15,7 @@ import javax.annotation.Resource;
 
 import java.util.List;
 
-import static com.mi.aftersales.util.RocketMqTopic.ROCKETMQ_TOPIC_4_ORDER_UPLOAD;
+import static com.mi.aftersales.common.RocketMqTopic.ROCKETMQ_TOPIC_4_ORDER_UPLOAD;
 
 /**
  * @description: 工单文件上传

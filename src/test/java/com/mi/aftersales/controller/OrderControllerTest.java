@@ -2,26 +2,21 @@ package com.mi.aftersales.controller;
 
 import com.alibaba.fastjson.JSON;
 import com.mi.aftersales.config.TestConfig;
+import com.mi.aftersales.pojo.vo.form.*;
 import com.mi.aftersales.util.query.ConditionQuery;
 import com.mi.aftersales.util.query.QueryParam;
-import com.mi.aftersales.vo.MaterialNum;
-import com.mi.aftersales.vo.form.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.test.context.SpringBootTest;
-
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.context.web.WebAppConfiguration;
-
 import org.springframework.test.web.servlet.MvcResult;
-
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import javax.annotation.Resource;
-
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -79,7 +74,7 @@ class OrderControllerTest {
     void postOrder() throws Exception {
 
         String[] fileIds = {"1795362152648097792"};
-        ClientOrderForm form = new ClientOrderForm();
+        ClientOrderFormVo form = new ClientOrderFormVo();
         form.setSkuId("1791492367829008384");
         form.setFapiaoId("1794933315766226944");
         form.setSn("QY1234");
@@ -117,7 +112,7 @@ class OrderControllerTest {
     void testEngineerAcceptOrder() throws Exception {
 
         String[] fileIds = {"1796427449530294272"};
-        EngineerUploadForm form = new EngineerUploadForm();
+        EngineerUploadFormVo form = new EngineerUploadFormVo();
         form.setOrderId("1796192674496368640");
         form.setFileIds(fileIds);
         String strJson = JSON.toJSONString(form);
@@ -138,7 +133,7 @@ class OrderControllerTest {
 
     @Test
     void faultDescription() throws Exception {
-        FaultDescriptionForm form = new FaultDescriptionForm();
+        FaultDescriptionFormVo form = new FaultDescriptionFormVo();
         form.setOrderId("1796192674496368640");
         form.setEngineerNotice("test");
         form.setEngineerFaultDesc("test111");
@@ -153,9 +148,9 @@ class OrderControllerTest {
     @Test
     void engineerFeeConfirm() throws Exception {
 
-        List<MaterialNum> materials = new ArrayList<>();
+        List<MaterialNumFormVo> materials = new ArrayList<>();
 
-        OrderFeeConfirmForm form = new OrderFeeConfirmForm();
+        OrderFeeConfirmFormVo form = new OrderFeeConfirmFormVo();
         form.setOrderId("1796192674496368640");
         form.setMaterials(materials);
         form.setManualFee(BigDecimal.valueOf(100));
@@ -192,9 +187,9 @@ class OrderControllerTest {
 
     @Test
     void materialDistribute() throws Exception {
-        List<MaterialNum> materials = new ArrayList<>();
+        List<MaterialNumFormVo> materials = new ArrayList<>();
 
-        MaterialDistributeForm form = new MaterialDistributeForm();
+        MaterialDistributeFormVo form = new MaterialDistributeFormVo();
         form.setOrderId("1796192674496368640");
         form.setMaterials(materials);
         String strJson = JSON.toJSONString(form);
@@ -227,7 +222,7 @@ class OrderControllerTest {
 
         String[] fileIds = {"1795362152648097792"};
 
-        EngineerUploadForm form = new EngineerUploadForm();
+        EngineerUploadFormVo form = new EngineerUploadFormVo();
         form.setOrderId("1796192674496368640");
         form.setFileIds(fileIds);
         String strJson = JSON.toJSONString(form);

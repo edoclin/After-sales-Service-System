@@ -1,0 +1,42 @@
+version: '3'
+services:
+  aftersales-server-1:
+    image: aftersales-server:1.0.0-alpha
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./logs/1/console:/server/logs/
+      - ./logs/1:/server/bin/logs/
+    environment:
+      - profile=dev-docker
+      - LOG_HOME=/server/bin
+  aftersales-server-2:
+    image: aftersales-server:1.0.0-alpha
+    ports:
+      - "8001:8000"
+    volumes:
+      - ./logs/2/console:/server/logs/
+      - ./logs/2:/server/bin/logs/
+    environment:
+      - profile=dev-docker
+      - LOG_HOME=/server/bin
+  aftersales-server-3:
+    image: aftersales-server:1.0.0-alpha
+    ports:
+      - "8002:8000"
+    volumes:
+      - ./logs/3/console:/server/logs/
+      - ./logs/3:/server/bin/logs/
+    environment:
+      - profile=dev-docker
+      - LOG_HOME=/server/bin
+  aftersales-nginx:
+    image: nginx:latest
+    ports:
+      - "443:443"
+    volumes:
+      - ./nginx/ssl/:/usr/share/nginx/ssl/
+      - ./nginx/static/:/usr/share/nginx/static/
+      - ./nginx/logs/nginx/:/etc/nginx/logs/
+      - ./nginx/conf/nginx.conf:/etc/nginx/nginx.conf
+    privileged: true

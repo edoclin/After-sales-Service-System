@@ -8,6 +8,7 @@ import com.mi.aftersales.pojo.vo.form.FapiaoFormVo;
 import com.mi.aftersales.pojo.vo.form.UpdateFapiaoFormVo;
 import com.mi.aftersales.service.FapiaoService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
@@ -30,8 +31,8 @@ public class FapiaoController {
     private FapiaoService fapiaoService;
 
     @PostMapping(path = "/client")
+    @Operation(summary = "客户添加发票", description = "客户添加发票")
     @CheckLogin
-    @Operation(summary = "添加发票", description = "添加发票")
     public void postFapiao(@RequestBody @Valid FapiaoFormVo form) {
         fapiaoService.addFapiao(form);
     }
@@ -55,6 +56,7 @@ public class FapiaoController {
     @DeleteMapping(path = "/client/{fapiaoId}")
     @CheckLogin
     @Operation(summary = "当前用户删除发票信息", description = "当前用户删除发票信息")
+    @Parameter(name = "fapiaoId", description = "需要删除的发票Id")
     public void delFapiao(@PathVariable String fapiaoId) {
         fapiaoService.deleteFapiaoByClient(fapiaoId, StpUtil.getLoginIdAsString());
     }

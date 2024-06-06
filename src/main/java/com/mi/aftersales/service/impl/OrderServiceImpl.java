@@ -15,10 +15,14 @@ import com.mi.aftersales.entity.*;
 import com.mi.aftersales.enums.config.OrderStatusChangeEventEnum;
 import com.mi.aftersales.enums.entity.*;
 import com.mi.aftersales.exception.graceful.*;
-import com.mi.aftersales.pojo.common.PageResult;
+import com.mi.aftersales.mq.producer.MqProducer;
+import com.mi.aftersales.common.PageResult;
 import com.mi.aftersales.pojo.message.PendingOrderMessage;
 import com.mi.aftersales.pojo.vo.*;
-import com.mi.aftersales.pojo.vo.form.*;
+import com.mi.aftersales.pojo.vo.form.ClientOrderFormVo;
+import com.mi.aftersales.pojo.vo.form.EngineerUploadFormVo;
+import com.mi.aftersales.pojo.vo.form.FaultDescriptionFormVo;
+import com.mi.aftersales.pojo.vo.form.OrderFeeConfirmFormVo;
 import com.mi.aftersales.repository.*;
 import com.mi.aftersales.service.OrderService;
 import com.mi.aftersales.statemachine.OrderStateMachineBuilder;
@@ -26,7 +30,6 @@ import com.mi.aftersales.util.COSUtil;
 import com.mi.aftersales.util.DateUtil;
 import com.mi.aftersales.util.query.ConditionQuery;
 import com.mi.aftersales.util.query.QueryUtil;
-import org.apache.rocketmq.spring.core.RocketMQTemplate;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.slf4j.Logger;
@@ -47,7 +50,9 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
-import static com.mi.aftersales.util.RocketMqTopic.*;
+import static com.mi.aftersales.common.RedisNamespace.*;
+import static com.mi.aftersales.common.StateMachineOrderStatus.*;
+import static com.mi.aftersales.common.RocketMqTopic.*;
 
 /**
  * <p>
@@ -59,9 +64,9 @@ import static com.mi.aftersales.util.RocketMqTopic.*;
  */
 @Service
 public class OrderServiceImpl implements OrderService {
-    public static final String NAMESPACE_4_ORDER_LOCK = "order:lock:";
-    public static final String NAMESPACE_4_MATERIAL_LOCK = "material:lock:";
+
     private static final Logger log = LoggerFactory.getLogger(OrderServiceImpl.class);
+
     @Resource
     private OrderConfig orderConfig;
 
@@ -97,7 +102,7 @@ public class OrderServiceImpl implements OrderService {
     private IClientServiceCenterRepository iClientServiceCenterRepository;
 
     @Resource
-    private RocketMQTemplate rocketmqTemplate;
+    private MqProducer mqProducer;
 
     @Resource
     private RedisTemplate<String, Object> redisTemplate;
@@ -111,6 +116,15 @@ public class OrderServiceImpl implements OrderService {
     @Resource
     private IOrderUploadRepository iOrderUploadRepository;
 
+
+    @Resource
+    private IOrderMaterialRepository iOrderMaterialRepository;
+
+    @Override
+    public void sendSms(String orderId) {
+        mqProducer.asyncSend(ROCKETMQ_TOPIC_4_SMS, orderId);
+    }
+
     /**
      * @description: 客户查询工单列表
      * @return:
@@ -120,8 +134,11 @@ public class OrderServiceImpl implements OrderService {
     @Override
     public List<ClientOrderSimpleVo> listClientOrders(ConditionQuery query, String loginId) {
         QueryWrapper<Order> wrapper = QueryUtil.buildWrapper(query, Order.class);
+
         wrapper = wrapper.eq("client_login_id", loginId).orderByDesc("created_time");
+
         List<ClientOrderSimpleVo> result = new ArrayList<>();
+
         iOrderRepository.list(wrapper).forEach(order -> {
             ClientOrderSimpleVo item = new ClientOrderSimpleVo();
             BeanUtil.copyProperties(order, item, DateUtil.copyDate2yyyyMMddHHmm());
@@ -147,13 +164,13 @@ public class OrderServiceImpl implements OrderService {
         }
 
         if ((Boolean.TRUE.equals(isClient) && !CharSequenceUtil.equals(order.getClientLoginId(), loginId)) ||
-                Boolean.FALSE.equals(isClient) && !CharSequenceUtil.equals(order.getEngineerLoginId(), loginId)
-        ) {
+                (Boolean.FALSE.equals(isClient) && !CharSequenceUtil.equals(order.getEngineerLoginId(), loginId))) {
             throw new IllegalLoginIdException();
         }
 
         OrderDetailVo orderDetailVo = new OrderDetailVo();
         BeanUtil.copyProperties(order, orderDetailVo, DateUtil.copyDate2yyyyMMddHHmm());
+
         orderDetailVo.setOrderStatus(order.getOrderStatus().getDesc());
         orderDetailVo.setOrderStatusValue(order.getOrderStatus().getValue());
 
@@ -261,6 +278,30 @@ public class OrderServiceImpl implements OrderService {
             if (Boolean.FALSE.equals(sendEvent(message))) {
                 throw new IllegalOrderStatusFlowException();
             }
+
+            OrderStatusLog orderStatusLog = new OrderStatusLog();
+
+            orderStatusLog
+                    .setCreatedId(order.getClientLoginId())
+                    .setOrderId(order.getOrderId())
+                    .setOrderStatus(OrderStatusEnum.CREATED)
+                    .setStatusDetail(CharSequenceUtil.format("工单创建成功，等待工程师处理！"));
+
+            mqProducer.asyncSend(ROCKETMQ_TOPIC_4_ORDER_LOG, orderStatusLog);
+
+            sendSms(order.getOrderId());
+
+            Integer spuCategoryId = (Integer) message.getHeaders().get(STATE_MACHINE_HEADER_CATEGORY_ID);
+
+            // 加入待办工单，设置时间戳
+            PendingOrderMessage pendingOrderMessage = new PendingOrderMessage();
+            pendingOrderMessage
+                    .setCreatedTime(DateUtil.yyyyMMddHHmm(order.getCreatedTime()))
+                    .setOrderId(order.getOrderId())
+                    .setCategories(iSpuCategoryRepository.listAllSpuCategoryName(spuCategoryId));
+
+            redisTemplate.opsForZSet().add(PENDING_ORDER_PREFIX, pendingOrderMessage, System.currentTimeMillis());
+
             List<OrderUpload> batch = new ArrayList<>();
             for (String fileId : form.getFileIds()) {
                 File byId = iFileRepository.getById(fileId);
@@ -277,9 +318,7 @@ public class OrderServiceImpl implements OrderService {
                 batch.add(orderUpload);
             }
 
-            Message<List<OrderUpload>> msg = MessageBuilder.withPayload(batch).build();
-            rocketmqTemplate.syncSend(ROCKETMQ_TOPIC_4_ORDER_UPLOAD, msg);
-
+            mqProducer.asyncSend(ROCKETMQ_TOPIC_4_ORDER_UPLOAD, batch);
         } catch (BaseCustomException e) {
             throw e;
         } catch (Exception e) {
@@ -301,7 +340,7 @@ public class OrderServiceImpl implements OrderService {
 //         按工单提交先后顺序，一次只能查询topN个
         Set<Object> pendingOrders;
         for (int i = 0; ; i += orderConfig.getTopN()) {
-            pendingOrders = redisTemplate.opsForZSet().range(NAMESPACE_4_PENDING_ORDER, i, i + orderConfig.getTopN() - 1);
+            pendingOrders = redisTemplate.opsForZSet().range(PENDING_ORDER_PREFIX, i, i + orderConfig.getTopN() - 1);
             if (CollUtil.isEmpty(pendingOrders)) {
                 break;
             }
@@ -340,10 +379,16 @@ public class OrderServiceImpl implements OrderService {
      **/
     @Override
     public void acceptOrder(String orderId, String loginId) {
+
+        Order order = iOrderRepository.getById(orderId);
+        if (BeanUtil.isEmpty(order)) {
+            throw new IllegalOrderIdException();
+        }
+
         boolean isPending = Boolean.FALSE;
         Set<Object> pendingOrders;
         for (int i = 0; ; i += orderConfig.getTopN()) {
-            pendingOrders = redisTemplate.opsForZSet().range(NAMESPACE_4_PENDING_ORDER, i, i + orderConfig.getTopN() - 1);
+            pendingOrders = redisTemplate.opsForZSet().range(PENDING_ORDER_PREFIX, i, i + orderConfig.getTopN() - 1);
             if (CollUtil.isEmpty(pendingOrders)) {
                 break;
             }
@@ -356,7 +401,7 @@ public class OrderServiceImpl implements OrderService {
         if (Boolean.FALSE.equals(isPending)) {
             throw new GracefulResponseException("该工单已被受理！");
         }
-        RLock fairLock = redissonClient.getFairLock(NAMESPACE_4_ORDER_LOCK + orderId);
+        RLock fairLock = redissonClient.getFairLock(ORDER_LOCK_PREFIX + orderId);
         try {
             if (fairLock.tryLock(10, TimeUnit.SECONDS)) {
                 if (Boolean.FALSE.equals(sendEvent(statusFlow(OrderStatusChangeEventEnum.ENGINEER_COMPLETED_ACCEPT, orderId)))) {
@@ -369,7 +414,7 @@ public class OrderServiceImpl implements OrderService {
             log.error(e.getMessage());
             Thread.currentThread().interrupt();
             throw new ServerErrorException();
-        } catch (BaseCustomException e) {
+        } catch (BaseCustomException | GracefulResponseException e) {
             log.warn(e.getMessage());
             throw e;
         } finally {
@@ -377,6 +422,28 @@ public class OrderServiceImpl implements OrderService {
                 fairLock.unlock();
             }
         }
+
+        // 状态日志
+        OrderStatusLog orderStatusLog = new OrderStatusLog();
+        orderStatusLog
+                .setOrderId(order.getOrderId())
+                .setOrderStatus(OrderStatusEnum.ACCEPTED)
+                .setStatusDetail(CharSequenceUtil.format("工单已被受理，等待工程师（{}）处理！", loginId));
+
+        mqProducer.asyncSend(ROCKETMQ_TOPIC_4_ORDER_LOG, orderStatusLog);
+        // 移除待办工单对应项
+        for (int i = 0; ; i += orderConfig.getTopN()) {
+            pendingOrders = redisTemplate.opsForZSet().range(PENDING_ORDER_PREFIX, i, i + orderConfig.getTopN() - 1);
+            if (CollUtil.isEmpty(pendingOrders)) {
+                break;
+            }
+            PendingOrderMessage delete = (PendingOrderMessage) CollUtil.findOne(pendingOrders, item -> CharSequenceUtil.equals(((PendingOrderMessage) item).getOrderId(), order.getOrderId()));
+            if (BeanUtil.isNotEmpty(delete)) {
+                redisTemplate.opsForZSet().remove(PENDING_ORDER_PREFIX, delete);
+                sendSms(order.getOrderId());
+            }
+        }
+
     }
 
     /**
@@ -445,8 +512,7 @@ public class OrderServiceImpl implements OrderService {
             batch.add(orderUpload);
         }
 
-        Message<List<OrderUpload>> msg = MessageBuilder.withPayload(batch).build();
-        rocketmqTemplate.syncSend(ROCKETMQ_TOPIC_4_ORDER_UPLOAD, msg);
+        mqProducer.asyncSend(ROCKETMQ_TOPIC_4_ORDER_UPLOAD, batch);
 
     }
 
@@ -477,6 +543,11 @@ public class OrderServiceImpl implements OrderService {
         if (Boolean.FALSE.equals(sendEvent(statusFlow(OrderStatusChangeEventEnum.ENGINEER_START_CHECKING, orderId)))) {
             throw new IllegalOrderStatusFlowException();
         }
+
+        OrderStatusLog orderStatusLog = new OrderStatusLog();
+        orderStatusLog.setOrderId(order.getOrderId()).setOrderStatus(OrderStatusEnum.CHECKING);
+
+        mqProducer.asyncSend(ROCKETMQ_TOPIC_4_ORDER_LOG, orderStatusLog);
     }
 
     /**
@@ -532,20 +603,19 @@ public class OrderServiceImpl implements OrderService {
 
         order.setManualFee(form.getManualFee());
 
-        List<MiddleOrderMaterial> batch = new ArrayList<>();
+        List<OrderMaterial> batch = new ArrayList<>();
         order.setMaterialFee(new BigDecimal("0"));
         // 这里只计算费用，不扣减库存
         form.getMaterials().forEach(materialNum -> {
             Material material = iMaterialRepository.getById(materialNum.getMaterialId());
             if (BeanUtil.isNotEmpty(material)) {
                 order.setMaterialFee(order.getMaterialFee().add(material.getPrice().multiply(materialNum.getNum())));
-                batch.add(new MiddleOrderMaterial().setOrderId(form.getOrderId()).setMaterialId(material.getMaterialId()).setMaterialAmount(materialNum.getNum()));
+                batch.add(new OrderMaterial().setOrderId(form.getOrderId()).setMaterialId(material.getMaterialId()).setMaterialAmount(materialNum.getNum()));
             }
         });
 
         try {
             iOrderRepository.updateById(order);
-
         } catch (Exception e) {
             log.error(e.getMessage());
             throw new ServerErrorException();
@@ -555,9 +625,16 @@ public class OrderServiceImpl implements OrderService {
             throw new IllegalOrderStatusFlowException();
         }
 
+        OrderStatusLog orderStatusLog = new OrderStatusLog();
+        orderStatusLog.setOrderId(order.getOrderId()).setOrderStatus(OrderStatusEnum.FEE_CONFIRMING);
+        orderStatusLog.setStatusDetail("工程师已生成维修账单！");
+
+        mqProducer.asyncSend(ROCKETMQ_TOPIC_4_ORDER_LOG, orderStatusLog);
+
+
+        sendSms(order.getOrderId());
         // 异步更新工单物料
-        Message<List<MiddleOrderMaterial>> msg = MessageBuilder.withPayload(batch).build();
-        rocketmqTemplate.send(ROCKETMQ_TOPIC_4_ORDER_MATERIAL, msg);
+        mqProducer.asyncSend(ROCKETMQ_TOPIC_4_ORDER_MATERIAL, batch);
     }
 
     /**
@@ -581,6 +658,13 @@ public class OrderServiceImpl implements OrderService {
         if (Boolean.FALSE.equals(sendEvent(build))) {
             throw new IllegalOrderStatusFlowException();
         }
+
+        OrderStatusLog orderStatusLog = new OrderStatusLog();
+        orderStatusLog.setOrderId(order.getOrderId()).setOrderStatus(OrderStatusEnum.FEE_CONFIRMED);
+        orderStatusLog.setStatusDetail("客户已确认账单，即将开始维修！");
+
+        mqProducer.asyncSend(ROCKETMQ_TOPIC_4_ORDER_LOG, orderStatusLog);
+        sendSms(order.getOrderId());
     }
 
     /**
@@ -605,6 +689,14 @@ public class OrderServiceImpl implements OrderService {
         if (Boolean.FALSE.equals(sendEvent(build))) {
             throw new IllegalOrderStatusFlowException();
         }
+
+        OrderStatusLog orderStatusLog = new OrderStatusLog();
+        orderStatusLog.setOrderId(order.getOrderId()).setOrderStatus(OrderStatusEnum.RETURNING);
+        orderStatusLog.setStatusDetail("用户拒绝维修，开始返还维修物品！");
+
+        mqProducer.asyncSend(ROCKETMQ_TOPIC_4_ORDER_LOG, orderStatusLog);
+
+        sendSms(order.getOrderId());
     }
 
     /**
@@ -630,6 +722,14 @@ public class OrderServiceImpl implements OrderService {
         if (Boolean.FALSE.equals(sendEvent(build))) {
             throw new IllegalOrderStatusFlowException();
         }
+
+        OrderStatusLog orderStatusLog = new OrderStatusLog();
+        orderStatusLog.setOrderId(order.getOrderId()).setOrderStatus(OrderStatusEnum.MATERIAL_APPLYING);
+        orderStatusLog.setStatusDetail("工程师申请维修所需物料！");
+
+        mqProducer.asyncSend(ROCKETMQ_TOPIC_4_ORDER_LOG, orderStatusLog);
+
+        sendSms(order.getOrderId());
     }
 
     /**
@@ -640,54 +740,77 @@ public class OrderServiceImpl implements OrderService {
      **/
     @Override
     @Transactional
-    public void distributeMaterial(MaterialDistributeFormVo form, String loginId) {
+    public void distributeMaterial(String orderId, String loginId) {
         // 当工单状态 == MATERIAL_APPLY时，库管开始处理申请
-        Order order = iOrderRepository.getById(form.getOrderId());
+
+        Order order = iOrderRepository.getById(orderId);
         if (BeanUtil.isEmpty(order)) {
             throw new IllegalOrderIdException();
         }
-        RLock fairLock = redissonClient.getFairLock(NAMESPACE_4_MATERIAL_LOCK);
-        try {
-            List<MaterialLog> materialLogs = new ArrayList<>();
-            List<Material> batch = new ArrayList<>();
-            if (fairLock.tryLock(30, TimeUnit.DAYS)) {
-                // 修改库存
-                form.getMaterials().forEach(materialNum -> {
-                    Material material = iMaterialRepository.getById(materialNum.getMaterialId());
+
+        // 未处于申请物料状态时抛出异常
+        if (order.getOrderStatus() != (OrderStatusEnum.MATERIAL_APPLYING)) {
+            throw new IllegalOrderStatusFlowException();
+        }
+
+        RLock fairLock;
+
+        List<MaterialLog> materialLogs = new ArrayList<>();
+        List<OrderMaterial> orderMaterials = iOrderMaterialRepository.lambdaQuery()
+                .eq(OrderMaterial::getOrderId, orderId).list();
+        for (OrderMaterial orderMaterial : orderMaterials) {
+            // 锁定物料（行）
+            fairLock = redissonClient.getFairLock(MATERIAL_LOCK_PREFIX + orderMaterial.getMaterialId());
+            if (fairLock == null) {
+                throw new ServerErrorException();
+            }
+            try {
+                if (fairLock.tryLock(30, TimeUnit.SECONDS)) {
+                    Material material = iMaterialRepository.getById(orderMaterial.getMaterialId());
+
                     if (BeanUtil.isEmpty(material)) {
                         throw new IllegalMaterialIdException();
                     }
-
-                    if (material.getStock().compareTo(materialNum.getNum()) > 0) {
-                        material.setStock(material.getStock().subtract(materialNum.getNum()));
-                    } else {
-                        throw new GracefulResponseException(CharSequenceUtil.format("物料（{}）库存不足！", materialNum.getMaterialId()));
+                    // 库存检查
+                    if (material.getStock().compareTo(orderMaterial.getMaterialAmount()) < 0) {
+                        throw new GracefulResponseException(CharSequenceUtil.format("物料（{}）库存不足！", orderMaterial.getMaterialId()));
                     }
+                    material.setStock(material.getStock().subtract(orderMaterial.getMaterialAmount()));
 
-                    batch.add(material);
+                    iMaterialRepository.updateById(material);
+
                     MaterialLog materialLog = new MaterialLog();
-                    materialLog.setMaterialId(materialNum.getMaterialId()).setAction(MaterialActionEnum.STOCK_OUT).setDelta(materialNum.getNum()).setOperatorId(loginId).setLogDetail(CharSequenceUtil.format("工单（id：{}，工程师：{}）申请物料", order.getOrderId(), order.getEngineerLoginId()));
+                    materialLog.setMaterialId(orderMaterial.getMaterialId()).setAction(MaterialActionEnum.STOCK_OUT).setDelta(orderMaterial.getMaterialAmount()).setOperatorId(loginId).setLogDetail(CharSequenceUtil.format("工单（id：{}，工程师：{}）申请物料", order.getOrderId(), order.getEngineerLoginId()));
                     materialLogs.add(materialLog);
-                });
-
-                // 异步物料变动日志
-                Message<List<MaterialLog>> msg = MessageBuilder.withPayload(materialLogs).build();
-                rocketmqTemplate.send(ROCKETMQ_TOPIC_4_MATERIAL_LOG, msg);
-            }
-        } catch (BaseCustomException e) {
-            throw e;
-        } catch (InterruptedException e) {
-            log.error(e.getMessage());
-            Thread.currentThread().interrupt();
-            throw new ServerErrorException();
-        } finally {
-            if (fairLock.isLocked()) {
+                }
+            } catch (BaseCustomException | GracefulResponseException e) {
+                throw e;
+            } catch (InterruptedException e) {
+                log.error(e.getMessage());
+                Thread.currentThread().interrupt();
+                throw new ServerErrorException();
+            } finally {
                 fairLock.unlock();
             }
         }
+
+        if (CollUtil.isNotEmpty(materialLogs)) {
+            // 异步物料变动日志
+            mqProducer.asyncSend(ROCKETMQ_TOPIC_4_MATERIAL_LOG, materialLogs);
+        }
+
         if (Boolean.FALSE.equals(sendEvent(statusFlow(OrderStatusChangeEventEnum.MANAGER_DISTRIBUTED_MATERIAL, order.getOrderId())))) {
             throw new IllegalOrderStatusFlowException();
         }
+
+        OrderStatusLog orderStatusLog = new OrderStatusLog();
+        orderStatusLog.setOrderId(order.getOrderId()).setOrderStatus(OrderStatusEnum.MATERIAL_DISTRIBUTING);
+        orderStatusLog.setStatusDetail("库管分发所需物料！");
+
+
+        mqProducer.asyncSend(ROCKETMQ_TOPIC_4_ORDER_LOG, orderStatusLog);
+
+        sendSms(order.getOrderId());
     }
 
     /**
@@ -708,17 +831,28 @@ public class OrderServiceImpl implements OrderService {
             throw new IllegalOrderLoginIdException();
         }
         Message<OrderStatusChangeEventEnum> build;
+        OrderStatusLog orderStatusLog = new OrderStatusLog();
 
         if (Boolean.TRUE.equals(material)) {
             // 来自收到物料的状态转换
             build = MessageBuilder.withPayload(OrderStatusChangeEventEnum.ENGINEER_RECEIVED_MATERIAL).setHeader(STATE_MACHINE_HEADER_ORDER_NAME, orderId).build();
+            orderStatusLog.setStatusDetail("物料准备完毕，工程师开始维修！");
+
         } else {
             // 来自直接开始维修的状态转换
             build = MessageBuilder.withPayload(OrderStatusChangeEventEnum.ENGINEER_MATERIAL_CONFIRMING).setHeader(STATE_MACHINE_HEADER_ORDER_NAME, orderId).setHeader(ENGINEER_CHOICE, OrderStatusChangeEventEnum.ENGINEER_START_REPAIR).build();
+            orderStatusLog.setStatusDetail("工程师开始维修！");
+
         }
         if (Boolean.FALSE.equals(sendEvent(build))) {
             throw new IllegalOrderStatusFlowException();
         }
+
+        orderStatusLog.setOrderId(order.getOrderId()).setOrderStatus(OrderStatusEnum.REPAIRING);
+
+        mqProducer.asyncSend(ROCKETMQ_TOPIC_4_ORDER_LOG, orderStatusLog);
+
+        sendSms(order.getOrderId());
     }
 
     /**
@@ -742,6 +876,14 @@ public class OrderServiceImpl implements OrderService {
         if (Boolean.FALSE.equals(sendEvent(statusFlow(OrderStatusChangeEventEnum.ENGINEER_START_RECHECK, order.getOrderId())))) {
             throw new IllegalOrderStatusFlowException();
         }
+
+        OrderStatusLog orderStatusLog = new OrderStatusLog();
+        orderStatusLog.setOrderId(order.getOrderId()).setOrderStatus(OrderStatusEnum.RE_CHECKING);
+        orderStatusLog.setStatusDetail("工程师完成维修，开始复检");
+
+        mqProducer.asyncSend(ROCKETMQ_TOPIC_4_ORDER_LOG, orderStatusLog);
+
+        sendSms(order.getOrderId());
     }
 
     /**
@@ -787,14 +929,14 @@ public class OrderServiceImpl implements OrderService {
     }
 
     /**
-     * @description: 工程师完成维修
+     * @description: 工程师完成复检
      * @return:
      * @author: edoclin
      * @created: 2024/6/2 15:23
      **/
     @Override
     @Transactional
-    public void finishRepair(String orderId, String loginId) {
+    public void finishRecheck(String orderId, String loginId) {
         Order order = iOrderRepository.getById(orderId);
         if (BeanUtil.isEmpty(order)) {
             throw new IllegalOrderIdException();
@@ -810,12 +952,20 @@ public class OrderServiceImpl implements OrderService {
 
         if (CollUtil.isEmpty(orderUploads) || orderUploads.size() != 1) {
             log.error("工程师上传文件数量不符合要求！");
-            throw new GracefulResponseException("工程师未上传或未按要求上传视频文件，请联系系统管理员！");
+            throw new GracefulResponseException("工程师未上传或未按要求上传视频文件！");
         }
 
         if (Boolean.FALSE.equals(sendEvent(statusFlow(OrderStatusChangeEventEnum.ENGINEER_COMPLETED_RECHECK, order.getOrderId())))) {
             throw new IllegalOrderStatusFlowException();
         }
+
+        OrderStatusLog orderStatusLog = new OrderStatusLog();
+        orderStatusLog.setOrderId(order.getOrderId()).setOrderStatus(OrderStatusEnum.TO_BE_PAID);
+        orderStatusLog.setStatusDetail("工程师完成复检，等待用户支付维修费用！");
+
+        mqProducer.asyncSend(ROCKETMQ_TOPIC_4_ORDER_LOG, orderStatusLog);
+
+        sendSms(order.getOrderId());
     }
 
     /**
@@ -839,6 +989,15 @@ public class OrderServiceImpl implements OrderService {
         if (Boolean.FALSE.equals(sendEvent(statusFlow(OrderStatusChangeEventEnum.ENGINEER_COMPLETED_RETURN, order.getOrderId())))) {
             throw new IllegalOrderStatusFlowException();
         }
+
+
+        OrderStatusLog orderStatusLog = new OrderStatusLog();
+        orderStatusLog.setOrderId(order.getOrderId()).setOrderStatus(OrderStatusEnum.RETURNING);
+        orderStatusLog.setStatusDetail("用户完成支付，维修结束，工程师返还维修物品！");
+
+        mqProducer.asyncSend(ROCKETMQ_TOPIC_4_ORDER_LOG, orderStatusLog);
+
+        sendSms(order.getOrderId());
     }
 
     /**
@@ -862,6 +1021,14 @@ public class OrderServiceImpl implements OrderService {
         if (Boolean.FALSE.equals(sendEvent(statusFlow(OrderStatusChangeEventEnum.CLIENT_CLOSED, order.getOrderId())))) {
             throw new IllegalOrderStatusFlowException();
         }
+
+        OrderStatusLog orderStatusLog = new OrderStatusLog();
+        orderStatusLog.setOrderId(order.getOrderId()).setOrderStatus(OrderStatusEnum.CLOSED);
+        orderStatusLog.setStatusDetail("客户关闭工单，本次维修结束！");
+
+        mqProducer.asyncSend(ROCKETMQ_TOPIC_4_ORDER_LOG, orderStatusLog);
+
+        sendSms(order.getOrderId());
     }
 
     @Override
@@ -876,19 +1043,19 @@ public class OrderServiceImpl implements OrderService {
         try {
             stateMachine = orderStateMachineBuilder.build();
             stateMachine.start();
-            if (Boolean.TRUE.equals(redisTemplate.hasKey(NAMESPACE_4_MACHINE_STATE + message.getHeaders().get(STATE_MACHINE_HEADER_ORDER_NAME)))) {
+            if (Boolean.TRUE.equals(redisTemplate.hasKey(MACHINE_PERSIST_PREFIX + message.getHeaders().get(STATE_MACHINE_HEADER_ORDER_NAME)))) {
                 // 存在持久化对象则恢复
-                orderRedisPersister.restore(stateMachine, NAMESPACE_4_MACHINE_STATE + message.getHeaders().get(STATE_MACHINE_HEADER_ORDER_NAME));
+                orderRedisPersister.restore(stateMachine, MACHINE_PERSIST_PREFIX + message.getHeaders().get(STATE_MACHINE_HEADER_ORDER_NAME));
             }
             result = stateMachine.sendEvent(message);
-            orderRedisPersister.persist(stateMachine, NAMESPACE_4_MACHINE_STATE + message.getHeaders().get(STATE_MACHINE_HEADER_ORDER_NAME));
+            orderRedisPersister.persist(stateMachine, MACHINE_PERSIST_PREFIX + message.getHeaders().get(STATE_MACHINE_HEADER_ORDER_NAME));
         } catch (Exception e) {
             throw new GracefulResponseException(e.getMessage());
         } finally {
             if (stateMachine != null) {
                 // todo 工单结束，删除持久化，目前还存在问题！！！
                 if (OrderStatusEnum.CLOSED.equals(stateMachine.getState().getId())) {
-                    redisTemplate.delete(NAMESPACE_4_MACHINE_STATE + message.getHeaders().get(STATE_MACHINE_HEADER_ORDER_NAME));
+                    redisTemplate.delete(MACHINE_PERSIST_PREFIX + message.getHeaders().get(STATE_MACHINE_HEADER_ORDER_NAME));
                 }
                 stateMachine.stop();
             }
