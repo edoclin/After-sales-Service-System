@@ -54,7 +54,7 @@ public class SkuController {
         return skuService.listClientSku(form, spuId);
     }
 
-    @PostMapping(path = "/manager")
+    @GetMapping(path = "/manager")
     @Operation(summary = "查询商品Sku（管理员）", description = "查询商品Sku（管理员）")
     public PageResult<SkuVo> conditionList(@RequestBody ConditionQuery query) {
         StpUtil.checkRole(EmployeeRoleEnum.SYSTEM_MANAGER.name());
