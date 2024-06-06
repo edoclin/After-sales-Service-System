@@ -2,19 +2,16 @@ package com.mi.aftersales.controller;
 
 import com.alibaba.fastjson.JSON;
 import com.mi.aftersales.config.TestConfig;
-import com.mi.aftersales.vo.form.LoginPermissionForm;
+import com.mi.aftersales.pojo.vo.form.LoginPermissionFormVo;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.test.context.SpringBootTest;
-
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.context.web.WebAppConfiguration;
-
 import org.springframework.test.web.servlet.MvcResult;
-
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import javax.annotation.Resource;
@@ -34,16 +31,16 @@ class MiddleLoginPermissionControllerTest {
     private TestConfig testConfig;
 
     @Resource
-    private MiddleLoginPermissionController middleLoginPermissionController;
+    private LoginPermissionController loginPermissionController;
 
     @BeforeEach
     void setUp() {
-        testConfig.setMockMvc(MockMvcBuilders.standaloneSetup(middleLoginPermissionController).build());
+        testConfig.setMockMvc(MockMvcBuilders.standaloneSetup(loginPermissionController).build());
     }
 
     @Test
     void postMiddleLoginPermission() throws Exception {
-        LoginPermissionForm form = new LoginPermissionForm();
+        LoginPermissionFormVo form = new LoginPermissionFormVo();
         form.setLoginId("1794929431970746368");
         form.setPermissionId("1");
 

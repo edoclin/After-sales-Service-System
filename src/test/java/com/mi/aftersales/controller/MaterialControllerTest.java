@@ -2,26 +2,21 @@ package com.mi.aftersales.controller;
 
 import com.alibaba.fastjson.JSON;
 import com.mi.aftersales.config.TestConfig;
-
-import com.mi.aftersales.vo.form.ManngerUpdateMaterialForm;
-import com.mi.aftersales.vo.form.MaterialForm;
+import com.mi.aftersales.pojo.vo.form.ManagerUpdateMaterialFormVo;
+import com.mi.aftersales.pojo.vo.form.MaterialFormVo;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
-
+import org.slf4j.LoggerFactory;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.context.web.WebAppConfiguration;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
-
 import javax.annotation.Resource;
-
 import java.math.BigDecimal;
-
 
 
 /**
@@ -31,7 +26,6 @@ import java.math.BigDecimal;
 @ExtendWith(SpringExtension.class)
 @SpringBootTest
 @WebAppConfiguration
-
 class MaterialControllerTest {
 
     private static final Logger logger = LoggerFactory.getLogger(MaterialControllerTest.class);
@@ -49,7 +43,7 @@ class MaterialControllerTest {
 
     @Test
     public void addMaterial() throws Exception {
-        MaterialForm form = new MaterialForm();
+        MaterialFormVo form = new MaterialFormVo();
         form.setMaterialName("Test11223");
         form.setMaterialDesc("TestAddMaterial");
         form.setUnit("test");
@@ -69,7 +63,7 @@ class MaterialControllerTest {
     public void updateMaterial() throws Exception {
 
         // 创建一个更新物料表单对象
-        ManngerUpdateMaterialForm form = new ManngerUpdateMaterialForm();
+        ManagerUpdateMaterialFormVo form = new ManagerUpdateMaterialFormVo();
         form.setMaterialId("1795767106466471936");
         form.setMaterialName("UpdatedTest1");
         form.setMaterialDesc("UpdatedTestUpdateMaterial");

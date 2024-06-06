@@ -2,7 +2,7 @@ package com.mi.aftersales.controller;
 
 import com.alibaba.fastjson.JSON;
 import com.mi.aftersales.config.TestConfig;
-import com.mi.aftersales.vo.form.ClientAddressForm;
+import com.mi.aftersales.pojo.vo.form.ClientAddressFormVo;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -13,6 +13,7 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.context.web.WebAppConfiguration;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+
 import javax.annotation.Resource;
 
 /**
@@ -41,7 +42,7 @@ class AddressControllerTest {
     public void postAddress() throws Exception {
 
         // 创建客户地址表单
-        ClientAddressForm form = new ClientAddressForm();
+        ClientAddressFormVo form = new ClientAddressFormVo();
         form.setReceiver("postAddressTest1234");
         form.setDefaulted(false);
         form.setMobile("18111111111");

@@ -15,7 +15,7 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 @Component
 public class TestConfig {
 
-    private static final String token_value = "Bearer Es_w2FK3UZWtLGoR1_VWWUeDsFzGaTZlNR__";
+    private static final String token_value = "Bearer BY_ooDIsVfza4B4So_Dk64mPx7waNgrxRc__";
 
 
 

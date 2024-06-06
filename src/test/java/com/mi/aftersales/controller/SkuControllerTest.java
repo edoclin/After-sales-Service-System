@@ -2,27 +2,23 @@ package com.mi.aftersales.controller;
 
 import com.alibaba.fastjson.JSON;
 import com.mi.aftersales.config.TestConfig;
+import com.mi.aftersales.pojo.vo.form.SkuFormVo;
+import com.mi.aftersales.pojo.vo.form.SkuVisibleSetFormVo;
+import com.mi.aftersales.pojo.vo.form.UpdateSkuVisibleFormVo;
 import com.mi.aftersales.util.query.ConditionQuery;
 import com.mi.aftersales.util.query.QueryParam;
-import com.mi.aftersales.vo.form.SkuForm;
-import com.mi.aftersales.vo.form.SkuVisibleSetForm;
-import com.mi.aftersales.vo.form.UpdateSkuVisibleForm;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.test.context.SpringBootTest;
-
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.context.web.WebAppConfiguration;
-
 import org.springframework.test.web.servlet.MvcResult;
-
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import javax.annotation.Resource;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -51,7 +47,7 @@ class SkuControllerTest {
 
     @Test
     void postSpu() throws Exception {
-        SkuForm form = new SkuForm();
+        SkuFormVo form = new SkuFormVo();
         form.setSpuId("1791442641188290560");
         form.setSkuDisplayName("小米14Pro(16GB+512GB)");
         form.setSkuCoverFileId("1796067339024977920");
@@ -66,7 +62,7 @@ class SkuControllerTest {
 
     @Test
     void putSpuVisible() throws Exception {
-        UpdateSkuVisibleForm form = new UpdateSkuVisibleForm();
+        UpdateSkuVisibleFormVo form = new UpdateSkuVisibleFormVo();
         form.setSkuId("1796084357518204928");
         form.setVisible(true);
 
@@ -115,7 +111,7 @@ class SkuControllerTest {
 
     @Test
     void testList() throws Exception {
-        SkuVisibleSetForm form = new SkuVisibleSetForm();
+        SkuVisibleSetFormVo form = new SkuVisibleSetFormVo();
         form.setSkuId("1796084357518204928");
         form.setVisible(true);
 

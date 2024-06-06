@@ -1,6 +1,7 @@
 package com.mi.aftersales.util.query;
 
 import cn.hutool.core.annotation.AnnotationUtil;
+import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.text.CharSequenceUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.ReflectUtil;
@@ -42,6 +43,10 @@ public class QueryUtil {
     }
 
     public static <T> QueryWrapper<T> buildWrapper(ConditionQuery query, Class<T> clazz) {
+        if (BeanUtil.isEmpty(query) || BeanUtil.isEmpty(query.getParams())) {
+            return buildEmptyQueryWrapper(clazz);
+        }
+
         Set<String> columns = columns(clazz);
 
         // 开启SQL防注入检查

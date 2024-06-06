@@ -2,26 +2,22 @@ package com.mi.aftersales.controller;
 
 import com.alibaba.fastjson.JSON;
 import com.mi.aftersales.config.TestConfig;
+import com.mi.aftersales.pojo.vo.form.SpuFormVo;
+import com.mi.aftersales.pojo.vo.form.UpdateSpuVisibleFormVo;
 import com.mi.aftersales.util.query.ConditionQuery;
 import com.mi.aftersales.util.query.QueryParam;
-import com.mi.aftersales.vo.form.SpuForm;
-import com.mi.aftersales.vo.form.UpdateSpuVisibleForm;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.test.context.SpringBootTest;
-
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.context.web.WebAppConfiguration;
-
 import org.springframework.test.web.servlet.MvcResult;
-
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import javax.annotation.Resource;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -50,7 +46,7 @@ class SpuControllerTest {
 
     @Test
     void postSpu() throws Exception {
-        SpuForm form = new SpuForm();
+        SpuFormVo form = new SpuFormVo();
         form.setCategoryId(11);
         form.setWeight(Short.valueOf("1"));
         form.setSpuName("小米12");
@@ -67,7 +63,7 @@ class SpuControllerTest {
 
     @Test
     void putSpuVisible() throws Exception {
-        UpdateSpuVisibleForm form = new UpdateSpuVisibleForm();
+        UpdateSpuVisibleFormVo form = new UpdateSpuVisibleFormVo();
         form.setSpuId("1796096627564597248");
         form.setVisible(true);
         String strJson = JSON.toJSONString(form);

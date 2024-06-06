@@ -2,23 +2,22 @@ package com.mi.aftersales.controller;
 
 import com.alibaba.fastjson.JSON;
 import com.mi.aftersales.config.TestConfig;
-import com.mi.aftersales.vo.form.SpuCategoryForm;
-import com.mi.aftersales.vo.form.SpuCategoryVisibleSetForm;
+import com.mi.aftersales.pojo.vo.form.SpuCategoryFormVo;
+import com.mi.aftersales.pojo.vo.form.SpuCategoryVisibleSetFormVo;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.test.context.SpringBootTest;
-;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.context.web.WebAppConfiguration;
-
 import org.springframework.test.web.servlet.MvcResult;
-
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import javax.annotation.Resource;
+
+;
 
 /**
  * @author QYenon
@@ -39,12 +38,12 @@ class SpuCategoryControllerTest {
 
     @BeforeEach
     void setUp() {
-        testConfig.setMockMvc( MockMvcBuilders.standaloneSetup(spuCategoryController).build());
+        testConfig.setMockMvc(MockMvcBuilders.standaloneSetup(spuCategoryController).build());
     }
 
     @Test
     void postSpuCategory() throws Exception {
-        SpuCategoryForm form = new SpuCategoryForm();
+        SpuCategoryFormVo form = new SpuCategoryFormVo();
         form.setVisible(false);
         form.setWeight(15);
         form.setCategoryName("小米15");
@@ -68,7 +67,7 @@ class SpuCategoryControllerTest {
 
     @Test
     void setVisible() throws Exception {
-        SpuCategoryVisibleSetForm form = new SpuCategoryVisibleSetForm();
+        SpuCategoryVisibleSetFormVo form = new SpuCategoryVisibleSetFormVo();
         form.setVisible(false);
         form.setCategoryId(8);
         String strJson = JSON.toJSONString(form);
