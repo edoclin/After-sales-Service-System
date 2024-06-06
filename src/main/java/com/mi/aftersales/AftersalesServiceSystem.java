@@ -11,7 +11,6 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 @EnableGracefulResponse
 @SpringBootApplication
 @MapperScan("com.mi.aftersales.mapper")
-
 public class AftersalesServiceSystem {
     public static void main(String[] args) {
         SpringApplication.run(AftersalesServiceSystem.class, args);
