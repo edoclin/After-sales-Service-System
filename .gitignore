@@ -48,3 +48,6 @@ out/
 /gradlew
 /gradlew.bat
 /proxy.bat
+/ops/
+/ops/
+/src/main/resources/application-dev-docker.yaml
