@@ -4,5 +4,3 @@ services:
     build:
       context: .
     image: aftersales-server:1.0.0-alpha
-    environment:
-      - profile=dev-docker
