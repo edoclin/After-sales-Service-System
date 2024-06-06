@@ -9,6 +9,7 @@ services:
       - ./logs/1:/server/bin/logs/
     environment:
       - profile=dev-docker
+      - LOG_HOME=/server/bin
   aftersales-server-2:
     image: aftersales-server:1.0.0-alpha
     ports:
@@ -18,6 +19,7 @@ services:
       - ./logs/2:/server/bin/logs/
     environment:
       - profile=dev-docker
+      - LOG_HOME=/server/bin
   aftersales-server-3:
     image: aftersales-server:1.0.0-alpha
     ports:
@@ -27,6 +29,7 @@ services:
       - ./logs/3:/server/bin/logs/
     environment:
       - profile=dev-docker
+      - LOG_HOME=/server/bin
   aftersales-nginx:
     image: nginx:latest
     ports:
