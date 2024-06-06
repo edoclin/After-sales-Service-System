@@ -11,9 +11,11 @@ public class RedisNamespace {
     private RedisNamespace() {
     }
 
-    public static final String ORDER_LOCK_PREFIX = "order:lock:";
-    public static final String MATERIAL_LOCK_PREFIX = "material:lock:";
+    public static final String ORDER_LOCK_PREFIX = "lock:order:";
+    public static final String MATERIAL_LOCK_PREFIX = "lock:material:";
+    public static final String SPU_CATEGORY_CACHE_LOCK_PREFIX = "lock:spu:category:";
 
     public static final String PENDING_ORDER_PREFIX = "order:pending:";
     public static final String MACHINE_PERSIST_PREFIX = "machine:persist:";
+    public static final String SPU_CATEGORY_CACHE_PREFIX = "spu:category:";
 }
