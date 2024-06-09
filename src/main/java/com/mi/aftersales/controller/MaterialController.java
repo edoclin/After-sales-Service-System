@@ -86,10 +86,9 @@ public class MaterialController {
     }
 
     @PostMapping(path = "/manager/applying")
-    @Operation(summary = "查看申请中的物料（MATERIAL_MANAGER）", description = "查看申请中的物料（MATERIAL_MANAGER）")
+    @Operation(summary = "查看申请中的物料（MATERIAL_MANAGER，按物料查询）", description = "查看申请中的物料（MATERIAL_MANAGER，按物料查询）")
     @CheckLogin
     public PageResult<OrderMaterialVo> listApplyingMaterial(@RequestBody @Valid ConditionQuery query) {
-
         StpUtil.checkRole(EmployeeRoleEnum.MATERIAL_MANAGER.name());
         return orderMaterialService.listOrderMaterial(query);
     }

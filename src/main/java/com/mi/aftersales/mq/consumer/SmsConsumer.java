@@ -4,7 +4,7 @@ package com.mi.aftersales.mq.consumer;
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.text.CharSequenceUtil;
 import cn.hutool.json.JSONUtil;
-import com.mi.aftersales.config.yaml.bean.CustomSmsConfig;
+import com.mi.aftersales.common.yaml.bean.CustomSmsConfig;
 import com.mi.aftersales.entity.SmsLog;
 import com.mi.aftersales.enums.controller.SmsType;
 import com.mi.aftersales.entity.Login;

@@ -17,5 +17,8 @@ public class RedisNamespace {
 
     public static final String PENDING_ORDER_PREFIX = "order:pending:";
     public static final String MACHINE_PERSIST_PREFIX = "machine:persist:";
-    public static final String SPU_CATEGORY_CACHE_PREFIX = "spu:category:";
+    public static final String SMS_PREFIX = "sms:";
+
+    public static final String SPU_CATEGORY_CACHE_PREFIX = "cache:spu:category:";
+    public static final String API_CACHE_PREFIX = "cache:api";
 }

@@ -1,15 +1,17 @@
-package com.mi.aftersales.config.yaml.bean;
+package com.mi.aftersales.common.yaml.bean;
 
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
+import java.util.Map;
+
 /**
  * @author edoclin
  */
 @Component
-@ConfigurationProperties(prefix = "order")
+@ConfigurationProperties(prefix = "oauth")
 @Data
-public class OrderConfig {
-    private Long topN;
+public class OAuthList {
+    private Map<String, OAuthConfig> clients;
 }

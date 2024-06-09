@@ -10,14 +10,15 @@ import cn.hutool.core.text.CharSequenceUtil;
 import cn.hutool.core.util.IdUtil;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.feiniaojin.gracefulresponse.GracefulResponseException;
-import com.mi.aftersales.config.yaml.bean.CustomSmsConfig;
-import com.mi.aftersales.config.yaml.bean.OAuthConfig;
-import com.mi.aftersales.config.yaml.bean.OAuthList;
+import com.mi.aftersales.common.yaml.bean.CustomSmsConfig;
+import com.mi.aftersales.common.yaml.bean.OAuthConfig;
+import com.mi.aftersales.common.yaml.bean.OAuthList;
 import com.mi.aftersales.enums.controller.SmsType;
 import com.mi.aftersales.entity.*;
 import com.mi.aftersales.enums.entity.LoginOAuthSourceEnum;
 import com.mi.aftersales.enums.entity.LoginTypeEnum;
 import com.mi.aftersales.repository.*;
+import com.mi.aftersales.service.AsyncTaskService;
 import com.mi.aftersales.service.LoginService;
 import com.mi.aftersales.pojo.vo.form.LoginBindFormVo;
 import com.mi.aftersales.pojo.vo.form.LoginBySmsFormVo;
@@ -34,6 +35,7 @@ import me.zhyd.oauth.request.AuthMiRequest;
 import me.zhyd.oauth.request.AuthRequest;
 import me.zhyd.oauth.utils.AuthStateUtils;
 import org.dromara.sms4j.api.SmsBlend;
+import org.dromara.sms4j.api.callback.CallBack;
 import org.dromara.sms4j.api.entity.SmsResponse;
 import org.dromara.sms4j.core.factory.SmsFactory;
 import org.slf4j.Logger;
@@ -43,7 +45,11 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
+
+import static com.mi.aftersales.common.RedisNamespace.SMS_PREFIX;
 
 /**
  * @description:
@@ -56,7 +62,8 @@ public class LoginServiceImpl implements LoginService {
 
     private static final Logger log = LoggerFactory.getLogger(LoginServiceImpl.class);
 
-
+    @Resource
+    private AsyncTaskService asyncTaskService;
     /**
      * @description: 三方登录成功状态码
      * @return:
@@ -77,12 +84,6 @@ public class LoginServiceImpl implements LoginService {
     @Resource
     private CustomSmsConfig customSmsConfig;
 
-    @Resource
-    private IEmployeeInfoRepository iEmployeeInfoRepository;
-
-    @Resource
-    private ILoginRoleRepository iLoginRoleRepository;
-
     @Override
     public void checkLogin() {
         // 根据返回值判断是否登录
@@ -96,19 +97,11 @@ public class LoginServiceImpl implements LoginService {
     @Override
     public SmsResultVo sendSmsCode(SendSmsCodeFormVo form) {
         SmsResultVo smsResultVo = new SmsResultVo();
-        RandomGenerator randomGenerator = new RandomGenerator("0123456789", 6);
 
-        String key = "sms:" + form.getMobile();
+        String key = SMS_PREFIX + form.getMobile();
         String smsCode = redisTemplate4Sms.opsForValue().get(key);
         if (CharSequenceUtil.isBlank(smsCode)) {
-            String code = randomGenerator.generate();
-
-            SmsBlend smsBlend = SmsFactory.getSmsBlend(SmsType.LOGIN.getValue());
-            // todo 待处理
-            SmsResponse smsResponse = smsBlend.sendMessage(form.getMobile(), code);
-
-            code += "_" + DateUtil.currentSeconds();
-            redisTemplate4Sms.opsForValue().set(key, code, customSmsConfig.getValidTime(), TimeUnit.SECONDS);
+            sendCode(form.getMobile(), key);
             smsResultVo.setSuccess(true);
         } else {
             // 存在, 判断发送时间
@@ -119,16 +112,22 @@ public class LoginServiceImpl implements LoginService {
                 smsResultVo.setSuccess(false);
                 smsResultVo.setInfo(CharSequenceUtil.format("请{}秒后再尝试!", customSmsConfig.getPeriod() - delta));
             } else {
-                String code = randomGenerator.generate();
-                SmsBlend smsBlend = SmsFactory.getSmsBlend(SmsType.LOGIN.getValue());
-                SmsResponse smsResponse = smsBlend.sendMessage(form.getMobile(), code);
-
-                code += "_" + DateUtil.currentSeconds();
-                redisTemplate4Sms.opsForValue().set(key, code, customSmsConfig.getValidTime(), TimeUnit.SECONDS);
+                sendCode(form.getMobile(), key);
                 smsResultVo.setSuccess(true);
             }
         }
         return smsResultVo;
+    }
+
+    private void sendCode(String mobile, String cacheKey) {
+        RandomGenerator randomGenerator = new RandomGenerator("0123456789", 6);
+
+        String code = randomGenerator.generate();
+        SmsBlend smsBlend = SmsFactory.getSmsBlend(SmsType.LOGIN.getValue());
+        smsBlend.sendMessageAsync(mobile, code, smsResponse -> asyncTaskService.asyncSmsLog(mobile, smsResponse));
+
+        code += "_" + DateUtil.currentSeconds();
+        redisTemplate4Sms.opsForValue().set(cacheKey, code, customSmsConfig.getValidTime(), TimeUnit.SECONDS);
     }
 
     @Override
@@ -280,24 +279,6 @@ public class LoginServiceImpl implements LoginService {
     private void login(Login login) {
         StpUtil.login(login.getLoginId());
 
-        // todo 权限，登录查询太慢
-//        List<String> permissions = new ArrayList<>();
-//        iMiddleLoginPermissionRepository.lambdaQuery().eq(MiddleLoginPermission::getLoginId, login.getLoginId()).list().forEach(middleLoginPermission -> iMiddlePermissionApiRepository.lambdaQuery().eq(MiddlePermissionApi::getPermissionId, middleLoginPermission.getPermissionId()).list().forEach(middlePermissionApi -> {
-//            Api api = iApiRepository.getById(middlePermissionApi.getApiId());
-//
-//            if (BeanUtil.isNotEmpty(api)) {
-//                permissions.add(CharSequenceUtil.format("{}-{}", api.getMethod().name().toUpperCase(), api.getUri()));
-//            }
-//        }));
-//        StpUtil.getSession().set(SaSession.PERMISSION_LIST, permissions);
-
-        ArrayList<String> roles = new ArrayList<>();
-
-        // 默认具有CLIENT角色
-        roles.add(LoginTypeEnum.CLIENT.name());
-        iLoginRoleRepository.lambdaQuery()
-                .eq(LoginRole::getLoginId, login.getLoginId())
-                .list().forEach(loginRole -> roles.add(loginRole.getEmployeeRole().name()));
-        StpUtil.getSession().set(SaSession.ROLE_LIST, roles);
+        asyncTaskService.listLoginPermissions(StpUtil.getSession(), login);
     }
 }

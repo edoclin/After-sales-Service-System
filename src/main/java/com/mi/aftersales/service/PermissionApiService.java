@@ -8,6 +8,6 @@ package com.mi.aftersales.service;
  * @author edoclin
  * @since 2024-05-14
  */
-public interface MiddlePermissionApiService {
+public interface PermissionApiService {
 
 }

@@ -10,7 +10,7 @@ import com.mi.aftersales.pojo.vo.form.LoginPermissionFormVo;
  * @author edoclin
  * @since 2024-05-14
  */
-public interface MiddleLoginPermissionService {
+public interface LoginPermissionService {
     /**
      * 关联用户权限。
      *

@@ -33,7 +33,7 @@ public class OrderMaterialController {
 
 
     @PostMapping(path = "/manager/applying")
-    @Operation(summary = "查看申请中的物料", description = "查看申请中的物料")
+    @Operation(summary = "查看申请中的物料（按申请中的订单查询）", description = "查看申请中的物料（按申请中的订单查询）")
     @CheckLogin
     public PageResult<OrderMaterialGroupVo> listApplyingOrderMaterial(@RequestBody @Valid ConditionQuery query) {
         StpUtil.checkRole(EmployeeRoleEnum.MATERIAL_MANAGER.name());

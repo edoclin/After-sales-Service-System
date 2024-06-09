@@ -4,6 +4,7 @@ import cn.dev33.satoken.stp.StpUtil;
 import com.mi.aftersales.aspect.anno.CheckLogin;
 import com.mi.aftersales.enums.entity.EmployeeRoleEnum;
 import com.mi.aftersales.common.PageResult;
+import com.mi.aftersales.exception.graceful.TransactionalErrorException;
 import com.mi.aftersales.pojo.vo.ClientOrderSimpleVo;
 import com.mi.aftersales.pojo.vo.OrderDetailVo;
 import com.mi.aftersales.pojo.vo.OrderSimple4EngineerVo;
@@ -78,7 +79,7 @@ public class OrderController {
     @GetMapping(path = "/engineer/accept/{orderId}")
     @Operation(summary = "工程师接受工单", description = "工程师接受工单")
     @CheckLogin
-    @Transactional
+    @Transactional(rollbackFor = TransactionalErrorException.class)
     public void engineerAcceptOrder(@PathVariable String orderId) {
         StpUtil.checkRole(EmployeeRoleEnum.ENGINEER.name());
         orderService.acceptOrder(orderId, StpUtil.getLoginIdAsString());

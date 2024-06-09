@@ -36,6 +36,7 @@ public class MqProducer {
 
 class RocketMqSendCallback implements SendCallback {
     private static final Logger log = LoggerFactory.getLogger("MqProducerLog");
+
     @Override
     public void onSuccess(SendResult sendResult) {
         log.info(SendResult.encoderSendResultToJson(sendResult));

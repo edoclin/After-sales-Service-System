@@ -2,11 +2,14 @@ package com.mi.aftersales.util.query;
 
 import cn.hutool.core.annotation.AnnotationUtil;
 import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.text.CharSequenceUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.ReflectUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.feiniaojin.gracefulresponse.GracefulResponseException;
 import com.mi.aftersales.exception.graceful.alias.AliasInvalidFormatException;
 import com.mi.aftersales.util.query.enums.Predicate;
@@ -27,6 +30,10 @@ public class QueryUtil {
     private QueryUtil() {
 
     }
+    public static <T> IPage<T> page(ConditionQuery query) {
+        return new Page<>(query.getCurrent(), query.getLimit());
+    }
+
 
     public static <T> Set<String> columns(Class<T> clazz) {
         HashSet<String> res = new HashSet<>();
@@ -43,7 +50,7 @@ public class QueryUtil {
     }
 
     public static <T> QueryWrapper<T> buildWrapper(ConditionQuery query, Class<T> clazz) {
-        if (BeanUtil.isEmpty(query) || BeanUtil.isEmpty(query.getParams())) {
+        if (BeanUtil.isEmpty(query) || CollUtil.isEmpty(query.getParams())) {
             return buildEmptyQueryWrapper(clazz);
         }
 

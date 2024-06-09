@@ -1,8 +1,8 @@
 package com.mi.aftersales.repository.impl;
 
-import com.mi.aftersales.entity.MiddlePermissionApi;
+import com.mi.aftersales.entity.PermissionApi;
 import com.mi.aftersales.mapper.MiddlePermissionApiMapper;
-import com.mi.aftersales.repository.IMiddlePermissionApiRepository;
+import com.mi.aftersales.repository.IPermissionApiRepository;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.springframework.stereotype.Service;
 
@@ -15,6 +15,6 @@ import org.springframework.stereotype.Service;
  * @since 2024-05-14
  */
 @Service
-public class IMiddlePermissionApiRepositoryImpl extends ServiceImpl<MiddlePermissionApiMapper, MiddlePermissionApi> implements IMiddlePermissionApiRepository {
+public class IPermissionApiRepositoryImpl extends ServiceImpl<MiddlePermissionApiMapper, PermissionApi> implements IPermissionApiRepository {
 
 }

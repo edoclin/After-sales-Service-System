@@ -11,7 +11,7 @@ import lombok.experimental.Accessors;
 
 /**
  * <p>
- * 用户具有权限中间表
+ * 权限具有API中间表
  * </p>
  *
  * @author edoclin
@@ -20,9 +20,9 @@ import lombok.experimental.Accessors;
 @Getter
 @Setter
 @Accessors(chain = true)
-@TableName("t_middle_login_permission")
-@Schema(name = "MiddleLoginPermission", description = "用户具有权限中间表")
-public class MiddleLoginPermission implements Serializable {
+@TableName("t_middle_permission_api")
+@Schema(name = "MiddlePermissionApi", description = "权限具有API中间表")
+public class PermissionApi implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
@@ -47,12 +47,12 @@ public class MiddleLoginPermission implements Serializable {
     private Long deleted;
 
     @Schema(description = "主键")
-    @TableId(value = "id", type = IdType.ASSIGN_UUID)
-    private String id;
-
-    @Schema(description = "用户ID")
-    private String loginId;
+    @TableId(value = "id", type = IdType.AUTO)
+    private Integer id;
 
     @Schema(description = "权限ID")
     private Integer permissionId;
+
+    @Schema(description = "ApiId")
+    private Integer apiId;
 }

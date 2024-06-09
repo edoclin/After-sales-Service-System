@@ -1,6 +1,6 @@
 package com.mi.aftersales.repository;
 
-import com.mi.aftersales.entity.MiddlePermissionApi;
+import com.mi.aftersales.entity.PermissionApi;
 import com.baomidou.mybatisplus.extension.service.IService;
 
 /**
@@ -11,6 +11,6 @@ import com.baomidou.mybatisplus.extension.service.IService;
  * @author edoclin
  * @since 2024-05-14
  */
-public interface IMiddlePermissionApiRepository extends IService<MiddlePermissionApi> {
+public interface IPermissionApiRepository extends IService<PermissionApi> {
 
 }

@@ -7,6 +7,7 @@ import com.mi.aftersales.enums.config.OrderStatusChangeEventEnum;
 import com.mi.aftersales.enums.entity.OrderStatusEnum;
 import com.mi.aftersales.exception.graceful.IllegalOrderIdException;
 import com.mi.aftersales.exception.graceful.IllegalOrderStatusFlowException;
+import com.mi.aftersales.exception.graceful.TransactionalErrorException;
 import com.mi.aftersales.repository.IOrderRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.Message;
@@ -27,7 +28,7 @@ import static com.mi.aftersales.common.StateMachineOrderStatus.*;
  **/
 @WithStateMachine(id = OrderStateMachineBuilder.MACHINE_ID)
 @Slf4j
-@Transactional
+@Transactional(rollbackFor = TransactionalErrorException.class)
 public class OrderEventConfig {
     @Resource
     private IOrderRepository iOrderRepository;

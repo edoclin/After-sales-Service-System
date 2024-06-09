@@ -1,4 +1,4 @@
-package com.mi.aftersales.config.yaml.bean;
+package com.mi.aftersales.common.yaml.bean;
 
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;

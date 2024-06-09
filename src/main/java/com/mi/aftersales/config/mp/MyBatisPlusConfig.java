@@ -35,14 +35,15 @@ public class MyBatisPlusConfig implements MetaObjectHandler, IdentifierGenerator
     private boolean excludeFillEntity(MetaObject metaObject) {
         return
                 (metaObject.getOriginalObject() instanceof Login) ||
-                        (metaObject.getOriginalObject() instanceof MiddleLoginPermission) ||
+                        (metaObject.getOriginalObject() instanceof LoginPermission) ||
                         (metaObject.getOriginalObject() instanceof Permission) ||
-                        (metaObject.getOriginalObject() instanceof MiddlePermissionApi) ||
+                        (metaObject.getOriginalObject() instanceof PermissionApi) ||
                         (metaObject.getOriginalObject() instanceof OrderStatusLog) ||
                         (metaObject.getOriginalObject() instanceof PayOrder) ||
                         (metaObject.getOriginalObject() instanceof OrderUpload) ||
                         (metaObject.getOriginalObject() instanceof MaterialLog) ||
                         (metaObject.getOriginalObject() instanceof SmsLog) ||
+                        (metaObject.getOriginalObject() instanceof LoginRole) ||
                         (metaObject.getOriginalObject() instanceof Api);
     }
 

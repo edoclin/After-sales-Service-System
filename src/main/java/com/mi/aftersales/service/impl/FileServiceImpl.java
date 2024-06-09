@@ -4,7 +4,7 @@ import cn.dev33.satoken.stp.StpUtil;
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.text.CharSequenceUtil;
 import cn.hutool.core.util.IdUtil;
-import com.mi.aftersales.config.yaml.bean.TencentCosConfig;
+import com.mi.aftersales.common.yaml.bean.TencentCosConfig;
 import com.mi.aftersales.entity.File;
 import com.mi.aftersales.exception.graceful.ServerErrorException;
 import com.mi.aftersales.pojo.vo.FileUploadVo;

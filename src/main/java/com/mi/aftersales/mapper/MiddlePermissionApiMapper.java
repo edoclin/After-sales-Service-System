@@ -1,6 +1,6 @@
 package com.mi.aftersales.mapper;
 
-import com.mi.aftersales.entity.MiddlePermissionApi;
+import com.mi.aftersales.entity.PermissionApi;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 
@@ -13,6 +13,6 @@ import org.apache.ibatis.annotations.Mapper;
  * @since 2024-05-14
  */
 @Mapper
-public interface MiddlePermissionApiMapper extends BaseMapper<MiddlePermissionApi> {
+public interface MiddlePermissionApiMapper extends BaseMapper<PermissionApi> {
 
 }

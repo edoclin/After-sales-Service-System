@@ -7,10 +7,10 @@
         <File>${LOG_HOME}/logs/data_log/data_change.log</File>
         <append>true</append>
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <fileNamePattern>${LOG_HOME}/logs/data_log/data_change.%d.%i.log</fileNamePattern>
+            <fileNamePattern>${LOG_HOME}/logs/data_log/data_change.%d.%i.gz</fileNamePattern>
             <maxHistory>90</maxHistory>
             <timeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
-                <maxFileSize>10MB</maxFileSize>
+                <maxFileSize>64MB</maxFileSize>
             </timeBasedFileNamingAndTriggeringPolicy>
         </rollingPolicy>
         <encoder>
@@ -24,10 +24,10 @@
         <File>${LOG_HOME}/logs/mq_log/mq_producer.log</File>
         <append>true</append>
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <fileNamePattern>${LOG_HOME}/logs/mq_log/mq_producer.%d.%i.log</fileNamePattern>
+            <fileNamePattern>${LOG_HOME}/logs/mq_log/mq_producer.%d.%i.gz</fileNamePattern>
             <maxHistory>90</maxHistory>
             <timeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
-                <maxFileSize>10MB</maxFileSize>
+                <maxFileSize>64MB</maxFileSize>
             </timeBasedFileNamingAndTriggeringPolicy>
         </rollingPolicy>
         <encoder>
@@ -41,10 +41,10 @@
         <File>${LOG_HOME}/logs/data_log/mybatis_plus.log</File>
         <append>true</append>
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <fileNamePattern>${LOG_HOME}/logs/data_log/mybatis_plus.%d.%i.log</fileNamePattern>
+            <fileNamePattern>${LOG_HOME}/logs/data_log/mybatis_plus.%d.%i.gz</fileNamePattern>
             <maxHistory>90</maxHistory>
             <timeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
-                <maxFileSize>10MB</maxFileSize>
+                <maxFileSize>64MB</maxFileSize>
             </timeBasedFileNamingAndTriggeringPolicy>
         </rollingPolicy>
         <encoder>
@@ -57,10 +57,10 @@
         <File>${LOG_HOME}/logs/web_log/servlet.log</File>
         <append>true</append>
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <fileNamePattern>${LOG_HOME}/logs/web_log/servlet.%d.%i.log</fileNamePattern>
+            <fileNamePattern>${LOG_HOME}/logs/web_log/servlet.%d.%i.gz</fileNamePattern>
             <maxHistory>90</maxHistory>
             <timeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
-                <maxFileSize>10MB</maxFileSize>
+                <maxFileSize>64MB</maxFileSize>
             </timeBasedFileNamingAndTriggeringPolicy>
         </rollingPolicy>
         <encoder>
@@ -74,10 +74,10 @@
         <File>${LOG_HOME}/logs/mq_log/mq_consumer.log</File>
         <append>true</append>
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <fileNamePattern>${LOG_HOME}/logs/mq_log/mq_consumer.%d.%i.log</fileNamePattern>
+            <fileNamePattern>${LOG_HOME}/logs/mq_log/mq_consumer.%d.%i.gz</fileNamePattern>
             <maxHistory>90</maxHistory>
             <timeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
-                <maxFileSize>10MB</maxFileSize>
+                <maxFileSize>64MB</maxFileSize>
             </timeBasedFileNamingAndTriggeringPolicy>
         </rollingPolicy>
         <encoder>
@@ -95,10 +95,10 @@
             <onMismatch>DENY</onMismatch>
         </filter>
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <fileNamePattern>${LOG_HOME}/logs/error.%d.%i.log</fileNamePattern>
+            <fileNamePattern>${LOG_HOME}/logs/error.%d.%i.gz</fileNamePattern>
             <maxHistory>90</maxHistory>
             <timeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
-                <maxFileSize>10MB</maxFileSize>
+                <maxFileSize>64MB</maxFileSize>
             </timeBasedFileNamingAndTriggeringPolicy>
         </rollingPolicy>
         <encoder>
@@ -107,26 +107,23 @@
         </encoder>
     </appender>
 
-
     <!--控制台日志， 控制台输出 -->
     <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
-<!--        <filter class="ch.qos.logback.classic.filter.LevelFilter">-->
-<!--            <level>INFO</level>-->
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>INFO</level>
 <!--            <onMatch>ACCEPT</onMatch>-->
 <!--            <onMismatch>DENY</onMismatch>-->
-<!--        </filter>-->
+        </filter>
         <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
-            <!--格式化输出：%d表示日期，%thread表示线程名，%-5level：级别从左显示5个字符宽度,%msg：日志消息，%n是换行符-->
             <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{50} - %msg%n</pattern>
         </encoder>
     </appender>
 
 
     <springProfile name="dev">
-<!--        <root level="info">-->
-<!--            <appender-ref ref="STDOUT"/>-->
-<!--            &lt;!&ndash;            <appender-ref ref="DataChangeRecorderAppender"/>&ndash;&gt;-->
-<!--        </root>-->
+        <root level="info">
+            <appender-ref ref="STDOUT"/>
+        </root>
         <root level="error">
             <appender-ref ref="ErrorAppender"/>
         </root>
@@ -152,7 +149,6 @@
     <springProfile name="dev-docker">
         <root level="info">
             <appender-ref ref="STDOUT"/>
-            <!--            <appender-ref ref="DataChangeRecorderAppender"/>-->
         </root>
         <root level="error">
             <appender-ref ref="ErrorAppender"/>
@@ -169,7 +165,7 @@
         <logger name="MqProducerLog" level="INFO">
             <appender-ref ref="MqProducerAppender"/>
         </logger>
-        <logger name="com.mi.aftersales.mq.consumer" level="debug">
+        <logger name="com.mi.aftersales.mq.consumer" level="DEBUG">
             <appender-ref ref="RocketMqConsumerAppender"/>
         </logger>
         <logger name="springframework.boot.autoconfigure" level="WARN"/>

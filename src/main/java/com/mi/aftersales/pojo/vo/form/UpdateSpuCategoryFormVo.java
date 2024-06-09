@@ -7,6 +7,7 @@ import lombok.experimental.Accessors;
 import org.hibernate.validator.constraints.Length;
 
 import javax.validation.constraints.NotEmpty;
+import javax.validation.constraints.NotNull;
 import java.io.Serializable;
 
 /**
@@ -33,10 +34,10 @@ public class UpdateSpuCategoryFormVo implements Serializable {
     private Integer parentCategoryId;
 
     @Schema(description = "分类编号")
-    @NotEmpty(message = "分类Id不能为空")
+    @NotNull(message = "分类Id不能为空")
     private Integer categoryId;
 
-    @NotEmpty(message = "验证码不能为空")
+    @NotEmpty(message = "分类名称不能为空")
     @Length(min = 1, max = 256, message = "")
     @Schema(description = "分类名称")
     private String categoryName;

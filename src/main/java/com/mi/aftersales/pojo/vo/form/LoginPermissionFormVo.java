@@ -16,11 +16,11 @@ import javax.validation.constraints.NotEmpty;
 @Accessors(chain = true)
 @Schema(title = "关联用户权限", description = "关联用户权限")
 public class LoginPermissionFormVo {
-    @Schema(description = "用户ID")
-    @NotEmpty(message = "用户ID不能为空")
+    @Schema(description = "用户Id")
+    @NotEmpty(message = "用户Id不能为空")
     private String loginId;
 
-    @Schema(description = "权限ID")
-    @NotEmpty(message = "权限ID不能为空")
+    @Schema(description = "权限Id")
+    @NotEmpty(message = "权限Id不能为空")
     private String permissionId;
 }
