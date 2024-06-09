@@ -2,12 +2,14 @@ package com.mi.aftersales.config;
 
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.bean.copier.CopyOptions;
+import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.text.CharSequenceUtil;
 import cn.hutool.core.util.ClassUtil;
-import com.mi.aftersales.config.yaml.bean.InitConfig;
+import com.mi.aftersales.common.yaml.bean.InitConfig;
 import com.mi.aftersales.controller.PlaceholderController;
 import com.mi.aftersales.entity.*;
 import com.mi.aftersales.enums.entity.LoginTypeEnum;
+import com.mi.aftersales.exception.graceful.TransactionalErrorException;
 import com.mi.aftersales.repository.*;
 import com.mi.aftersales.util.ApiUtil;
 import org.redisson.api.RLock;
@@ -17,9 +19,12 @@ import org.springframework.boot.ApplicationRunner;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.scheduling.annotation.EnableAsync;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import java.util.ArrayList;
+
+import static com.mi.aftersales.common.RedisNamespace.API_CACHE_PREFIX;
 
 /**
  * @description: 启动初始化配置
@@ -50,10 +55,13 @@ public class InitApplicationRunner implements ApplicationRunner {
     private IPermissionRepository iPermissionRepository;
 
     @Resource
-    private IMiddlePermissionApiRepository iMiddlePermissionApiRepository;
+    private IPermissionApiRepository iPermissionApiRepository;
 
     @Resource
-    private IMiddleLoginPermissionRepository iMiddleLoginPermissionRepository;
+    private ILoginPermissionRepository iLoginPermissionRepository;
+
+    @Resource
+    private ILoginRoleRepository iLoginRoleRepository;
 
     /**
      * @description: 缓存API列表
@@ -62,11 +70,10 @@ public class InitApplicationRunner implements ApplicationRunner {
      * @created: 2024/5/16 21:23
      **/
     public void cachedApis() {
-
-        redisTemplate.delete("apis:cached");
+        redisTemplate.delete(API_CACHE_PREFIX);
         ArrayList<String> apis = new ArrayList<>();
         iApiRepository.list().forEach(api -> apis.add(CharSequenceUtil.format("{}-{}", api.getMethod().name().toUpperCase(), api.getUri())));
-        redisTemplate.opsForList().leftPushAll("apis:cached", apis);
+        redisTemplate.opsForList().leftPushAll(API_CACHE_PREFIX, apis);
     }
 
     /**
@@ -88,6 +95,8 @@ public class InitApplicationRunner implements ApplicationRunner {
 
 
     private void init() {
+
+        // 用户初始化
         Permission permission = iPermissionRepository.lambdaQuery().eq(Permission::getPermissionKey, initConfig.getPermissionKey()).eq(Permission::getPermissionName, initConfig.getPermissionName()).one();
         // 创建默认权限
         if (BeanUtil.isEmpty(permission)) {
@@ -100,12 +109,12 @@ public class InitApplicationRunner implements ApplicationRunner {
         Permission finalPermission = permission;
         // 默认权限管理所有API
         iApiRepository.list().forEach(api -> {
-            MiddlePermissionApi one = iMiddlePermissionApiRepository.lambdaQuery().eq(MiddlePermissionApi::getPermissionId, finalPermission.getPermissionId()).eq(MiddlePermissionApi::getApiId, api.getApiId()).one();
+            PermissionApi one = iPermissionApiRepository.lambdaQuery().eq(PermissionApi::getPermissionId, finalPermission.getPermissionId()).eq(PermissionApi::getApiId, api.getApiId()).one();
             if (BeanUtil.isEmpty(one)) {
-                one = new MiddlePermissionApi();
+                one = new PermissionApi();
                 one.setPermissionId(finalPermission.getPermissionId());
                 one.setApiId(api.getApiId());
-                iMiddlePermissionApiRepository.save(one);
+                iPermissionApiRepository.save(one);
             }
         });
 
@@ -118,18 +127,32 @@ public class InitApplicationRunner implements ApplicationRunner {
             iLoginRepository.save(login);
         }
 
-        MiddleLoginPermission one = iMiddleLoginPermissionRepository.lambdaQuery().eq(MiddleLoginPermission::getLoginId, initConfig.getLoginMobile()).eq(MiddleLoginPermission::getPermissionId, finalPermission.getPermissionId()).one();
+        LoginPermission one = iLoginPermissionRepository.lambdaQuery().eq(LoginPermission::getLoginId, initConfig.getLoginMobile()).eq(LoginPermission::getPermissionId, finalPermission.getPermissionId()).one();
 
         if (BeanUtil.isEmpty(one)) {
-            one = new MiddleLoginPermission();
+            one = new LoginPermission();
             one.setLoginId(login.getLoginId());
             one.setPermissionId(finalPermission.getPermissionId());
-            iMiddleLoginPermissionRepository.save(one);
+            iLoginPermissionRepository.save(one);
         }
+
+        if (CollUtil.isEmpty(iLoginRoleRepository.lambdaQuery().eq(LoginRole::getLoginId, login.getLoginId()).list())) {
+            String loginId = login.getLoginId();
+            initConfig.getRoleList().forEach(role -> {
+                LoginRole loginRole = new LoginRole();
+                loginRole.setLoginId(loginId)
+                        .setCreatedId(loginId)
+                        .setEmployeeRole(role);
+                iLoginRoleRepository.save(loginRole);
+            });
+        }
+
+
     }
 
     @Override
-    public void run(ApplicationArguments args) throws Exception {
+    @Transactional(rollbackFor = TransactionalErrorException.class)
+    public void run(ApplicationArguments args) {
         RLock fairLock = redissonClient.getFairLock("init");
         if (fairLock.tryLock()) {
 //            initApiTable();

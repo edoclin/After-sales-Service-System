@@ -10,7 +10,7 @@ import cn.hutool.core.util.ArrayUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.feiniaojin.gracefulresponse.GracefulResponseException;
-import com.mi.aftersales.config.yaml.bean.OrderConfig;
+import com.mi.aftersales.common.yaml.bean.OrderConfig;
 import com.mi.aftersales.entity.*;
 import com.mi.aftersales.enums.config.OrderStatusChangeEventEnum;
 import com.mi.aftersales.enums.entity.*;
@@ -122,6 +122,9 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public void sendSms(String orderId) {
+
+
+
         mqProducer.asyncSend(ROCKETMQ_TOPIC_4_SMS, orderId);
     }
 
@@ -225,7 +228,7 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    @Transactional
+    @Transactional(rollbackFor = TransactionalErrorException.class)
     public void createOrder(ClientOrderFormVo form, String loginId) {
         Fapiao fapiao = iFapiaoRepository.getById(form.getFapiaoId());
         if (BeanUtil.isEmpty(fapiao) || !CharSequenceUtil.equals(fapiao.getCreatedId(), loginId)) {
@@ -485,7 +488,7 @@ public class OrderServiceImpl implements OrderService {
      * @created: 2024/5/29 21:01
      **/
     @Override
-    @Transactional
+    @Transactional(rollbackFor = TransactionalErrorException.class)
     public void engineerUploadImage(EngineerUploadFormVo form) {
         Order order = iOrderRepository.getById(form.getOrderId());
 
@@ -523,7 +526,7 @@ public class OrderServiceImpl implements OrderService {
      * @created: 2024/6/2 15:21
      **/
     @Override
-    @Transactional
+    @Transactional(rollbackFor = TransactionalErrorException.class)
     public void startChecking(String orderId, String loginId) {
         Order order = iOrderRepository.getById(orderId);
 
@@ -557,7 +560,7 @@ public class OrderServiceImpl implements OrderService {
      * @created: 2024/6/2 15:21
      **/
     @Override
-    @Transactional
+    @Transactional(rollbackFor = TransactionalErrorException.class)
     public void uploadFaultDescription(FaultDescriptionFormVo form, String loginId) {
         Order order = iOrderRepository.getById(form.getOrderId());
         if (BeanUtil.isEmpty(order)) {
@@ -586,7 +589,7 @@ public class OrderServiceImpl implements OrderService {
      * @created: 2024/6/2 15:22
      **/
     @Override
-    @Transactional
+    @Transactional(rollbackFor = TransactionalErrorException.class)
     public void confirmFee(OrderFeeConfirmFormVo form, String loginId) {
         Order order = iOrderRepository.getById(form.getOrderId());
         if (BeanUtil.isEmpty(order)) {
@@ -644,7 +647,7 @@ public class OrderServiceImpl implements OrderService {
      * @created: 2024/6/2 15:22
      **/
     @Override
-    @Transactional
+    @Transactional(rollbackFor = TransactionalErrorException.class)
     public void clientConfirmFee(String orderId, String loginId) {
         Order order = iOrderRepository.getById(orderId);
         if (BeanUtil.isEmpty(order)) {
@@ -674,7 +677,7 @@ public class OrderServiceImpl implements OrderService {
      * @created: 2024/6/2 15:22
      **/
     @Override
-    @Transactional
+    @Transactional(rollbackFor = TransactionalErrorException.class)
     public void clientRejectRepair(String orderId, String loginId) {
         Order order = iOrderRepository.getById(orderId);
         if (BeanUtil.isEmpty(order)) {
@@ -706,7 +709,7 @@ public class OrderServiceImpl implements OrderService {
      * @created: 2024/6/2 15:22
      **/
     @Override
-    @Transactional
+    @Transactional(rollbackFor = TransactionalErrorException.class)
     public void applyMaterial(String orderId, String loginId) {
         Order order = iOrderRepository.getById(orderId);
         if (BeanUtil.isEmpty(order)) {
@@ -739,7 +742,7 @@ public class OrderServiceImpl implements OrderService {
      * @created: 2024/6/2 15:22
      **/
     @Override
-    @Transactional
+    @Transactional(rollbackFor = TransactionalErrorException.class)
     public void distributeMaterial(String orderId, String loginId) {
         // 当工单状态 == MATERIAL_APPLY时，库管开始处理申请
 

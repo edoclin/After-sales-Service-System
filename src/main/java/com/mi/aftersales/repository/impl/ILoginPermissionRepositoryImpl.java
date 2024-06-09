@@ -1,8 +1,8 @@
 package com.mi.aftersales.repository.impl;
 
-import com.mi.aftersales.entity.MiddleLoginPermission;
+import com.mi.aftersales.entity.LoginPermission;
 import com.mi.aftersales.mapper.MiddleLoginPermissionMapper;
-import com.mi.aftersales.repository.IMiddleLoginPermissionRepository;
+import com.mi.aftersales.repository.ILoginPermissionRepository;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.springframework.stereotype.Service;
 
@@ -15,5 +15,5 @@ import org.springframework.stereotype.Service;
  * @since 2024-05-14
  */
 @Service
-public class IMiddleLoginPermissionRepositoryImpl extends ServiceImpl<MiddleLoginPermissionMapper, MiddleLoginPermission> implements IMiddleLoginPermissionRepository {
+public class ILoginPermissionRepositoryImpl extends ServiceImpl<MiddleLoginPermissionMapper, LoginPermission> implements ILoginPermissionRepository {
 }

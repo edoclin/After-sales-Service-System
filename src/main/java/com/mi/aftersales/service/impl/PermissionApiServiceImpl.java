@@ -1,6 +1,6 @@
 package com.mi.aftersales.service.impl;
 
-import com.mi.aftersales.service.MiddlePermissionApiService;
+import com.mi.aftersales.service.PermissionApiService;
 import org.springframework.stereotype.Service;
 
 /**
@@ -12,6 +12,6 @@ import org.springframework.stereotype.Service;
  * @since 2024-05-14
  */
 @Service
-public class MiddlePermissionApiServiceImpl implements MiddlePermissionApiService {
+public class PermissionApiServiceImpl implements PermissionApiService {
 
 }
