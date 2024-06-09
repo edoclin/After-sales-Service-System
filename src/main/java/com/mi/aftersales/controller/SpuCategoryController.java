@@ -1,10 +1,13 @@
 package com.mi.aftersales.controller;
 
+import com.mi.aftersales.common.PageResult;
 import com.mi.aftersales.pojo.vo.SpuCategory4ClientVo;
+import com.mi.aftersales.pojo.vo.SpuCategoryVo4Manager;
 import com.mi.aftersales.pojo.vo.form.SpuCategoryFormVo;
 import com.mi.aftersales.pojo.vo.form.SpuCategoryVisibleSetFormVo;
 import com.mi.aftersales.pojo.vo.form.UpdateSpuCategoryFormVo;
 import com.mi.aftersales.service.SpuCategoryService;
+import com.mi.aftersales.util.query.ConditionQuery;
 import io.swagger.v3.oas.annotations.Operation;
 import org.springframework.web.bind.annotation.*;
 
@@ -38,6 +41,13 @@ public class SpuCategoryController {
     public void poutSpuCategory(@RequestBody @Valid UpdateSpuCategoryFormVo form) {
         spuCategoryService.updateSpuCategory(form);
     }
+
+    @GetMapping(path = "/manager")
+    @Operation(summary = "Spu分类目录（管理员）", description = "Spu分类目录（管理员）")
+    public PageResult<SpuCategoryVo4Manager> listSpuCategoryByCondition(@RequestBody @Valid ConditionQuery query) {
+        return spuCategoryService.listSpuCategory(query);
+    }
+
 
     @GetMapping(path = "/client")
     @Operation(summary = "Spu分类目录", description = "Spu分类目录")

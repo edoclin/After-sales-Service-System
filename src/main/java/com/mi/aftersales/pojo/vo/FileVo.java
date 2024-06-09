@@ -16,7 +16,7 @@ import lombok.experimental.Accessors;
 @Schema(title = "客户端展示文件", description = "客户端展示文件")
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 public class FileVo {
-    @Schema(description = "文件ID")
+    @Schema(description = "文件Id")
     private String fileId;
     @Schema(description = "访问路径")
     private String url;

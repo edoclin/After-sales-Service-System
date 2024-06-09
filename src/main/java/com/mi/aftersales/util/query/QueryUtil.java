@@ -106,7 +106,6 @@ public class QueryUtil {
                         wrapper = wrapper.le(underlineColumn, queryParam.getValue());
                     }
                 }
-                default -> throw new AliasInvalidFormatException();
             }
             switch (queryParam.getOrderBy()) {
                 case ASC -> wrapper = wrapper.orderByAsc(underlineColumn);

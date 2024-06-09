@@ -7,6 +7,7 @@ import cn.hutool.core.util.IdUtil;
 import com.mi.aftersales.common.yaml.bean.TencentCosConfig;
 import com.mi.aftersales.entity.File;
 import com.mi.aftersales.exception.graceful.ServerErrorException;
+import com.mi.aftersales.exception.graceful.alias.AliasUploadSizeExceededException;
 import com.mi.aftersales.pojo.vo.FileUploadVo;
 import com.mi.aftersales.pojo.vo.form.FileFormVo;
 import com.mi.aftersales.repository.IFileRepository;
@@ -20,6 +21,7 @@ import com.qcloud.cos.model.UploadResult;
 import com.qcloud.cos.region.Region;
 import com.qcloud.cos.transfer.TransferManager;
 import net.coobird.thumbnailator.Thumbnails;
+import org.apache.tomcat.util.http.fileupload.impl.FileSizeLimitExceededException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -72,24 +74,34 @@ public class FileServiceImpl implements FileService {
         COSCredentials cred = new BasicCOSCredentials(cosConfig.getSecretId(), cosConfig.getSecretKey());
         COSClient cosClient = new COSClient(cred, clientConfig);
         TransferManager transferManager = new TransferManager(cosClient);
-
+        java.io.File localFile = null;
+        java.io.File uploadFile = null;
         try {
 
             for (MultipartFile file : files) {
-
                 String key = CharSequenceUtil.format("{}_{}", Long.toHexString(IdUtil.getSnowflakeNextId()), file.getOriginalFilename());
-                java.io.File localFile = new java.io.File(cosConfig.getTempPath(), key);
+                localFile = new java.io.File(cosConfig.getTempPath(), key);
                 file.transferTo(localFile);
+                String fileType = FileUtil.getType(localFile);
 
-                java.io.File uploadFile = new java.io.File(cosConfig.getTempPath(), "zip_" + key);
-                Thumbnails.of(localFile).scale(.1f).outputQuality(.35f).toFile(uploadFile);
+                if (fileType.contains(".jpg") || fileType.contains(".png") || fileType.contains(".gif")) {
+                    if (FileUtil.size(localFile) > 2 * 1024 * 1024) {
+                        throw new AliasUploadSizeExceededException();
+                    }
+                    uploadFile = new java.io.File(cosConfig.getTempPath(), "zip_" + key);
+                    Thumbnails.of(localFile).scale(.1f).outputQuality(.35f).toFile(uploadFile);
+                } else {
+                    // 未压缩
+                    uploadFile = localFile;
+                }
+
                 PutObjectRequest putObjectRequest = new PutObjectRequest(cosConfig.getBucketName(), cosConfig.getPrefix() + key, uploadFile);
                 UploadResult uploadResult = transferManager.upload(putObjectRequest).waitForUploadResult();
                 fileFormVo.getKeys().add(uploadResult.getKey());
+
                 if (Boolean.FALSE.equals(FileUtil.del(localFile)) || Boolean.FALSE.equals(FileUtil.del(uploadFile))) {
                     log.warn("缓存文件删除失败：{}", key);
                 }
-
             }
         } catch (IOException e) {
             log.error("文件转换失败！");
@@ -100,6 +112,10 @@ public class FileServiceImpl implements FileService {
             log.error(e.getMessage());
             Thread.currentThread().interrupt();
             throw new ServerErrorException();
+        } finally {
+            // 确保文件释放
+            FileUtil.del(localFile);
+            FileUtil.del(uploadFile);
         }
         return generateFileIds(fileFormVo);
     }

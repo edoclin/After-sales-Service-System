@@ -13,12 +13,12 @@ import lombok.experimental.Accessors;
 @Getter
 @Setter
 @Accessors(chain = true)
-@Schema(title = "商品SKU信息（客户）", description = "商品SKU信息（客户）")
+@Schema(title = "商品Sku信息（客户）", description = "商品Sku信息（客户）")
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 public class ClientSkuVo {
-    @Schema(description = "商品SPU_ID")
+    @Schema(description = "商品SpuId")
     private String spuId;
-    @Schema(description = "商品SkU_ID")
+    @Schema(description = "商品SkuId")
     private String skuId;
     @Schema(description = "商品名称")
     private String skuDisplayName;

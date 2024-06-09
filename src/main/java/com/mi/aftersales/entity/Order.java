@@ -31,7 +31,7 @@ public class Order implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
-    @Schema(description = "工单ID")
+    @Schema(description = "工单Id")
     @TableId(value = "order_id", type = IdType.ASSIGN_UUID)
     @EnableQuery
     private String orderId;
@@ -58,11 +58,14 @@ public class Order implements Serializable {
     @TableLogic
     private Long deleted;
 
-    @Schema(description = "最小销售单元ID(商品)")
+    @Schema(description = "SkuId(商品)")
     private String skuId;
 
-    @Schema(description = "发票ID")
+    @Schema(description = "发票Id")
     private String fapiaoId;
+
+    @Schema(description = "联系地址Id")
+    private String addressId;
 
     @Schema(description = "商品序列号")
     @EnableQuery

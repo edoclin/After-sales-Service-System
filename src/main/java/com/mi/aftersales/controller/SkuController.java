@@ -50,8 +50,8 @@ public class SkuController {
 
     @PostMapping(path = "/client/{spuId}")
     @Operation(summary = "客户查询商品Sku", description = "客户查询商品Sku")
-    public PageResult<ClientSkuVo> list4Client(@RequestBody @Valid ConditionQuery form, @PathVariable String spuId) {
-        return skuService.listClientSku(form, spuId);
+    public PageResult<ClientSkuVo> list4Client(@RequestBody @Valid ConditionQuery query, @PathVariable String spuId) {
+        return skuService.listClientSku(query, spuId);
     }
 
     @PostMapping(path = "/manager/query")

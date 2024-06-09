@@ -16,9 +16,9 @@ import lombok.experimental.Accessors;
 @Schema(title = "商品信息（管理员）", description = "商品信息（管理员）")
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 public class SpuVo {
-    @Schema(description = "商品ID")
+    @Schema(description = "商品Id")
     private String spuId;
-    @Schema(description = "分类ID")
+    @Schema(description = "分类Id")
     private String categoryId;
     @Schema(description = "商品名称")
     private String spuName;

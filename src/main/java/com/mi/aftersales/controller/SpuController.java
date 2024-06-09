@@ -50,8 +50,8 @@ public class SpuController {
     @PostMapping(path = "/client/{categoryId}")
     @Operation(summary = "客户查询商品Spu By 分类Id", description = "客户查询商品Spu By 分类Id")
     @Parameter(name = "categoryId", description = "所属分类", example = "1", required = true)
-    public PageResult<ClientSpuVo> list4Client(@RequestBody @Valid ConditionQuery form, @PathVariable Integer categoryId) {
-        return spuService.listClientSpu(form, categoryId);
+    public PageResult<ClientSpuVo> list4Client(@RequestBody @Valid ConditionQuery query, @PathVariable Integer categoryId) {
+        return spuService.listClientSpu(query, categoryId);
     }
 
     @PostMapping(path = "/list")

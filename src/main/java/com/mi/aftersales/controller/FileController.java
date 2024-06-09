@@ -38,7 +38,6 @@ public class FileController {
     @PostMapping(path = "/upload/by-server")
     @CheckLogin
     @Operation(summary = "上传到服务器再上传到COS", description = "上传到服务器再上传到COS")
-    @Parameter(name = "files", description = "二进制文件数组")
     public List<FileUploadVo> uploadByServer(@RequestBody MultipartFile[] files) {
         return fileService.uploadByServer(files);
     }
