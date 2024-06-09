@@ -124,7 +124,6 @@ public class OrderServiceImpl implements OrderService {
     public void sendSms(String orderId) {
 
 
-
         mqProducer.asyncSend(ROCKETMQ_TOPIC_4_SMS, orderId);
     }
 
@@ -907,8 +906,16 @@ public class OrderServiceImpl implements OrderService {
             throw new IllegalOrderIdException();
         }
 
-        if (CollUtil.isNotEmpty(iOrderUploadRepository.lambdaQuery().eq(OrderUpload::getOrderId, form.getOrderId()).eq(OrderUpload::getUploaderType, OrderUploaderTypeEnum.ENGINEER).list())) {
-            throw new GracefulResponseException("已完成文件上传！");
+        OrderUpload upload = iOrderUploadRepository
+                .lambdaQuery()
+                .eq(OrderUpload::getOrderId, form.getOrderId())
+                .eq(OrderUpload::getUploaderType, OrderUploaderTypeEnum.ENGINEER)
+                .eq(OrderUpload::getFileType, OrderUploadFileTypeEnum.VIDEO)
+                .one();
+
+
+        if (BeanUtil.isNotEmpty(upload)) {
+            throw new GracefulResponseException("请勿重复上传！");
         }
 
         if (!CharSequenceUtil.equals(order.getEngineerLoginId(), StpUtil.getLoginIdAsString())) {
@@ -920,7 +927,11 @@ public class OrderServiceImpl implements OrderService {
         }
 
         OrderUpload orderUpload = new OrderUpload();
-        orderUpload.setUploaderType(OrderUploaderTypeEnum.ENGINEER).setOrderId(form.getOrderId()).setFileId(form.getFileIds()[0]).setFileType(OrderUploadFileTypeEnum.VIDEO);
+        orderUpload
+                .setUploaderType(OrderUploaderTypeEnum.ENGINEER)
+                .setOrderId(form.getOrderId())
+                .setFileId(form.getFileIds()[0])
+                .setFileType(OrderUploadFileTypeEnum.VIDEO);
 
         try {
             iOrderUploadRepository.save(orderUpload);

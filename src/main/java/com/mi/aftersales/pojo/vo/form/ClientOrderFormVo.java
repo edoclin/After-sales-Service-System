@@ -21,9 +21,13 @@ public class ClientOrderFormVo {
     @NotEmpty(message = "商品不能为空")
     private String skuId;
 
-    @Schema(description = "发票ID")
-    @NotEmpty(message = "发票ID不能为空")
+    @Schema(description = "发票Id")
+    @NotEmpty(message = "发票Id不能为空")
     private String fapiaoId;
+
+    @Schema(description = "联系地址Id")
+    @NotEmpty(message = "联系地址Id不能为空")
+    private String addressId;
 
     @Schema(description = "商品序列号")
     private String sn;

@@ -1,17 +1,25 @@
 package com.mi.aftersales.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.bean.copier.CopyOptions;
 import cn.hutool.core.collection.CollUtil;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.feiniaojin.gracefulresponse.GracefulResponseException;
+import com.mi.aftersales.common.PageResult;
 import com.mi.aftersales.entity.SpuCategory;
 import com.mi.aftersales.exception.graceful.IllegalSpuCategoryIdException;
 import com.mi.aftersales.exception.graceful.ServerErrorException;
 import com.mi.aftersales.pojo.vo.SpuCategory4ClientVo;
+import com.mi.aftersales.pojo.vo.SpuCategoryVo4Manager;
 import com.mi.aftersales.pojo.vo.form.SpuCategoryFormVo;
 import com.mi.aftersales.pojo.vo.form.SpuCategoryVisibleSetFormVo;
 import com.mi.aftersales.pojo.vo.form.UpdateSpuCategoryFormVo;
 import com.mi.aftersales.repository.ISpuCategoryRepository;
 import com.mi.aftersales.service.SpuCategoryService;
+import com.mi.aftersales.util.DateUtil;
+import com.mi.aftersales.util.query.ConditionQuery;
+import com.mi.aftersales.util.query.QueryUtil;
+import com.mi.aftersales.util.view.ViewUtil;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -53,7 +61,7 @@ public class SpuCategoryServiceImpl implements SpuCategoryService {
         BeanUtil.copyProperties(form, spuCategory);
 
         iSpuCategoryRepository.save(spuCategory);
-
+        cleanSpuCategoryCache();
     }
 
     @Override
@@ -62,9 +70,28 @@ public class SpuCategoryServiceImpl implements SpuCategoryService {
             throw new IllegalSpuCategoryIdException();
         }
         SpuCategory spuCategory = new SpuCategory();
-        BeanUtil.copyProperties(form, spuCategory);
+        BeanUtil.copyProperties(form, spuCategory, CopyOptions.create().ignoreNullValue());
 
-        iSpuCategoryRepository.save(spuCategory);
+        iSpuCategoryRepository.updateById(spuCategory);
+        cleanSpuCategoryCache();
+    }
+
+    @Override
+    public PageResult<SpuCategoryVo4Manager> listSpuCategory(ConditionQuery query) {
+        PageResult<SpuCategoryVo4Manager> result = new PageResult<>();
+
+        result.setDataColumns(ViewUtil.dataColumns(SpuCategoryVo4Manager.class));
+
+        QueryWrapper<SpuCategory> wrapper = QueryUtil.buildWrapper(query, SpuCategory.class);
+        result.setTotal(iSpuCategoryRepository.count(wrapper));
+        iSpuCategoryRepository.page(QueryUtil.page(query), wrapper).getRecords().forEach(spuCategory -> {
+            SpuCategoryVo4Manager item = new SpuCategoryVo4Manager();
+
+            BeanUtil.copyProperties(spuCategory, item, DateUtil.copyDate2yyyyMMddHHmm());
+
+            result.getData().add(item);
+        });
+        return result;
     }
 
     @Override
@@ -78,9 +105,8 @@ public class SpuCategoryServiceImpl implements SpuCategoryService {
         }
 
 
-        if (Boolean.FALSE.equals(iSpuCategoryRepository.removeById(categoryId))) {
-            throw new ServerErrorException();
-        }
+        iSpuCategoryRepository.removeById(categoryId);
+        cleanSpuCategoryCache();
     }
 
     @Override
@@ -131,4 +157,7 @@ public class SpuCategoryServiceImpl implements SpuCategoryService {
         return redisTemplate.opsForList().range(key, 0, -1);
     }
 
+    public void cleanSpuCategoryCache() {
+        redisTemplate.delete(SPU_CATEGORY_CACHE_PREFIX);
+    }
 }

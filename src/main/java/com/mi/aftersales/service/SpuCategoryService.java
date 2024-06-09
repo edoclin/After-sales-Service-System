@@ -1,9 +1,12 @@
 package com.mi.aftersales.service;
 
+import com.mi.aftersales.common.PageResult;
+import com.mi.aftersales.pojo.vo.SpuCategoryVo4Manager;
 import com.mi.aftersales.pojo.vo.form.SpuCategoryFormVo;
 import com.mi.aftersales.pojo.vo.form.SpuCategoryVisibleSetFormVo;
 import com.mi.aftersales.pojo.vo.SpuCategory4ClientVo;
 import com.mi.aftersales.pojo.vo.form.UpdateSpuCategoryFormVo;
+import com.mi.aftersales.util.query.ConditionQuery;
 
 import java.util.List;
 
@@ -24,6 +27,8 @@ public interface SpuCategoryService {
     void addSpuCategory(SpuCategoryFormVo form);
 
     void updateSpuCategory(UpdateSpuCategoryFormVo form);
+
+    PageResult<SpuCategoryVo4Manager> listSpuCategory(ConditionQuery query);
 
     void deleteSpuCategoryById(Integer categoryId);
 
