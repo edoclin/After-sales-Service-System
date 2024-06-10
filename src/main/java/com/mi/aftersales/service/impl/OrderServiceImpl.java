@@ -73,6 +73,8 @@ public class OrderServiceImpl implements OrderService {
     @Resource
     private IMaterialRepository iMaterialRepository;
 
+    @Resource
+    private IAddressRepository iAddressRepository;
 
     @Resource(name = "orderRedisPersister")
     private StateMachinePersister<OrderStatusEnum, OrderStatusChangeEventEnum, String> orderRedisPersister;
@@ -240,6 +242,10 @@ public class OrderServiceImpl implements OrderService {
             throw new IllegalSkuIdException();
         }
 
+        if (BeanUtil.isEmpty(iAddressRepository.getById(form.getAddressId()))) {
+            throw new IllegalAddressIdException();
+        }
+
         Spu spu = iSpuRepository.getById(sku.getSpuId());
 
         if (form.getFileIds().length > 3) {
@@ -311,6 +317,11 @@ public class OrderServiceImpl implements OrderService {
                 if (BeanUtil.isEmpty(byId)) {
                     throw new IllegalFileIdException();
                 }
+
+                if (BeanUtil.isEmpty(iOrderUploadRepository.getById(fileId))) {
+                    throw new DuplicateOrderUploadKeyException();
+                }
+
                 OrderUpload orderUpload = new OrderUpload();
                 orderUpload.setUploaderType(OrderUploaderTypeEnum.CLIENT);
                 orderUpload.setOrderId(order.getOrderId());
@@ -510,7 +521,13 @@ public class OrderServiceImpl implements OrderService {
             if (BeanUtil.isEmpty(byId)) {
                 throw new IllegalFileIdException();
             }
+
+            if (BeanUtil.isEmpty(iOrderUploadRepository.getById(fileId))) {
+                throw new DuplicateOrderUploadKeyException();
+            }
+
             OrderUpload orderUpload = new OrderUpload().setFileId(fileId).setUploaderType(OrderUploaderTypeEnum.ENGINEER).setOrderId(order.getOrderId()).setFileType(OrderUploadFileTypeEnum.IMAGE).setCreatedId(StpUtil.getLoginIdAsString());
+
             batch.add(orderUpload);
         }
 
@@ -915,7 +932,9 @@ public class OrderServiceImpl implements OrderService {
 
 
         if (BeanUtil.isNotEmpty(upload)) {
-            throw new GracefulResponseException("请勿重复上传！");
+            upload.setFileId(form.getFileIds()[0]);
+            iOrderUploadRepository.updateById(upload);
+            return;
         }
 
         if (!CharSequenceUtil.equals(order.getEngineerLoginId(), StpUtil.getLoginIdAsString())) {
@@ -933,13 +952,7 @@ public class OrderServiceImpl implements OrderService {
                 .setFileId(form.getFileIds()[0])
                 .setFileType(OrderUploadFileTypeEnum.VIDEO);
 
-        try {
-            iOrderUploadRepository.save(orderUpload);
-
-        } catch (Exception e) {
-            log.error(e.getMessage());
-            throw new ServerErrorException();
-        }
+        iOrderUploadRepository.save(orderUpload);
     }
 
     /**
