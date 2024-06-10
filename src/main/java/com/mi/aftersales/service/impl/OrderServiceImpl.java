@@ -318,7 +318,7 @@ public class OrderServiceImpl implements OrderService {
                     throw new IllegalFileIdException();
                 }
 
-                if (BeanUtil.isEmpty(iOrderUploadRepository.getById(fileId))) {
+                if (BeanUtil.isNotEmpty(iOrderUploadRepository.getById(fileId))) {
                     throw new DuplicateOrderUploadKeyException();
                 }
 
@@ -522,7 +522,7 @@ public class OrderServiceImpl implements OrderService {
                 throw new IllegalFileIdException();
             }
 
-            if (BeanUtil.isEmpty(iOrderUploadRepository.getById(fileId))) {
+            if (BeanUtil.isNotEmpty(iOrderUploadRepository.getById(fileId))) {
                 throw new DuplicateOrderUploadKeyException();
             }
 
