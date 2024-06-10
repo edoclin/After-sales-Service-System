@@ -43,8 +43,7 @@ class OrderStatusLogControllerTest {
     void listOrderStatusLogById() throws Exception {
         String orderId = "1794929431970746368";
 
-        MvcResult mvcResult = testConfig.getMockMvcResult("/aftersales/orderStatusLog/" + orderId);
+        testConfig.getMockMvcResult("/aftersales/order-status-log/" + orderId);
 
-        logger.info("调用返回的结果：{}", mvcResult.getResponse().getContentAsString());
     }
 }

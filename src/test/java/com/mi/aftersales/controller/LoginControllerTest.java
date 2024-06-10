@@ -1,6 +1,7 @@
 package com.mi.aftersales.controller;
 
 import com.alibaba.fastjson.JSON;
+import com.mi.aftersales.config.TestConfig;
 import com.mi.aftersales.pojo.vo.form.LoginBySmsFormVo;
 import com.mi.aftersales.pojo.vo.form.SendSmsCodeFormVo;
 import org.junit.jupiter.api.BeforeEach;
@@ -36,9 +37,22 @@ class LoginControllerTest {
 
     private MockMvc mockMvc;
 
+    @Resource
+    private TestConfig testConfig;
+
     @BeforeEach
     void setUp() {
-        mockMvc = MockMvcBuilders.standaloneSetup(loginController).build();
+        testConfig.setMockMvc(MockMvcBuilders.standaloneSetup(loginController).build());
+    }
+
+    @Test
+    void checkLogin() throws Exception {
+        testConfig.getMockMvcResult("/aftersales/login/check");
+    }
+
+    @Test
+    void logout() throws Exception {
+        testConfig.getMockMvcResult("/aftersales/login/logout");
     }
 
     @Test
@@ -47,16 +61,8 @@ class LoginControllerTest {
         form.setMobile("18845105338");
         String strJson = JSON.toJSONString(form);
 
-        MvcResult mvcResult = mockMvc.perform(
-                        MockMvcRequestBuilders.post("/aftersales/login/sms/send")
-                                .accept(MediaType.parseMediaType("application/json;charset=UTF-8"))
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content(strJson)
-                )
-                .andExpect(MockMvcResultMatchers.status().isOk())
-                .andDo(MockMvcResultHandlers.print())
-                .andReturn();
-        logger.info("调用返回的结果：{}", mvcResult.getResponse().getContentAsString());
+        testConfig.postMockMvcResult("/aftersales/login/sms/send",strJson);
+
     }
 
     @Test
@@ -67,16 +73,8 @@ class LoginControllerTest {
         form.setAutoRegister(true);
         String strJson = JSON.toJSONString(form);
 
-        MvcResult mvcResult = mockMvc.perform(
-                        MockMvcRequestBuilders.post("/aftersales/login/sms")
-                                .accept(MediaType.parseMediaType("application/json;charset=UTF-8"))
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content(strJson)
-                )
-                .andExpect(MockMvcResultMatchers.status().isOk())
-                .andDo(MockMvcResultHandlers.print())
-                .andReturn();
-        logger.info("调用返回的结果：{}", mvcResult.getResponse().getContentAsString());
+        testConfig.postMockMvcResult("/aftersales/login/sms",strJson);
+
     }
 
 }

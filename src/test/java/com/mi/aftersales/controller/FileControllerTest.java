@@ -2,6 +2,7 @@ package com.mi.aftersales.controller;
 
 import cn.hutool.core.collection.CollUtil;
 import com.alibaba.fastjson.JSON;
+import com.mi.aftersales.config.TestConfig;
 import com.mi.aftersales.pojo.vo.form.FileFormVo;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -37,9 +38,12 @@ class FileControllerTest {
 
     private MockMvc mockMvc;
 
+    @Resource
+    private TestConfig testConfig;
+
     @BeforeEach
     void setUp() {
-        mockMvc = MockMvcBuilders.standaloneSetup(fileController).build();
+        testConfig.setMockMvc(MockMvcBuilders.standaloneSetup(fileController).build());
     }
 
     @Test
@@ -51,18 +55,7 @@ class FileControllerTest {
         form.setKeys(CollUtil.toList(keys));
         String strJson = JSON.toJSONString(form);
 
-        MvcResult mvcResult = mockMvc.perform(
-                        MockMvcRequestBuilders.post("/aftersales/file/upload")
-                                .header("aftersales-token", "Bearer 4V_3nTMacaHes5kbk_T6rKdccUrQb0c5zU__")
-                                .accept(MediaType.parseMediaType("application/json;charset=UTF-8"))
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content(strJson)
-                )
-                .andExpect(MockMvcResultMatchers.status().isOk())
-                .andDo(MockMvcResultHandlers.print())
-                .andReturn();
-        logger.info("调用返回的结果：{}", mvcResult.getResponse().getContentAsString());
-
+        testConfig.postMockMvcResult("/aftersales/file/upload",strJson);
 
     }
 }

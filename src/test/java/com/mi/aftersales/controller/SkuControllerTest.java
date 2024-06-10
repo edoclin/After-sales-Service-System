@@ -1,6 +1,8 @@
 package com.mi.aftersales.controller;
 
 import com.alibaba.fastjson.JSON;
+import com.mi.aftersales.config.TestConfig;
+import com.mi.aftersales.pojo.vo.form.UpdateSkuFormVo;
 import com.mi.aftersales.util.query.ConditionQuery;
 import com.mi.aftersales.util.query.QueryParam;
 import com.mi.aftersales.pojo.vo.form.SkuFormVo;
@@ -43,9 +45,12 @@ class SkuControllerTest {
 
     private MockMvc mockMvc;
 
+    @Resource
+    private TestConfig testConfig;
+
     @BeforeEach
     void setUp() {
-        mockMvc = MockMvcBuilders.standaloneSetup(skuController).build();
+        testConfig.setMockMvc(MockMvcBuilders.standaloneSetup(skuController).build());
     }
 
     @Test
@@ -57,17 +62,22 @@ class SkuControllerTest {
         form.setVisible(false);
         String strJson = JSON.toJSONString(form);
 
-        MvcResult mvcResult = mockMvc.perform(
-                        MockMvcRequestBuilders.post("/aftersales/sku/")
-                                .header("aftersales-token", "Bearer 4V_3nTMacaHes5kbk_T6rKdccUrQb0c5zU__")
-                                .accept(MediaType.parseMediaType("application/json;charset=UTF-8"))
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content(strJson)
-                )
-                .andExpect(MockMvcResultMatchers.status().isOk())
-                .andDo(MockMvcResultHandlers.print())
-                .andReturn();
-        logger.info("调用返回的结果：{}", mvcResult.getResponse().getContentAsString());
+        testConfig.postMockMvcResult("/aftersales/sku/manager",strJson);
+
+    }
+
+    @Test
+    void updateSpu() throws Exception {
+
+        UpdateSkuFormVo form = new UpdateSkuFormVo();
+        form.setSkuId("1796084357518204928");
+        form.setSpuId("1791442641188290560");
+        form.setSkuCoverFileId("1800068261165916160");
+        form.setSkuDisplayName("小米14Pro(24GB+2048GB)");
+
+        String strJson = JSON.toJSONString(form);
+
+        testConfig.putMockMvcResult("/aftersales/sku/manager",strJson);
 
     }
 
@@ -79,19 +89,7 @@ class SkuControllerTest {
 
         String strJson = JSON.toJSONString(form);
 
-        MvcResult mvcResult = mockMvc.perform(
-                        MockMvcRequestBuilders.put("/aftersales/sku/visible")
-                                .header("aftersales-token", "Bearer 4V_3nTMacaHes5kbk_T6rKdccUrQb0c5zU__")
-                                .accept(MediaType.parseMediaType("application/json;charset=UTF-8"))
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content(strJson)
-                )
-                .andExpect(MockMvcResultMatchers.status().isOk())
-                .andDo(MockMvcResultHandlers.print())
-                .andReturn();
-        logger.info("调用返回的结果：{}", mvcResult.getResponse().getContentAsString());
-
-
+        testConfig.putMockMvcResult("/aftersales/sku/manager/visible",strJson);
 
     }
 
@@ -104,23 +102,12 @@ class SkuControllerTest {
 
         String strJson = JSON.toJSONString(form);
 
-        MvcResult mvcResult = mockMvc.perform(
-                        MockMvcRequestBuilders.post("/aftersales/sku/client/" + spuId)
-                                .header("aftersales-token", "Bearer 4V_3nTMacaHes5kbk_T6rKdccUrQb0c5zU__")
-                                .accept(MediaType.parseMediaType("application/json;charset=UTF-8"))
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content(strJson)
-                )
-                .andExpect(MockMvcResultMatchers.status().isOk())
-                .andDo(MockMvcResultHandlers.print())
-                .andReturn();
-        logger.info("调用返回的结果：{}", mvcResult.getResponse().getContentAsString());
+        testConfig.postMockMvcResult("/aftersales/sku/client/" + spuId, strJson);
 
     }
 
     @Test
-    void list() throws Exception {
-        String spuId = "1791442606358790144";
+    void conditionList() throws Exception {
         List<QueryParam> list = new ArrayList<>();
 
 
@@ -131,43 +118,17 @@ class SkuControllerTest {
 
         String strJson = JSON.toJSONString(form);
 
-        MvcResult mvcResult = mockMvc.perform(
-                        MockMvcRequestBuilders.post("/aftersales/sku/list/" + spuId)
-                                .header("aftersales-token", "Bearer 4V_3nTMacaHes5kbk_T6rKdccUrQb0c5zU__")
-                                .accept(MediaType.parseMediaType("application/json;charset=UTF-8"))
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content(strJson)
-                )
-                .andExpect(MockMvcResultMatchers.status().isOk())
-                .andDo(MockMvcResultHandlers.print())
-                .andReturn();
-        logger.info("调用返回的结果：{}", mvcResult.getResponse().getContentAsString());
-
-
+        testConfig.postMockMvcResult("/aftersales/sku/manager/query", strJson);
 
     }
 
 
     @Test
-    void testList() throws Exception {
-        SkuVisibleSetFormVo form = new SkuVisibleSetFormVo();
-        form.setSkuId("1796084357518204928");
-        form.setVisible(true);
+    void deleteSkuById() throws Exception {
 
-        String strJson = JSON.toJSONString(form);
+        String skuId = "1796084357518204928";
 
-        MvcResult mvcResult = mockMvc.perform(
-                        MockMvcRequestBuilders.post("/aftersales/sku/visible/")
-                                .header("aftersales-token", "Bearer 4V_3nTMacaHes5kbk_T6rKdccUrQb0c5zU__")
-                                .accept(MediaType.parseMediaType("application/json;charset=UTF-8"))
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content(strJson)
-                )
-                .andExpect(MockMvcResultMatchers.status().isOk())
-                .andDo(MockMvcResultHandlers.print())
-                .andReturn();
-        logger.info("调用返回的结果：{}", mvcResult.getResponse().getContentAsString());
-
+        testConfig.deleteMockMvcResult("/aftersales/sku/manager" + skuId);
 
     }
 }

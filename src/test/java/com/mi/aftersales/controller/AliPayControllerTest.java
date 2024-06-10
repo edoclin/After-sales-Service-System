@@ -44,17 +44,15 @@ class AliPayControllerTest {
 
         String orderId = "1796192674496368640";
 
-        MvcResult mvcResult = testConfig.getMockMvcResult("/aftersales/alipay/pay/" + orderId);
+        testConfig.getMockMvcResult("/aftersales/alipay/pay/" + orderId);
 
-        logger.info("调用返回的结果：{}",mvcResult.getResponse().getContentAsString());
     }
 
     @Test
     public void returnCallback() throws Exception {
 
-        MvcResult mvcResult = testConfig.getMockMvcResult("/aftersales/alipay/return", "outTradeNo", "" );
+        testConfig.getMockMvcResult("/aftersales/alipay/return", "outTradeNo", "" );
 
-        logger.info("调用返回的结果：{}",mvcResult.getResponse().getContentAsString());
 
     }
 }

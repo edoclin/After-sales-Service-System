@@ -1,6 +1,7 @@
 package com.mi.aftersales.controller;
 
 import com.alibaba.fastjson.JSON;
+import com.mi.aftersales.config.TestConfig;
 import com.mi.aftersales.pojo.vo.form.ClientAddressFormVo;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -31,18 +32,17 @@ class AddressControllerTest {
 
     private static final Logger logger = LoggerFactory.getLogger(AddressControllerTest.class);
 
+    @Resource
+    private TestConfig testConfig;
 
     @Resource
     private AddressController addressController;
-
-//    @Mock
-//    private IAddressService addressService;
 
     private MockMvc mockMvc;
 
     @BeforeEach
     void setUp() {
-        mockMvc = MockMvcBuilders.standaloneSetup(addressController).build();
+        testConfig.setMockMvc(MockMvcBuilders.standaloneSetup(addressController).build());
     }
 
     @Test
@@ -57,31 +57,13 @@ class AddressControllerTest {
         form.setAddressDetail("test");
         String strJson = JSON.toJSONString(form);
 
-        MvcResult mvcResult = mockMvc.perform(
-                        MockMvcRequestBuilders.post("/aftersales/address/")
-                                .header("aftersales-token", "Bearer 4V_3nTMacaHes5kbk_T6rKdccUrQb0c5zU__")
-                                .accept(MediaType.parseMediaType("application/json;charset=UTF-8"))
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content(strJson)
-                )
-                .andExpect(MockMvcResultMatchers.status().isOk())
-                .andDo(MockMvcResultHandlers.print())
-                .andReturn();
-        logger.info("调用返回的结果：{}", mvcResult.getResponse().getContentAsString());
-
+        testConfig.postMockMvcResult("/aftersales/address/client", strJson);
 
     }
 
     @Test
     public void listAddress() throws Exception {
-        MvcResult mvcResult =  mockMvc.perform(
-                MockMvcRequestBuilders.get("/aftersales/address/")
-                        .header("aftersales-token", "Bearer 4V_3nTMacaHes5kbk_T6rKdccUrQb0c5zU__")
-                )
-                .andExpect(MockMvcResultMatchers.status().isOk())
-                .andDo(MockMvcResultHandlers.print())
-                .andReturn();
-        logger.info("调用返回的结果：{}", mvcResult.getResponse().getContentAsString());
+        testConfig.putMockMvcResult("/aftersales/address/client");
     }
 
     @Test
@@ -89,14 +71,7 @@ class AddressControllerTest {
 
         String addressId = "1795830688256237568";
 
-        MvcResult mvcResult = mockMvc.perform(
-                MockMvcRequestBuilders.put("/aftersales/address/defaulted/" + addressId)
-                        .header("aftersales-token", "Bearer 4V_3nTMacaHes5kbk_T6rKdccUrQb0c5zU__")
-        )
-                .andExpect(MockMvcResultMatchers.status().isOk())
-                .andDo(MockMvcResultHandlers.print())
-                .andReturn();
-        logger.info("调用返回的结果：{}",mvcResult.getResponse().getContentAsString());
+        testConfig.putMockMvcResult("/aftersales/address/client/defaulted/" + addressId);
 
     }
 
@@ -105,13 +80,6 @@ class AddressControllerTest {
 
         String addressId = "1795830688256237568";
 
-        MvcResult mvcResult = mockMvc.perform(
-                MockMvcRequestBuilders.delete("/aftersales/address/" + addressId)
-                        .header("aftersales-token", "Bearer 4V_3nTMacaHes5kbk_T6rKdccUrQb0c5zU__")
-        )
-                .andExpect(MockMvcResultMatchers.status().isOk())
-                .andDo(MockMvcResultHandlers.print())
-                .andReturn();
-        logger.info("调用返回的结果：{}",mvcResult.getResponse().getContentAsString());
+        testConfig.deleteMockMvcResult("/aftersales/address/client/" + addressId);
     }
 }

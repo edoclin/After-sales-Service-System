@@ -1,6 +1,7 @@
 package com.mi.aftersales.controller;
 
 import com.alibaba.fastjson.JSON;
+import com.mi.aftersales.config.TestConfig;
 import com.mi.aftersales.pojo.vo.form.LoginPermissionFormVo;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -34,11 +35,13 @@ class LoginPermissionControllerTest {
     @Resource
     private LoginPermissionController loginPermissionController;
 
-    private MockMvc mockMvc;
+    @Resource
+    private TestConfig testConfig;
+
 
     @BeforeEach
     void setUp() {
-        mockMvc = MockMvcBuilders.standaloneSetup(loginPermissionController).build();
+        testConfig.setMockMvc(MockMvcBuilders.standaloneSetup(loginPermissionController).build());
     }
 
     @Test
@@ -50,18 +53,7 @@ class LoginPermissionControllerTest {
 
         String strJson = JSON.toJSONString(form);
 
-        MvcResult mvcResult = mockMvc.perform(
-                        MockMvcRequestBuilders.post("/aftersales/middleLoginPermission/")
-                                .header("aftersales-token", "Bearer 4V_3nTMacaHes5kbk_T6rKdccUrQb0c5zU__")
-                                .accept(MediaType.parseMediaType("application/json;charset=UTF-8"))
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content(strJson)
-                )
-                .andExpect(MockMvcResultMatchers.status().isOk())
-                .andDo(MockMvcResultHandlers.print())
-                .andReturn();
-        logger.info("调用返回的结果：{}", mvcResult.getResponse().getContentAsString());
-
+        testConfig.postMockMvcResult("/aftersales/login-permission/manager",strJson);
 
     }
 }

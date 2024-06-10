@@ -1,7 +1,11 @@
 package com.mi.aftersales.controller;
 
 import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
+import com.feiniaojin.gracefulresponse.GracefulResponseException;
 import com.mi.aftersales.config.TestConfig;
+import com.mi.aftersales.exception.graceful.*;
 import com.mi.aftersales.pojo.vo.form.*;
 import com.mi.aftersales.util.query.ConditionQuery;
 import com.mi.aftersales.util.query.QueryParam;
@@ -22,6 +26,8 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+import static org.junit.jupiter.api.Assertions.*;
+
 /**
  * @author QYenon
  * @create 2024/5/30
@@ -30,7 +36,6 @@ import java.util.List;
 @SpringBootTest
 @WebAppConfiguration
 class OrderControllerTest {
-
     private static final Logger logger = LoggerFactory.getLogger(OrderControllerTest.class);
 
     @Resource
@@ -39,13 +44,34 @@ class OrderControllerTest {
     @Resource
     private OrderController orderController;
 
+    String orderId = "1800044842059816960";
+
     @BeforeEach
     void setUp() {
         testConfig.setMockMvc(MockMvcBuilders.standaloneSetup(orderController).build());
     }
 
     @Test
-    void listClientOrder() throws Exception {
+    void postOrder() throws Exception {//1.1客户创建工单
+
+        String[] fileIds = {"1795362152648097792"};
+        ClientOrderFormVo form = new ClientOrderFormVo();
+        form.setSkuId("1791492367829008384");
+        form.setFapiaoId("1796427448704016384");
+        form.setSn("QY1234");
+        form.setOrderType("SEND_FOR1");
+        form.setClientFaultDesc("test");
+        form.setCenterId("String");
+        form.setArrivalTime(LocalDateTime.of(2024, 6, 30, 12, 21));
+        form.setFileIds(fileIds);
+        form.setAddressId("1797285355565862912");
+        String strJson = JSON.toJSONString(form);
+
+        testConfig.postMockMvcResult("/aftersales/order/client/create", strJson);
+    }
+
+    @Test
+    void listClientOrder() throws Exception {//1.2客户查询工单
         List<QueryParam> params = new ArrayList<>();
 
         ConditionQuery query = new ConditionQuery();
@@ -55,205 +81,161 @@ class OrderControllerTest {
 
         String strJson = JSON.toJSONString(query);
 
-        MvcResult mvcResult = testConfig.putMockMvcResult("/aftersales/order/client", strJson);
-
-        logger.info("调用返回的结果：{}", mvcResult.getResponse().getContentAsString());
+        testConfig.postMockMvcResult("/aftersales/order/client", strJson);
     }
 
     @Test
-    void orderDetailById() throws Exception {
-        String orderId = "1796166211369848832";
+    void orderDetailById() throws Exception {//1.3 客户查询工单详情
 
-
-        MvcResult mvcResult = testConfig.getMockMvcResult("/aftersales/order/client/" + orderId);
-
-        logger.info("调用返回的结果：{}", mvcResult.getResponse().getContentAsString());
+        testConfig.getMockMvcResult("/aftersales/order/client/detail/" + orderId);
     }
 
     @Test
-    void postOrder() throws Exception {
+    void listPendingOrder() throws Exception {//2.1工程师查询待办工单
+        Integer spuCategoryId = 10;
 
-        String[] fileIds = {"1795362152648097792"};
-        ClientOrderFormVo form = new ClientOrderFormVo();
-        form.setSkuId("1791492367829008384");
-        form.setFapiaoId("1794933315766226944");
-        form.setSn("QY1234");
-        form.setOrderType("SEND_FOR");
-        form.setClientFaultDesc("test");
-        form.setCenterId("String");
-        form.setArrivalTime(LocalDateTime.of(2024,6,5,12,21));
-        form.setFileIds(fileIds);
-        String strJson = JSON.toJSONString(form);
+        testConfig.getMockMvcResult("/aftersales/order/engineer/pending/" + spuCategoryId);
 
-        MvcResult mvcResult = testConfig.postMockMvcResult("/aftersales/order/client/create", strJson);
-
-
-        logger.info("调用返回的结果：{}", mvcResult.getResponse().getContentAsString());
     }
 
     @Test
-    void listPendingOrder() throws Exception {
-        MvcResult mvcResult = testConfig.getMockMvcResult("/aftersales/order/engineer/pending");
+    void engineerAcceptOrder() throws Exception {//2.2 工程师接受工单
 
-        logger.info("调用返回的结果：{}", mvcResult.getResponse().getContentAsString());
+        testConfig.getMockMvcResult("/aftersales/order/engineer/accept/" + orderId);
     }
 
     @Test
-    void engineerAcceptOrder() throws Exception {
-        String orderId = "1796192674496368640";
+    void listEngineerOrder() throws Exception {//2.3工程师查询所属工单
+        List<QueryParam> params = new ArrayList<>();
+        ConditionQuery query = new ConditionQuery();
+        query.setCurrent(1L);
+        query.setLimit(10L);
+        query.setParams(params);
+        String strJson = JSON.toJSONString(query);
 
-
-        MvcResult mvcResult = testConfig.getMockMvcResult("/aftersales/order/engineer/accept/" + orderId);
-
-        logger.info("调用返回的结果：{}", mvcResult.getResponse().getContentAsString());
+        testConfig.postMockMvcResult("/aftersales/order/engineer", strJson);
     }
 
     @Test
-    void testEngineerAcceptOrder() throws Exception {
+    void orderDetailByEngineerId() throws Exception {//2.4工程师查询工单详情
 
-        String[] fileIds = {"1796427449530294272"};
+        testConfig.getMockMvcResult("/aftersales/order/engineer/detail/" + orderId);
+    }
+
+    @Test
+    void testEngineerAcceptOrder() throws Exception {//3.1 工程师上传检测前图片
+
+        String[] fileIds = {"1800068261165916160"};
         EngineerUploadFormVo form = new EngineerUploadFormVo();
-        form.setOrderId("1796192674496368640");
+        form.setOrderId(orderId);
         form.setFileIds(fileIds);
         String strJson = JSON.toJSONString(form);
 
-        MvcResult mvcResult = testConfig.postMockMvcResult("/aftersales/order/engineer/upload/image", strJson);
-
-        logger.info("调用返回的结果：{}", mvcResult.getResponse().getContentAsString());
+        testConfig.postMockMvcResult("/aftersales/order/engineer/upload/before", strJson);
     }
 
     @Test
-    void startRepairMachine() throws Exception {
-        String orderId = "1796192674496368640";
+    void startRepairMachine() throws Exception {//3.2工程师开始检测
 
-        MvcResult mvcResult = testConfig.putMockMvcResult("/aftersales/order/engineer/checking/" + orderId);
-
-        logger.info("调用返回的结果：{}", mvcResult.getResponse().getContentAsString());
+        testConfig.putMockMvcResult("/aftersales/order/engineer/checking/" + orderId);
     }
 
     @Test
-    void faultDescription() throws Exception {
+    void faultDescription() throws Exception {//4.1工程师上传故障描述
         FaultDescriptionFormVo form = new FaultDescriptionFormVo();
-        form.setOrderId("1796192674496368640");
+        form.setOrderId(orderId);
         form.setEngineerNotice("test");
         form.setEngineerFaultDesc("test111");
 
         String strJson = JSON.toJSONString(form);
 
-        MvcResult mvcResult = testConfig.putMockMvcResult("/aftersales/order/engineer/faultDesc", strJson);
-
-        logger.info("调用返回的结果：{}", mvcResult.getResponse().getContentAsString());
+        testConfig.putMockMvcResult("/aftersales/order/engineer/fault-desc", strJson);
     }
 
     @Test
-    void engineerFeeConfirm() throws Exception {
+    void engineerFeeConfirm() throws Exception {//4.2 工程师确认计费
 
         List<MaterialNumFormVo> materials = new ArrayList<>();
 
         OrderFeeConfirmFormVo form = new OrderFeeConfirmFormVo();
-        form.setOrderId("1796192674496368640");
+        form.setOrderId(orderId);
         form.setMaterials(materials);
         form.setManualFee(BigDecimal.valueOf(100));
         String strJson = JSON.toJSONString(form);
 
-        MvcResult mvcResult = testConfig.putMockMvcResult("/aftersales/order/engineer/feeConfirm", strJson);
-
-        logger.info("调用返回的结果：{}", mvcResult.getResponse().getContentAsString());
+        testConfig.putMockMvcResult("/aftersales/order/engineer/fee-confirm", strJson);
     }
 
     @Test
-    void clientConfirmFee() throws Exception {
-        String orderId = "1796192674496368640";
-        MvcResult mvcResult = testConfig.putMockMvcResult("/aftersales/order/client/feeConfirm/" + orderId);
+    void clientConfirmFee() throws Exception {//5.1 用户确认计费（确认维修）
 
-        logger.info("调用返回的结果：{}", mvcResult.getResponse().getContentAsString());
+        testConfig.putMockMvcResult("/aftersales/order/client/fee-confirm/" + orderId);
     }
 
     @Test
-    void clientRejectRepair() throws Exception {
-        String orderId = "1796192674496368640";
-        MvcResult mvcResult = testConfig.putMockMvcResult("/aftersales/order/client/reject/" + orderId);
+    void clientRejectRepair() throws Exception {//5.2 用户拒绝维修（返回物品）
 
-        logger.info("调用返回的结果：{}", mvcResult.getResponse().getContentAsString());
+        testConfig.putMockMvcResult("/aftersales/order/client/reject/" + orderId);
     }
 
     @Test
-    void materialApply() throws Exception {
-        String orderId = "1796192674496368640";
-        MvcResult mvcResult = testConfig.putMockMvcResult("/aftersales/order/material/apply/" + orderId);
+    void materialApply() throws Exception {//6 工程师申请物料
 
-        logger.info("调用返回的结果：{}", mvcResult.getResponse().getContentAsString());
+        testConfig.putMockMvcResult("/aftersales/order/engineer/material-apply/" + orderId);
     }
 
     @Test
-    void materialDistribute() throws Exception {
-        List<MaterialNumFormVo> materials = new ArrayList<>();
+    void materialDistribute() throws Exception {//7 库管处理请求（分发物料）
 
-        MaterialDistributeFormVo form = new MaterialDistributeFormVo();
-        form.setOrderId("1796192674496368640");
-        form.setMaterials(materials);
-        String strJson = JSON.toJSONString(form);
-
-        MvcResult mvcResult = testConfig.putMockMvcResult("/aftersales/order/material/distribute/", strJson);
-
-        logger.info("调用返回的结果：{}", mvcResult.getResponse().getContentAsString());
+        testConfig.putMockMvcResult("/aftersales/order/manager/material-distribute/" + orderId);
     }
 
     @Test
-    void engineerStartRepairing() throws Exception {
-        String orderId = "1796192674496368640";
+    void engineerStartRepairing() throws Exception {//8 工程师开始维修
+
         Boolean material = true;
 
-        MvcResult mvcResult = testConfig.putMockMvcResult("/aftersales/order/engineer/repair/" + orderId+ "/" + material);
+        testConfig.putMockMvcResult("/aftersales/order/engineer/repair/" + orderId+ "/" + material);
+    }
 
-        logger.info("调用返回的结果：{}", mvcResult.getResponse().getContentAsString());
+
+    @Test
+    void engineerStartRechecking() throws Exception {//9 工程师开始复检
+
+        testConfig.putMockMvcResult("/aftersales/order/engineer/recheck/" + orderId);
+
     }
 
     @Test
-    void engineerStartRechecking() throws Exception {
-        String orderId = "1796192674496368640";
-        MvcResult mvcResult = testConfig.putMockMvcResult("/aftersales/order/engineer/recheck/" + orderId);
+    void engineerUploadVideo() throws Exception {//10.1 工程师上传维修结果（视频）
 
-        logger.info("调用返回的结果：{}", mvcResult.getResponse().getContentAsString());
-    }
-
-    @Test
-    void engineerUploadVideo() throws Exception {
-
-        String[] fileIds = {"1795362152648097792"};
+        String[] fileIds = {"1800075352312111104"};
 
         EngineerUploadFormVo form = new EngineerUploadFormVo();
-        form.setOrderId("1796192674496368640");
+        form.setOrderId(orderId);
         form.setFileIds(fileIds);
         String strJson = JSON.toJSONString(form);
 
-        MvcResult mvcResult = testConfig.putMockMvcResult("/aftersales/order/engineer/recheck/upload/", strJson);
-        logger.info("调用返回的结果：{}", mvcResult.getResponse().getContentAsString());
+        testConfig.putMockMvcResult("/aftersales/order/engineer/recheck/upload/", strJson);
     }
 
     @Test
-    void engineerFinishedRepair() throws Exception {
-        String orderId = "1796192674496368640";
-        MvcResult mvcResult = testConfig.putMockMvcResult("/aftersales/order/engineer/toBePaid/" + orderId);
+    void engineerFinishedRepair() throws Exception {//10.2 工程师完成维修，发送账单，等待支付
 
-        logger.info("调用返回的结果：{}", mvcResult.getResponse().getContentAsString());
+        testConfig.putMockMvcResult("/aftersales/order/engineer/to-be-paid/" + orderId);
     }
 
     @Test
     void engineerReturn() throws Exception {
-        String orderId = "1796192674496368640";
-        MvcResult mvcResult = testConfig.putMockMvcResult("/aftersales/order/engineer/return/" + orderId);
 
-        logger.info("调用返回的结果：{}", mvcResult.getResponse().getContentAsString());
+        testConfig.putMockMvcResult("/aftersales/order/engineer/return/" + orderId);
+
     }
 
     @Test
     void clientClose() throws Exception {
-        String orderId = "1796192674496368640";
-        MvcResult mvcResult = testConfig.putMockMvcResult("/aftersales/order/client/close/" + orderId);
 
-        logger.info("调用返回的结果：{}", mvcResult.getResponse().getContentAsString());
+        testConfig.putMockMvcResult("/aftersales/order/client/close/" + orderId);
     }
-
 
 }

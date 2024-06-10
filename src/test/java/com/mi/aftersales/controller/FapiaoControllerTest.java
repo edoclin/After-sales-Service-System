@@ -3,6 +3,7 @@ package com.mi.aftersales.controller;
 import com.alibaba.fastjson.JSON;
 
 
+import com.mi.aftersales.config.TestConfig;
 import com.mi.aftersales.pojo.vo.form.FapiaoFormVo;
 import com.mi.aftersales.pojo.vo.form.UpdateFapiaoFormVo;
 import org.junit.jupiter.api.BeforeEach;
@@ -39,13 +40,12 @@ class FapiaoControllerTest {
     @Resource
     private FapiaoController fapiaoController;
 
-
-
-    private MockMvc mockMvc;
+    @Resource
+    private TestConfig testConfig;
 
     @BeforeEach
     void setUp() {
-        mockMvc = MockMvcBuilders.standaloneSetup(fapiaoController).build();
+        testConfig.setMockMvc(MockMvcBuilders.standaloneSetup(fapiaoController).build());
     }
 
     @Test
@@ -55,31 +55,22 @@ class FapiaoControllerTest {
         form.setFapiaoNo("Test11123");
         String strJson = JSON.toJSONString(form);
 
-        MvcResult mvcResult = mockMvc.perform(
-                MockMvcRequestBuilders.post("/aftersales/fapiao/")
-                        .header("aftersales-token", "Bearer 4V_3nTMacaHes5kbk_T6rKdccUrQb0c5zU__")
-                        .accept(MediaType.parseMediaType("application/json;charset=UTF-8"))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(strJson)
-        )
-                .andExpect(MockMvcResultMatchers.status().isOk())
-                .andDo(MockMvcResultHandlers.print())
-                .andReturn();
-        logger.info("调用返回的结果：{}",mvcResult.getResponse().getContentAsString());
+        testConfig.postMockMvcResult("/aftersales/fapiao/client",strJson);
+
     }
 
     @Test
     void listFapiao() throws Exception {
 
-        MvcResult mvcResult = mockMvc.perform(
-                        MockMvcRequestBuilders.get("/aftersales/fapiao/client")
-                                .header("aftersales-token", "Bearer 4V_3nTMacaHes5kbk_T6rKdccUrQb0c5zU__")
-                )
-                .andExpect(MockMvcResultMatchers.status().isOk())
-                .andDo(MockMvcResultHandlers.print())
-                .andReturn();
-        logger.info("调用返回的结果：{}",mvcResult.getResponse().getContentAsString());
+        testConfig.getMockMvcResult("/aftersales/fapiao/client");
 
+    }
+
+    @Test
+    void listFapiaoByLoginId() throws Exception {
+        String loginId = "";
+
+        testConfig.getMockMvcResult("/aftersales/fapiao/manager" + loginId);
 
     }
 
@@ -88,14 +79,7 @@ class FapiaoControllerTest {
 
         String fapiaoId = "1796051108574253056";
 
-        MvcResult mvcResult = mockMvc.perform(
-                        MockMvcRequestBuilders.delete("/aftersales/fapiao/client/" + fapiaoId)
-                                .header("aftersales-token", "Bearer 4V_3nTMacaHes5kbk_T6rKdccUrQb0c5zU__")
-                )
-                .andExpect(MockMvcResultMatchers.status().isOk())
-                .andDo(MockMvcResultHandlers.print())
-                .andReturn();
-        logger.info("调用返回的结果：{}",mvcResult.getResponse().getContentAsString());
+        testConfig.deleteMockMvcResult("/aftersales/fapiao/client/" + fapiaoId);
 
     }
 
@@ -107,17 +91,7 @@ class FapiaoControllerTest {
         form.setFapiaoTime(LocalDateTime.of(2024, 5, 30, 13, 28));
         String strJson = JSON.toJSONString(form);
 
-        MvcResult mvcResult = mockMvc.perform(
-                        MockMvcRequestBuilders.put("/aftersales/fapiao/client" )
-                                .header("aftersales-token", "Bearer 4V_3nTMacaHes5kbk_T6rKdccUrQb0c5zU__")
-                                .accept(MediaType.parseMediaType("application/json;charset=UTF-8"))
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content(strJson)
-                )
-                .andExpect(MockMvcResultMatchers.status().isOk())
-                .andDo(MockMvcResultHandlers.print())
-                .andReturn();
-        logger.info("调用返回的结果：{}",mvcResult.getResponse().getContentAsString());
+        testConfig.putMockMvcResult("/aftersales/fapiao/client",strJson);
 
     }
 }

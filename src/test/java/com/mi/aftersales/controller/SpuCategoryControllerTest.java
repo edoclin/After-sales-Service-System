@@ -1,8 +1,12 @@
 package com.mi.aftersales.controller;
 
 import com.alibaba.fastjson.JSON;
+import com.mi.aftersales.config.TestConfig;
 import com.mi.aftersales.pojo.vo.form.SpuCategoryFormVo;
 import com.mi.aftersales.pojo.vo.form.SpuCategoryVisibleSetFormVo;
+import com.mi.aftersales.pojo.vo.form.UpdateSpuCategoryFormVo;
+import com.mi.aftersales.util.query.ConditionQuery;
+import com.mi.aftersales.util.query.QueryParam;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -20,6 +24,8 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import javax.annotation.Resource;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author QYenon
@@ -37,9 +43,12 @@ class SpuCategoryControllerTest {
 
     private MockMvc mockMvc;
 
+    @Resource
+    private TestConfig testConfig;
+
     @BeforeEach
     void setUp() {
-        mockMvc = MockMvcBuilders.standaloneSetup(spuCategoryController).build();
+        testConfig.setMockMvc(MockMvcBuilders.standaloneSetup(spuCategoryController).build());
     }
 
     @Test
@@ -52,33 +61,50 @@ class SpuCategoryControllerTest {
         form.setCategoryLevel(0);
         String strJson = JSON.toJSONString(form);
 
-        MvcResult mvcResult = mockMvc.perform(
-                        MockMvcRequestBuilders.post("/aftersales/spuCategory/")
-                                .header("aftersales-token", "Bearer 4V_3nTMacaHes5kbk_T6rKdccUrQb0c5zU__")
-                                .accept(MediaType.parseMediaType("application/json;charset=UTF-8"))
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content(strJson)
-                )
-                .andExpect(MockMvcResultMatchers.status().isOk())
-                .andDo(MockMvcResultHandlers.print())
-                .andReturn();
-        logger.info("调用返回的结果：{}", mvcResult.getResponse().getContentAsString());
+        testConfig.postMockMvcResult("/aftersales/spu-category/manager", strJson);
 
+    }
+
+    @Test
+    void poutSpuCategory() throws Exception {
+        UpdateSpuCategoryFormVo form = new UpdateSpuCategoryFormVo();
+
+        form.setCategoryName("小米14ultra");
+        form.setCategoryId(10);
+
+        String strJson = JSON.toJSONString(form);
+
+        testConfig.postMockMvcResult("/aftersales/spu-category/manager", strJson);
+
+    }
+
+    @Test
+    void listSpuCategoryByCondition() throws Exception {
+
+        List<QueryParam> params = new ArrayList<>();
+        ConditionQuery query = new ConditionQuery();
+        query.setCurrent(1L);
+        query.setLimit(10L);
+        query.setParams(params);
+        String strJson = JSON.toJSONString(query);
+
+        testConfig.getMockMvcResult("/aftersales/spu-category/manager",strJson);
 
     }
 
     @Test
     void listSpuCategory4Client() throws Exception {
-        MvcResult mvcResult = mockMvc.perform(
-                        MockMvcRequestBuilders.get("/aftersales/spuCategory/list/client")
-                                .header("aftersales-token", "Bearer 4V_3nTMacaHes5kbk_T6rKdccUrQb0c5zU__")
-                )
-                .andExpect(MockMvcResultMatchers.status().isOk())
-                .andDo(MockMvcResultHandlers.print())
-                .andReturn();
-        logger.info("调用返回的结果：{}", mvcResult.getResponse().getContentAsString());
+        testConfig.getMockMvcResult("/aftersales/spu-category/manager");
 
     }
+
+    @Test
+    void deleteSpuCategoryById() throws Exception {
+        Integer categoryId = 10;
+        testConfig.deleteMockMvcResult("/aftersales/spu-category/manager" + categoryId);
+
+    }
+
 
     @Test
     void setVisible() throws Exception {
@@ -87,17 +113,6 @@ class SpuCategoryControllerTest {
         form.setCategoryId(8);
         String strJson = JSON.toJSONString(form);
 
-        MvcResult mvcResult = mockMvc.perform(
-                        MockMvcRequestBuilders.get("/aftersales/spuCategory/visible")
-                                .header("aftersales-token", "Bearer 4V_3nTMacaHes5kbk_T6rKdccUrQb0c5zU__")
-                                .accept(MediaType.parseMediaType("application/json;charset=UTF-8"))
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content(strJson)
-                )
-                .andExpect(MockMvcResultMatchers.status().isOk())
-                .andDo(MockMvcResultHandlers.print())
-                .andReturn();
-        logger.info("调用返回的结果：{}", mvcResult.getResponse().getContentAsString());
-
+        testConfig.putMockMvcResult("/aftersales/spu-category/manager/visible", strJson);
     }
 }

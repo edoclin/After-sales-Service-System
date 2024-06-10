@@ -2,6 +2,7 @@ package com.mi.aftersales.controller;
 
 import com.alibaba.fastjson.JSON;
 
+import com.mi.aftersales.config.TestConfig;
 import com.mi.aftersales.pojo.vo.form.ClientServiceCenterFormVo;
 import com.mi.aftersales.pojo.vo.form.UpdateClientServiceCenterFormVo;
 import org.junit.jupiter.api.BeforeEach;
@@ -36,12 +37,15 @@ class ClientServiceCenterControllerTest {
     @Resource
     private ClientServiceCenterController clientServiceCenterController;
 
+    @Resource
+    private TestConfig testConfig;
+
 
     private MockMvc mockMvc;
 
     @BeforeEach
     void setUp() {
-        mockMvc = MockMvcBuilders.standaloneSetup(clientServiceCenterController).build();
+        testConfig.setMockMvc(MockMvcBuilders.standaloneSetup(clientServiceCenterController).build());
     }
 
     @Test
@@ -53,16 +57,7 @@ class ClientServiceCenterControllerTest {
 
         String strJson = JSON.toJSONString(form);
 
-        MvcResult mvcResult = mockMvc.perform(
-                MockMvcRequestBuilders.post("/aftersales/clientServiceCenter/")
-                        .accept(MediaType.parseMediaType("application/json;charset=UTF-8"))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(strJson)
-        )
-                .andExpect(MockMvcResultMatchers.status().isOk())
-                .andDo(MockMvcResultHandlers.print())
-                .andReturn();
-        logger.info("调用返回的结果：{}",mvcResult.getResponse().getContentAsString());
+        testConfig.postMockMvcResult("/aftersales/client-service-center/manager",strJson);
     }
 
     @Test
@@ -75,17 +70,6 @@ class ClientServiceCenterControllerTest {
 
         String strJson = JSON.toJSONString(form);
 
-        MvcResult mvcResult = mockMvc.perform(
-                        MockMvcRequestBuilders.put("/aftersales/clientServiceCenter/")
-                                .accept(MediaType.parseMediaType("application/json;charset=UTF-8"))
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content(strJson)
-                )
-                .andExpect(MockMvcResultMatchers.status().isOk())
-                .andDo(MockMvcResultHandlers.print())
-                .andReturn();
-        logger.info("调用返回的结果：{}",mvcResult.getResponse().getContentAsString());
-
-
+        testConfig.putMockMvcResult("/aftersales/client-service-center/manager",strJson);
     }
 }

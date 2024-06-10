@@ -21,7 +21,7 @@ public class UpdateSpuFormVo {
 
     @Schema(description = "商品Id")
     @NotNull(message = "商品Id不能为空")
-    private Integer spuId;
+    private String spuId;
 
     @Schema(description = "商品所属分类ID")
     @NotNull(message = "商品所属分类ID不能为空")
