@@ -8,10 +8,7 @@ import com.mi.aftersales.pojo.vo.SmsLogVo;
 import com.mi.aftersales.service.SmsLogService;
 import com.mi.aftersales.util.query.ConditionQuery;
 import io.swagger.v3.oas.annotations.Operation;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import javax.validation.Valid;
@@ -31,7 +28,7 @@ public class SmsLogController {
     private SmsLogService smsLogService;
 
 
-    @GetMapping(path = "/")
+    @PostMapping(path = "/")
     @Operation(summary = "查询短信发送日志", description = "查询短信发送日志")
     @CheckLogin
     public PageResult<SmsLogVo> listSmsLogByCondition(@RequestBody @Valid ConditionQuery query) {
