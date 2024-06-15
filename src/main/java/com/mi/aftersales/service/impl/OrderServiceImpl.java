@@ -10,13 +10,13 @@ import cn.hutool.core.util.ArrayUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.feiniaojin.gracefulresponse.GracefulResponseException;
+import com.mi.aftersales.common.PageResult;
 import com.mi.aftersales.common.yaml.bean.OrderConfig;
 import com.mi.aftersales.entity.*;
 import com.mi.aftersales.enums.config.OrderStatusChangeEventEnum;
 import com.mi.aftersales.enums.entity.*;
 import com.mi.aftersales.exception.graceful.*;
 import com.mi.aftersales.mq.producer.MqProducer;
-import com.mi.aftersales.common.PageResult;
 import com.mi.aftersales.pojo.message.PendingOrderMessage;
 import com.mi.aftersales.pojo.vo.*;
 import com.mi.aftersales.pojo.vo.form.ClientOrderFormVo;
@@ -51,8 +51,8 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import static com.mi.aftersales.common.RedisNamespace.*;
-import static com.mi.aftersales.common.StateMachineOrderStatus.*;
 import static com.mi.aftersales.common.RocketMqTopic.*;
+import static com.mi.aftersales.common.StateMachineOrderStatus.*;
 
 /**
  * <p>
@@ -246,11 +246,11 @@ public class OrderServiceImpl implements OrderService {
             throw new IllegalAddressIdException();
         }
 
-        Spu spu = iSpuRepository.getById(sku.getSpuId());
-
         if (form.getFileIds().length > 3) {
             throw new GracefulResponseException("上传图片超出限制（3张）");
         }
+
+        Spu spu = iSpuRepository.getById(sku.getSpuId());
 
         Order order = new Order();
 
@@ -271,7 +271,6 @@ public class OrderServiceImpl implements OrderService {
         if (LocalDateTimeUtil.now().isAfter(form.getArrivalTime())) {
             throw new GracefulResponseException("预约时间不能早于当前时间！");
         }
-
 
         order.setClientLoginId(loginId);
         try {
@@ -349,8 +348,7 @@ public class OrderServiceImpl implements OrderService {
     @Override
     public List<PendingOrderSimple4EngineerVo> listPendingOrders(Integer spuCategoryId) {
         ArrayList<PendingOrderSimple4EngineerVo> result = new ArrayList<>();
-
-//         按工单提交先后顺序，一次只能查询topN个
+        // 按工单提交先后顺序，一次只能查询topN个
         Set<Object> pendingOrders;
         for (int i = 0; ; i += orderConfig.getTopN()) {
             pendingOrders = redisTemplate.opsForZSet().range(PENDING_ORDER_PREFIX, i, i + orderConfig.getTopN() - 1);
@@ -398,23 +396,16 @@ public class OrderServiceImpl implements OrderService {
             throw new IllegalOrderIdException();
         }
 
-        boolean isPending = Boolean.FALSE;
         Set<Object> pendingOrders;
-        for (int i = 0; ; i += orderConfig.getTopN()) {
-            pendingOrders = redisTemplate.opsForZSet().range(PENDING_ORDER_PREFIX, i, i + orderConfig.getTopN() - 1);
-            if (CollUtil.isEmpty(pendingOrders)) {
-                break;
-            }
-            if (CollUtil.contains(pendingOrders, item -> CharSequenceUtil.equals(((PendingOrderMessage) item).getOrderId(), orderId))) {
-                isPending = Boolean.TRUE;
-                break;
-            }
-        }
+
+        boolean isPending = isPending(orderId);
 
         if (Boolean.FALSE.equals(isPending)) {
             throw new GracefulResponseException("该工单已被受理！");
         }
+
         RLock fairLock = redissonClient.getFairLock(ORDER_LOCK_PREFIX + orderId);
+
         try {
             if (fairLock.tryLock(10, TimeUnit.SECONDS)) {
                 if (Boolean.FALSE.equals(sendEvent(statusFlow(OrderStatusChangeEventEnum.ENGINEER_COMPLETED_ACCEPT, orderId)))) {
@@ -428,12 +419,10 @@ public class OrderServiceImpl implements OrderService {
             Thread.currentThread().interrupt();
             throw new ServerErrorException();
         } catch (BaseCustomException | GracefulResponseException e) {
-            log.warn(e.getMessage());
+            log.error(e.getMessage());
             throw e;
         } finally {
-            if (fairLock.isLocked()) {
-                fairLock.unlock();
-            }
+            fairLock.unlock();
         }
 
         // 状态日志
@@ -457,6 +446,19 @@ public class OrderServiceImpl implements OrderService {
             }
         }
 
+    }
+
+    private boolean isPending(String orderId) {
+        Set<Object> pendingOrders;
+        for (int i = 0; ; i += orderConfig.getTopN()) {
+            pendingOrders = redisTemplate.opsForZSet().range(PENDING_ORDER_PREFIX, i, i + orderConfig.getTopN() - 1);
+            if (CollUtil.isEmpty(pendingOrders)) {
+                return Boolean.FALSE;
+            }
+            if (CollUtil.contains(pendingOrders, item -> CharSequenceUtil.equals(((PendingOrderMessage) item).getOrderId(), orderId))) {
+                return Boolean.TRUE;
+            }
+        }
     }
 
     /**
@@ -761,7 +763,6 @@ public class OrderServiceImpl implements OrderService {
     @Transactional(rollbackFor = TransactionalErrorException.class)
     public void distributeMaterial(String orderId, String loginId) {
         // 当工单状态 == MATERIAL_APPLY时，库管开始处理申请
-
         Order order = iOrderRepository.getById(orderId);
         if (BeanUtil.isEmpty(order)) {
             throw new IllegalOrderIdException();
@@ -771,12 +772,27 @@ public class OrderServiceImpl implements OrderService {
         if (order.getOrderStatus() != (OrderStatusEnum.MATERIAL_APPLYING)) {
             throw new IllegalOrderStatusFlowException();
         }
+        // 更新物料库存
+        updateMaterial(orderId, loginId, order);
 
+        if (Boolean.FALSE.equals(sendEvent(statusFlow(OrderStatusChangeEventEnum.MANAGER_DISTRIBUTED_MATERIAL, order.getOrderId())))) {
+            throw new IllegalOrderStatusFlowException();
+        }
+
+        OrderStatusLog orderStatusLog = new OrderStatusLog();
+        orderStatusLog.setOrderId(order.getOrderId()).setOrderStatus(OrderStatusEnum.MATERIAL_DISTRIBUTING).setStatusDetail("库管分发所需物料！");
+
+        mqProducer.asyncSend(ROCKETMQ_TOPIC_4_ORDER_LOG, orderStatusLog);
+        sendSms(order.getOrderId());
+    }
+
+    private void updateMaterial(String orderId, String loginId, Order order) {
         RLock fairLock;
 
         List<MaterialLog> materialLogs = new ArrayList<>();
         List<OrderMaterial> orderMaterials = iOrderMaterialRepository.lambdaQuery()
                 .eq(OrderMaterial::getOrderId, orderId).list();
+
         for (OrderMaterial orderMaterial : orderMaterials) {
             // 锁定物料（行）
             fairLock = redissonClient.getFairLock(MATERIAL_LOCK_PREFIX + orderMaterial.getMaterialId());
@@ -799,10 +815,15 @@ public class OrderServiceImpl implements OrderService {
                     iMaterialRepository.updateById(material);
 
                     MaterialLog materialLog = new MaterialLog();
-                    materialLog.setMaterialId(orderMaterial.getMaterialId()).setAction(MaterialActionEnum.STOCK_OUT).setDelta(orderMaterial.getMaterialAmount()).setOperatorId(loginId).setLogDetail(CharSequenceUtil.format("工单（id：{}，工程师：{}）申请物料", order.getOrderId(), order.getEngineerLoginId()));
+                    materialLog.setMaterialId(orderMaterial.getMaterialId())
+                            .setAction(MaterialActionEnum.STOCK_OUT)
+                            .setDelta(orderMaterial.getMaterialAmount())
+                            .setOperatorId(loginId)
+                            .setLogDetail(CharSequenceUtil.format("工单（id：{}，工程师：{}）申请物料", order.getOrderId(), order.getEngineerLoginId()));
                     materialLogs.add(materialLog);
                 }
             } catch (BaseCustomException | GracefulResponseException e) {
+                log.error(e.getMessage());
                 throw e;
             } catch (InterruptedException e) {
                 log.error(e.getMessage());
@@ -812,24 +833,10 @@ public class OrderServiceImpl implements OrderService {
                 fairLock.unlock();
             }
         }
-
         if (CollUtil.isNotEmpty(materialLogs)) {
             // 异步物料变动日志
             mqProducer.asyncSend(ROCKETMQ_TOPIC_4_MATERIAL_LOG, materialLogs);
         }
-
-        if (Boolean.FALSE.equals(sendEvent(statusFlow(OrderStatusChangeEventEnum.MANAGER_DISTRIBUTED_MATERIAL, order.getOrderId())))) {
-            throw new IllegalOrderStatusFlowException();
-        }
-
-        OrderStatusLog orderStatusLog = new OrderStatusLog();
-        orderStatusLog.setOrderId(order.getOrderId()).setOrderStatus(OrderStatusEnum.MATERIAL_DISTRIBUTING);
-        orderStatusLog.setStatusDetail("库管分发所需物料！");
-
-
-        mqProducer.asyncSend(ROCKETMQ_TOPIC_4_ORDER_LOG, orderStatusLog);
-
-        sendSms(order.getOrderId());
     }
 
     /**
@@ -870,7 +877,6 @@ public class OrderServiceImpl implements OrderService {
         orderStatusLog.setOrderId(order.getOrderId()).setOrderStatus(OrderStatusEnum.REPAIRING);
 
         mqProducer.asyncSend(ROCKETMQ_TOPIC_4_ORDER_LOG, orderStatusLog);
-
         sendSms(order.getOrderId());
     }
 
@@ -901,7 +907,6 @@ public class OrderServiceImpl implements OrderService {
         orderStatusLog.setStatusDetail("工程师完成维修，开始复检");
 
         mqProducer.asyncSend(ROCKETMQ_TOPIC_4_ORDER_LOG, orderStatusLog);
-
         sendSms(order.getOrderId());
     }
 
@@ -919,6 +924,7 @@ public class OrderServiceImpl implements OrderService {
         if (ArrayUtil.isEmpty(form.getFileIds()) || form.getFileIds().length != 1) {
             throw new GracefulResponseException("文件数量非法！");
         }
+
         if (BeanUtil.isEmpty(order)) {
             throw new IllegalOrderIdException();
         }
@@ -929,7 +935,6 @@ public class OrderServiceImpl implements OrderService {
                 .eq(OrderUpload::getUploaderType, OrderUploaderTypeEnum.ENGINEER)
                 .eq(OrderUpload::getFileType, OrderUploadFileTypeEnum.VIDEO)
                 .one();
-
 
         if (BeanUtil.isNotEmpty(upload)) {
             upload.setFileId(form.getFileIds()[0]);
@@ -969,7 +974,6 @@ public class OrderServiceImpl implements OrderService {
             throw new IllegalOrderIdException();
         }
 
-
         if (!CharSequenceUtil.equals(order.getEngineerLoginId(), loginId)) {
             throw new IllegalOrderLoginIdException();
         }
@@ -991,7 +995,6 @@ public class OrderServiceImpl implements OrderService {
         orderStatusLog.setStatusDetail("工程师完成复检，等待用户支付维修费用！");
 
         mqProducer.asyncSend(ROCKETMQ_TOPIC_4_ORDER_LOG, orderStatusLog);
-
         sendSms(order.getOrderId());
     }
 
@@ -1016,7 +1019,6 @@ public class OrderServiceImpl implements OrderService {
         if (Boolean.FALSE.equals(sendEvent(statusFlow(OrderStatusChangeEventEnum.ENGINEER_COMPLETED_RETURN, order.getOrderId())))) {
             throw new IllegalOrderStatusFlowException();
         }
-
 
         OrderStatusLog orderStatusLog = new OrderStatusLog();
         orderStatusLog.setOrderId(order.getOrderId()).setOrderStatus(OrderStatusEnum.RETURNING);
@@ -1063,28 +1065,46 @@ public class OrderServiceImpl implements OrderService {
         return MessageBuilder.withPayload(payload).setHeader(STATE_MACHINE_HEADER_ORDER_NAME, orderId).build();
     }
 
+    /**
+     * 保证分布式同步
+     *
+     * @param message 状态转换消息
+     * @return 状态转换结果
+     */
     @Override
-    public synchronized boolean sendEvent(Message<OrderStatusChangeEventEnum> message) {
-        boolean result;
+    public boolean sendEvent(Message<OrderStatusChangeEventEnum> message) {
+        boolean result = Boolean.FALSE;
         ObjectStateMachine<OrderStatusEnum, OrderStatusChangeEventEnum> stateMachine = null;
-        try {
-            stateMachine = orderStateMachineBuilder.build();
-            stateMachine.start();
-            if (Boolean.TRUE.equals(redisTemplate.hasKey(MACHINE_PERSIST_PREFIX + message.getHeaders().get(STATE_MACHINE_HEADER_ORDER_NAME)))) {
-                // 存在持久化对象则恢复
-                orderRedisPersister.restore(stateMachine, MACHINE_PERSIST_PREFIX + message.getHeaders().get(STATE_MACHINE_HEADER_ORDER_NAME));
-            }
-            result = stateMachine.sendEvent(message);
-            orderRedisPersister.persist(stateMachine, MACHINE_PERSIST_PREFIX + message.getHeaders().get(STATE_MACHINE_HEADER_ORDER_NAME));
-        } catch (Exception e) {
-            throw new GracefulResponseException(e.getMessage());
-        } finally {
-            if (stateMachine != null) {
-                // todo 工单结束，删除持久化，目前还存在问题！！！
-                if (OrderStatusEnum.CLOSED.equals(stateMachine.getState().getId())) {
-                    redisTemplate.delete(MACHINE_PERSIST_PREFIX + message.getHeaders().get(STATE_MACHINE_HEADER_ORDER_NAME));
+        String orderId = (String) message.getHeaders().get(STATE_MACHINE_HEADER_ORDER_NAME);
+        String cacheKey = MACHINE_PERSIST_PREFIX + orderId;
+
+        RLock fairLock = redissonClient.getFairLock(STATEMACHINE_LOCK_PREFIX + orderId);
+
+        if (fairLock.tryLock()) {
+            try {
+                stateMachine = orderStateMachineBuilder.build();
+                stateMachine.start();
+
+                if (Boolean.TRUE.equals(redisTemplate.hasKey(cacheKey))) {
+                    // 存在持久化对象则恢复
+                    orderRedisPersister.restore(stateMachine, cacheKey);
                 }
-                stateMachine.stop();
+                // 改变状态
+                result = stateMachine.sendEvent(message);
+                // 持久化状态机
+                orderRedisPersister.persist(stateMachine, cacheKey);
+            } catch (Exception e) {
+                log.error(e.getMessage());
+                throw new ServerErrorException();
+            } finally {
+                if (stateMachine != null) {
+                    // 工单结束，删除持久化，目前还存在问题？？？
+                    if (OrderStatusEnum.CLOSED.equals(stateMachine.getState().getId())) {
+                        redisTemplate.delete(cacheKey);
+                    }
+                    stateMachine.stop();
+                }
+                fairLock.unlock();
             }
         }
         return result;
