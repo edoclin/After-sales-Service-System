@@ -218,19 +218,20 @@ public class MaterialServiceImpl implements MaterialService {
         QueryWrapper<Material> wrapper = QueryUtil.buildWrapper(query, Material.class);
         PageResult<MaterialVo> result = new PageResult<>();
 
-        for (QueryParam param : query.getParams()) {
-            if (param.getOperator() == Operator.CUSTOM) {
-                List<Integer> in = new ArrayList<>(spuCategoryService.childrenCategoryId(Integer.valueOf(param.getValue())));
+        if (null != query.getParams()) {
+            for (QueryParam param : query.getParams()) {
+                if (param.getOperator() == Operator.CUSTOM) {
+                    List<Integer> in = new ArrayList<>(spuCategoryService.childrenCategoryId(Integer.valueOf(param.getValue())));
 
-                if (CollUtil.isNotEmpty(in)) {
-                    wrapper = wrapper.in("spu_category_id", in);
-                } else {
-                    log.warn("非法的Spu分类Id：{}", param.getValue());
+                    if (CollUtil.isNotEmpty(in)) {
+                        wrapper = wrapper.in("spu_category_id", in);
+                    } else {
+                        log.warn("非法的Spu分类Id：{}", param.getValue());
+                    }
+                    break;
                 }
-                break;
             }
         }
-
 
         result.setTotal(iMaterialRepository.count(wrapper));
         result.setDataColumns(ViewUtil.dataColumns(MaterialVo.class));

@@ -1,14 +1,17 @@
 package com.mi.aftersales.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.collection.CollUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.feiniaojin.gracefulresponse.GracefulResponseException;
 import com.mi.aftersales.entity.File;
+import com.mi.aftersales.entity.Sku;
 import com.mi.aftersales.entity.Spu;
 import com.mi.aftersales.exception.graceful.IllegalSpuIdException;
 import com.mi.aftersales.exception.graceful.ServerErrorException;
 import com.mi.aftersales.pojo.vo.form.UpdateSpuFormVo;
+import com.mi.aftersales.repository.ISkuRepository;
 import com.mi.aftersales.service.SpuService;
 import com.mi.aftersales.repository.IFileRepository;
 import com.mi.aftersales.repository.ISpuCategoryRepository;
@@ -45,6 +48,9 @@ public class SpuServiceImpl implements SpuService {
     private ISpuCategoryRepository iSpuCategoryRepository;
 
     @Resource
+    private ISkuRepository iSkuRepository;
+
+    @Resource
     private IFileRepository iFileRepository;
 
     @Override
@@ -78,6 +84,21 @@ public class SpuServiceImpl implements SpuService {
         if (!iSpuRepository.updateById(spu)) {
             throw new ServerErrorException();
         }
+    }
+
+    @Override
+    public void removeSpuById(String spuId) {
+
+        Spu spu = iSpuRepository.getById(spuId);
+        if (BeanUtil.isEmpty(spu)) {
+            throw new IllegalSpuIdException();
+        }
+
+        if (CollUtil.isNotEmpty(iSkuRepository.lambdaQuery().eq(Sku::getSpuId, spuId).list())) {
+            throw new GracefulResponseException("存在相关联的商品Sku，无法删除！");
+        }
+
+        iSpuRepository.removeById(spuId);
     }
 
     @Override

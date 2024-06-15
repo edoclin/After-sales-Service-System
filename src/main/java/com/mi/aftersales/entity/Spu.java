@@ -32,7 +32,7 @@ public class Spu implements Serializable {
     @Schema(description = "创建时间")
     @TableField(fill = FieldFill.INSERT)
     @EnableQuery
-     private LocalDateTime createdTime;
+    private LocalDateTime createdTime;
 
     @Schema(description = "更新时间")
     @TableField(fill = FieldFill.UPDATE)

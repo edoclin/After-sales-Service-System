@@ -42,7 +42,7 @@ public class SpuCategoryController {
         spuCategoryService.updateSpuCategory(form);
     }
 
-    @GetMapping(path = "/manager")
+    @PostMapping(path = "/manager/query")
     @Operation(summary = "Spu分类目录（管理员）", description = "Spu分类目录（管理员）")
     public PageResult<SpuCategoryVo4Manager> listSpuCategoryByCondition(@RequestBody @Valid ConditionQuery query) {
         return spuCategoryService.listSpuCategory(query);

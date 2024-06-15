@@ -31,6 +31,8 @@ public interface SpuService {
      */
     void updateSpuVisibility(UpdateSpuVisibleFormVo form);
 
+    void removeSpuById(String spuId);
+
     void updateSpuById(UpdateSpuFormVo form);
 
     /**

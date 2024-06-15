@@ -1,6 +1,7 @@
 package com.mi.aftersales.pojo.vo;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.mi.aftersales.util.query.EnableQuery;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import lombok.Setter;
@@ -20,6 +21,7 @@ import java.io.Serializable;
 public class SpuCategoryVo4Manager implements Serializable {
     @Schema(description = "分类ID")
     private Integer categoryId;
+
     @Schema(description = "分类名称")
     private String categoryName;
 
@@ -28,11 +30,13 @@ public class SpuCategoryVo4Manager implements Serializable {
 
     @Schema(description = "创建时间")
     private String createdTime;
+
     @Schema(description = "更新时间")
     private String updatedTime;
 
     @Schema(description = "创建者")
     private String createdId;
+
     @Schema(description = "更新者")
     private String updatedId;
 

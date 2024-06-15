@@ -45,7 +45,7 @@ public class SmsLogServiceImpl implements SmsLogService {
             BeanUtil.copyProperties(smsLog, item, DateUtil.copyDate2yyyyMMddHHmm());
 
             item.setSmsType(smsLog.getSmsType().getDesc());
-
+            result.getData().add(item);
         });
         return result;
 
